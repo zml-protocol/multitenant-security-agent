@@ -148,5 +148,6 @@ When every item is complete, change `approval_status` to `ready_for_claude_revie
 | `2026-09-19T21:09:33Z` | `codex` | Recorded vulnerable/remediation Git references and the GitHub Free private-repository protection limitation; no ref was moved and the start gate remains open | No (freeze-control record only) |
 | `2026-09-19T21:12:15Z` | `codex` | Installed and tested a local pre-push guard for the frozen branch and vulnerable tag; server-side protection remains unavailable | No (local defense-in-depth control) |
 | `2026-09-19T21:22:29Z` | `codex` | Completed the Claude reviewer runtime readiness audit; Claude was neither installed nor executed, credential contents were not read, and the formal start gate remains open | No (runtime-readiness record only) |
+| `2026-09-19T21:41:52Z` | `codex` | Implemented and passed the credential-free, offline isolation smoke test for the pinned Claude Code 2.1.278 Linux reviewer image; no authentication or model call occurred, and the formal start gate remains open | No (implementation of the approved runtime foundation) |
 
 After formal approval, any change affecting actors, assets, trust boundaries, scope, expected behavior, tool access, or the finding standard requires a new entry and reapproval. A spelling-only correction that does not change meaning may be recorded as not requiring reapproval.

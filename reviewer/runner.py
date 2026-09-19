@@ -12,6 +12,7 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RUN_ROOT = ROOT / ".local" / "reviewer-runs"
+RUNTIME_PROFILE_PATH = ROOT / "reviewer" / "runtime" / "profile.json"
 RUN_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 PHASE1 = "decision_path_and_independent_matrix"
 PHASE2 = "difference_review"
@@ -110,6 +111,11 @@ def validate_bundle(bundle):
 def docker_plan(input_directory, output_directory, phase):
     input_directory = Path(input_directory).resolve()
     output_directory = Path(output_directory).resolve()
+    runtime = read_json(RUNTIME_PROFILE_PATH)
+    if runtime.get("formal_execution_authorized") is not False:
+        raise ValueError("Reviewer runtime profile must not authorize formal execution")
+    if runtime.get("network_mode") != "none" or runtime.get("credential_injection") != "disabled":
+        raise ValueError("Reviewer runtime profile must remain offline and credential-free")
     return {
         "schema_version": "1.0",
         "phase": phase,
@@ -117,22 +123,33 @@ def docker_plan(input_directory, output_directory, phase):
         "network_mode": "none",
         "credential_injection": "disabled",
         "source_repository_mounted": False,
+        "runtime": {
+            "profile": "reviewer/runtime/profile.json",
+            "profile_schema_version": runtime["schema_version"],
+            "image": runtime["image"],
+            "claude_code_version": runtime["claude_code_version"],
+            "container_user": runtime["container_user"],
+            "managed_settings": runtime["managed_settings"],
+            "image_digest_required_before_formal_execution": runtime["image_digest_required_before_formal_execution"]
+        },
         "placeholders": {
-            "image": "<approved-reviewer-image>",
             "command": "<approved-reviewer-command>"
         },
         "docker_arguments_template": [
             "docker", "run", "--rm", "--read-only",
+            "--user", runtime["container_user"],
             "--cap-drop", "ALL",
             "--security-opt", "no-new-privileges:true",
             "--pids-limit", "128",
             "--memory", "1g",
             "--cpus", "1",
             "--network", "none",
+            "--tmpfs", "/run/claude-config:rw,noexec,nosuid,nodev,size=16m,uid=10001,gid=10001,mode=0700",
+            "--tmpfs", "/tmp:rw,noexec,nosuid,nodev,size=16m,uid=10001,gid=10001,mode=0700",
             "--mount", f"type=bind,src={input_directory},dst=/review/input,readonly",
             "--mount", f"type=bind,src={output_directory},dst=/review/output",
             "--workdir", "/review/input",
-            "<approved-reviewer-image>",
+            runtime["image"],
             "<approved-reviewer-command>"
         ]
     }

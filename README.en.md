@@ -81,10 +81,11 @@ For remediation validation, stop the application, set `LAB_MODE` back to `secure
 - `evaluation/`: operator-only neutral scenarios and truth mapping, excluded from reviewer bundles.
 - `reviewer/bundle.py`: builds a single-scenario, redacted reviewer bundle with integrity hashes.
 - `reviewer/runner.py`: prepares isolated phase inputs, seals phase 1 output, and enforces the human-approved phase 2 release gate.
+- `reviewer/runtime/`: defines the Linux reviewer image with a pinned Claude Code version, base-image digest, npm integrity lock, and enforced managed settings.
 - `fixtures/permissions.v1.json`: independent, explicit authorization expectations.
 - `fixtures/request-template.v1.json`: a normal request template with no credentials.
 - `scanner/`: the fixed matrix, response evidence assessment, and reporting.
 - `tests/`: full matrix tests, mode isolation, remediation retests, error/timeout fixtures, log correlation, and redaction.
-- `scripts/demo.py`: in-process complete demo; `scripts/smoke.py`: real HTTP verification.
+- `scripts/demo.py`: in-process complete demo; `scripts/smoke.py`: real HTTP verification; `scripts/reviewer_runtime_smoke.py`: credential-free, offline reviewer-container isolation verification.
 
 `.local/`, databases, tokens, runtime logs, and local reports are ignored by Git. Raw responses are not persisted; reports retain only user/tenant test IDs, matched field names, and evidence references. The current authentication scheme is for a local lab and is not a production identity platform.

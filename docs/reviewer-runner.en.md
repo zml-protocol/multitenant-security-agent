@@ -2,9 +2,9 @@
 
 English | [中文](reviewer-runner.md)
 
-Status: `implemented_not_authorized_for_claude`
+Status: `runtime_foundation_implemented_not_authorized_for_claude`
 
-The runner implements the approved bundle-only, two-phase handoff. It does not invoke Claude, inject credentials, select a formal scenario, or authorize an assessment. Its current Docker plan is deliberately offline and contains image and command placeholders.
+The runner implements the approved bundle-only, two-phase handoff. It does not invoke Claude, inject credentials, select a formal scenario, or authorize an assessment. Its current Docker plan references the local Linux image definition pinned to Claude Code `2.1.278`, remains deliberately offline, and retains a formal reviewer command placeholder.
 
 ## State Machine
 
@@ -37,8 +37,15 @@ Preparation rejects unknown or extra files, missing hashes, changed files, symbo
 - Linux capabilities are dropped and `no-new-privileges` is enabled;
 - CPU, memory, and process counts are bounded;
 - networking and credential injection are disabled.
+- the process runs as non-root UID/GID `10001:10001`, with restricted tmpfs mounts for temporary Claude configuration and `/tmp`.
 
-The plan is evidence of the intended command boundary, not proof that a container ran. The placeholders cannot be treated as an authorized Claude command.
+The image definition under `reviewer/runtime/` pins the base-image digest, Claude Code version, and npm package integrity. Build the image and run its credential-free, offline smoke test with:
+
+```text
+python -m scripts.reviewer_runtime_smoke
+```
+
+The smoke test launches by image ID rather than a mutable tag and checks the version, non-root identity, read-only input, writable output, read-only root filesystem, writable temporary configuration, absence of a default network route, and absence of Claude/Anthropic credential environment variables. It writes results under the Git-ignored `.local/reviewer-runtime/`. This proves only the runtime foundation boundary, not an authorized Claude command or assessment; every Docker plan still contains `<approved-reviewer-command>`.
 
 ## Seal Phase 1
 

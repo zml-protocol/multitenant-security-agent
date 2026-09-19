@@ -2,15 +2,15 @@
 
 [English](claude-runtime.en.md) | 中文
 
-状态：`audited_not_installed_not_authorized`
+状态：`runtime_foundation_implemented_not_authorized`
 
-本文件记录正式 AppSec 评估所需的 Claude Code 运行时边界。审计只检查本机能力和官方要求；没有安装或启动 Claude，没有读取凭据内容，也没有改变 `approval_status`。正式执行仍需 Security Engineer 单独批准。
+本文件记录正式 AppSec 评估所需的 Claude Code 运行时边界。初始审计只检查本机能力和官方要求；后续实现只把 Claude Code 安装进隔离 Docker 镜像并执行离线版本检查，没有在宿主机安装、认证或调用模型，没有读取凭据内容，也没有改变 `approval_status`。正式执行仍需 Security Engineer 单独批准。
 
 ## 本机审计结果
 
 | 项目 | 观察结果 | 对正式评估的影响 |
 | --- | --- | --- |
-| Claude Code | `claude` 命令未安装 | 当前无法启动 reviewer |
+| Claude Code | 宿主机未安装 `claude` 命令；隔离镜像内固定为 `2.1.278` | Reviewer 必须通过受控容器运行 |
 | Node.js / npm | Node.js `v22.17.0`，npm `10.9.2`；`npm.cmd` 可用 | 可支持安装流程，但本次未安装 |
 | Windows | 原生 Windows 环境，已安装 Git for Windows | Claude 可在原生 Windows 运行，但官方 Bash 沙箱不支持原生 Windows |
 | WSL | 只发现 Docker Desktop 的内部发行版，没有用户 Linux 发行版 | 当前没有可用于交互式 Claude 沙箱的 WSL2 工作区 |
@@ -43,6 +43,20 @@ Claude Code 的沙箱只约束 Bash 类子进程；内置 Read/Edit/Write 工具
 
 容器是主要隔离边界。Claude Code 自带沙箱可作为纵深防御，但不能作为唯一控制，因为它不覆盖所有内置文件工具。
 
+## 已实现的离线容器基础
+
+`reviewer/runtime/` 现已包含：
+
+- 基于摘要固定的 `node:22.17.0-bookworm-slim`；
+- Claude Code `2.1.278` 和包含各平台包 integrity 的 `package-lock.json`；
+- `/etc/claude-code/managed-settings.json`，禁止 bypass permission mode、Claude.ai connectors、Artifacts、skills/plugins 同步、自动更新、遥测、错误报告和非必要流量，并启用子进程环境清理；
+- 非 root UID/GID `10001:10001`；
+- 由现有 runner 生成的只读输入、可写输出、只读根文件系统、受限 tmpfs、删除 capabilities、`no-new-privileges` 和 `--network none` 参数。
+
+`python -m scripts.reviewer_runtime_smoke` 已在 Docker Desktop 上通过，并确认版本、UID、文件系统边界、临时配置、无默认路由和无凭据环境变量。脚本使用本次构建的镜像 ID 执行 smoke 并把 ID 写入本地结果；正式运行仍须使用并记录不可变 registry digest。
+
+Smoke 只执行 `claude --version` 和本地边界探测。它没有认证、模型调用或 API 费用，也尚未证明 Claude 在真实会话中应用了 managed settings。
+
 ## 网络出口边界
 
 当前 runner 的 `--network none` 适用于离线隔离验证，无法完成真实 Claude API 调用。正式运行需要一个单独实现并验证的受限出口代理。Docker 网络本身不能按域名可靠地执行 allowlist。
@@ -73,15 +87,15 @@ Claude Code 的沙箱只约束 Bash 类子进程；内置 Read/Edit/Write 工具
 | 冻结 bundle 与哈希校验 | 已实现 | 使用已记录的正式候选并再次校验 |
 | 只读输入、可写输出、无源仓库挂载 | 已通过真实 Docker smoke test | 在最终 Claude 镜像上重复验证 |
 | 两阶段 seal/release 门禁 | 已实现 | 维持人工授权 |
-| Claude Code 安装与版本固定 | 未实现 | 构建并记录固定版本镜像 |
-| Linux 运行依赖 | 未验证 | 在镜像内验证 Claude 与所选沙箱依赖 |
+| Claude Code 安装与版本固定 | 已实现离线镜像基础 | 正式运行前记录不可变 registry digest |
+| Linux 运行基础 | 已验证 | 已验证二进制、非 root 身份和 Docker 文件边界；内置 Bash sandbox 尚未验证 |
 | 受限网络出口 | 未实现 | 实现代理 allowlist、拒绝规则与日志脱敏测试 |
 | 专用凭据注入与子进程清理 | 未实现 | 选择 secret source，验证不进入输入、日志和输出 |
-| 非必要连接、插件和 connectors 禁用 | 未实现 | 固化 managed settings 并验证实际连接 |
+| 非必要连接、插件和 connectors 禁用 | managed settings 已固化 | 联网前验证 Claude 实际加载设置及真实连接 |
 | 模型与费用预算 | 未批准 | 由 Security Engineer 单独批准 |
 | 正式 Claude 执行 | 未授权 | 完成审批记录第 8 节后另行授权 |
 
-因此当前结论是：离线 runner 隔离基础已经存在，但真实 Claude reviewer 运行时尚未准备完成，也未获执行授权。
+因此当前结论是：固定版本的离线 reviewer 容器基础已经实现并通过 smoke test，但受限出口、专用凭据和真实设置加载仍未验证，正式 Claude reviewer 也未获执行授权。
 
 ## 官方资料
 

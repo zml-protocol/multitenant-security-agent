@@ -81,10 +81,11 @@ $env:LAB_MODE = 'same_tenant_bypass'
 - `evaluation/`：操作者专用的中性场景与 truth mapping，不进入 reviewer bundle。
 - `reviewer/bundle.py`：构建单场景、脱敏、带完整性哈希的 reviewer bundle。
 - `reviewer/runner.py`：准备隔离阶段输入、封存第一阶段输出，并强制执行人工批准的第二阶段释放门禁。
+- `reviewer/runtime/`：固定 Claude Code 版本、基础镜像摘要、npm 完整性锁和强制 managed settings 的 Linux reviewer 镜像定义。
 - `fixtures/permissions.v1.json`：独立的显式权限预期。
 - `fixtures/request-template.v1.json`：正常请求模板，不含凭据。
 - `scanner/`：固定矩阵、响应证据判定和报告。
 - `tests/`：完整矩阵、模式独立性、修复复测、错误/超时夹具与日志脱敏。
-- `scripts/demo.py`：进程内完整演示；`scripts/smoke.py`：真实 HTTP 验证。
+- `scripts/demo.py`：进程内完整演示；`scripts/smoke.py`：真实 HTTP 验证；`scripts/reviewer_runtime_smoke.py`：无凭据、离线 reviewer 容器隔离验证。
 
 `.local/`、数据库、令牌、运行日志和本地报告已被 Git 忽略。原始响应不落盘；报告只保留用户/租户测试 ID、命中的字段名和证据引用。当前为本地实验认证方案，不是生产身份平台。

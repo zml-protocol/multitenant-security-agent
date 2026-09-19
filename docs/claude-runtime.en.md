@@ -2,15 +2,15 @@
 
 English | [中文](claude-runtime.md)
 
-Status: `audited_not_installed_not_authorized`
+Status: `runtime_foundation_implemented_not_authorized`
 
-This document records the Claude Code runtime boundary required for the formal AppSec assessment. The audit checked only local capabilities and official requirements. It did not install or launch Claude, read credential contents, or change `approval_status`. Formal execution still requires separate Security Engineer approval.
+This document records the Claude Code runtime boundary required for the formal AppSec assessment. The initial audit checked only local capabilities and official requirements. The later implementation installed Claude Code only inside an isolated Docker image and ran an offline version check. It did not install Claude on the host, authenticate, invoke a model, read credential contents, or change `approval_status`. Formal execution still requires separate Security Engineer approval.
 
 ## Local audit results
 
 | Item | Observation | Formal-assessment impact |
 | --- | --- | --- |
-| Claude Code | The `claude` command is not installed | The reviewer cannot currently start |
+| Claude Code | The host has no `claude` command; the isolated image pins version `2.1.278` | The reviewer must run through the controlled container |
 | Node.js / npm | Node.js `v22.17.0`, npm `10.9.2`; `npm.cmd` works | The host can support an install flow, but no install occurred |
 | Windows | Native Windows with Git for Windows installed | Claude can run on native Windows, but the official Bash sandbox does not support native Windows |
 | WSL | Only Docker Desktop's internal distribution was found; no user Linux distribution | There is no current WSL2 workspace for an interactive sandboxed Claude session |
@@ -43,6 +43,20 @@ The formal reviewer should run in a version-pinned Linux container image rather 
 
 The container is the primary isolation boundary. Claude Code's own sandbox may add defense in depth, but it cannot be the only control because it does not cover every built-in file tool.
 
+## Implemented offline container foundation
+
+`reviewer/runtime/` now contains:
+
+- `node:22.17.0-bookworm-slim` pinned by digest;
+- Claude Code `2.1.278` with a `package-lock.json` that contains platform-package integrity values;
+- `/etc/claude-code/managed-settings.json`, which disables bypass permission mode, Claude.ai connectors, Artifacts, skill/plugin synchronization, automatic updates, telemetry, error reporting, and nonessential traffic, and enables subprocess environment scrubbing;
+- non-root UID/GID `10001:10001`;
+- runner-generated arguments for read-only input, writable output, a read-only root filesystem, restricted tmpfs mounts, dropped capabilities, `no-new-privileges`, and `--network none`.
+
+`python -m scripts.reviewer_runtime_smoke` passed on Docker Desktop and verified the version, UID, filesystem boundaries, temporary configuration, absence of a default route, and absence of credential environment variables. The script runs the smoke test against the image ID from that build and records the ID in the local result. A formal run must still use and record an immutable registry digest.
+
+The smoke test executes only `claude --version` and local boundary probes. It performed no authentication, model call, or API spending, and it does not yet prove that Claude applies the managed settings during a real session.
+
 ## Network egress boundary
 
 The runner's current `--network none` mode is suitable for offline isolation validation but cannot make a real Claude API request. Formal execution needs a separately implemented and tested restricted egress proxy. A Docker network alone does not reliably enforce a hostname allowlist.
@@ -73,15 +87,15 @@ The run may record the credential source type and a non-secret identifier, never
 | Frozen bundle and hash verification | Implemented | Use the recorded formal candidate and verify it again |
 | Read-only input, writable output, no source-repository mount | Passed a real Docker smoke test | Repeat on the final Claude image |
 | Two-phase seal/release gate | Implemented | Retain human authorization |
-| Claude Code installation and version pin | Not implemented | Build and record a pinned image |
-| Linux runtime dependencies | Not verified | Verify Claude and selected sandbox dependencies in the image |
+| Claude Code installation and version pin | Offline image foundation implemented | Record an immutable registry digest before formal execution |
+| Linux runtime foundation | Verified | Binary, non-root identity, and Docker filesystem boundaries passed; the built-in Bash sandbox remains unverified |
 | Restricted network egress | Not implemented | Implement the proxy allowlist, deny rules, and redacted-log tests |
 | Dedicated credential injection and subprocess scrubbing | Not implemented | Select a secret source and prove it cannot enter inputs, logs, or outputs |
-| Nonessential connections, plugins, and connectors disabled | Not implemented | Freeze managed settings and verify actual connections |
+| Nonessential connections, plugins, and connectors disabled | Managed settings frozen | Verify that Claude loads them and observe actual connections before enabling egress |
 | Model and cost budget | Not approved | Obtain separate Security Engineer approval |
 | Formal Claude execution | Not authorized | Complete Section 8 of the approval record and authorize separately |
 
-The current conclusion is that the offline runner isolation foundation exists, but the real Claude reviewer runtime is neither ready nor authorized to execute.
+The current conclusion is that the pinned offline reviewer-container foundation is implemented and smoke-tested, while restricted egress, dedicated credentials, and real settings loading remain unverified, and formal Claude reviewer execution is still unauthorized.
 
 ## Official sources
 

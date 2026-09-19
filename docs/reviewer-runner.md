@@ -2,9 +2,9 @@
 
 [English](reviewer-runner.en.md) | 中文
 
-状态：`implemented_not_authorized_for_claude`
+状态：`runtime_foundation_implemented_not_authorized_for_claude`
 
-本 runner 实现已批准的 bundle-only 两阶段交接，但不会调用 Claude、注入凭据、选择正式场景或授权开始评估。当前 Docker 计划特意保持离线，并使用镜像与命令占位符。
+本 runner 实现已批准的 bundle-only 两阶段交接，但不会调用 Claude、注入凭据、选择正式场景或授权开始评估。当前 Docker 计划引用固定 Claude Code `2.1.278` 的本地 Linux 镜像定义，继续保持离线，并保留正式 reviewer 命令占位符。
 
 ## 状态机
 
@@ -37,8 +37,15 @@ python -m reviewer.runner prepare \
 - 删除 Linux capabilities，并启用 `no-new-privileges`。
 - 限制 CPU、内存和进程数。
 - 禁用网络与凭据注入。
+- 以非 root UID/GID `10001:10001` 运行，并为临时 Claude 配置和 `/tmp` 创建受限 tmpfs。
 
-该计划用于证明预期命令边界，不代表容器已经运行；其中占位符不能被视为已授权的 Claude 命令。
+镜像定义位于 `reviewer/runtime/`，固定基础镜像摘要、Claude Code 版本和 npm 包完整性。以下命令构建镜像并执行无凭据、无网络 smoke test：
+
+```text
+python -m scripts.reviewer_runtime_smoke
+```
+
+Smoke test 使用镜像 ID 而不是可变 tag 启动容器，检查版本、非 root 身份、输入只读、输出可写、根文件系统只读、临时配置可写、没有默认网络路由且不存在 Claude/Anthropic 凭据环境变量。结果写入 Git 忽略的 `.local/reviewer-runtime/`。这只证明运行时基础隔离，不是正式 Claude 命令或评估授权；每个 Docker plan 仍保留 `<approved-reviewer-command>`。
 
 ## 封存第一阶段
 

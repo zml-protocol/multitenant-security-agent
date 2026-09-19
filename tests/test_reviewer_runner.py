@@ -50,15 +50,26 @@ def test_prepare_creates_bundle_only_offline_docker_plan(lab, tmp_path):
     assert plan["network_mode"] == "none"
     assert plan["credential_injection"] == "disabled"
     assert plan["source_repository_mounted"] is False
+    assert plan["runtime"]["image"] == "multitenant-security-agent/claude-reviewer:2.1.278"
+    assert plan["runtime"]["claude_code_version"] == "2.1.278"
+    assert plan["runtime"]["container_user"] == "10001:10001"
+    assert plan["runtime"]["image_digest_required_before_formal_execution"] is True
+    assert "image" not in plan["placeholders"]
+    assert plan["placeholders"]["command"] == "<approved-reviewer-command>"
     arguments = plan["docker_arguments_template"]
     assert "--read-only" in arguments
+    assert arguments[arguments.index("--user") + 1] == "10001:10001"
     assert arguments[arguments.index("--cap-drop") + 1] == "ALL"
     assert arguments[arguments.index("--network") + 1] == "none"
+    tmpfs_mounts = [arguments[index + 1] for index, value in enumerate(arguments) if value == "--tmpfs"]
+    assert any(mount.startswith("/run/claude-config:") for mount in tmpfs_mounts)
+    assert any(mount.startswith("/tmp:") for mount in tmpfs_mounts)
     mounts = [arguments[index + 1] for index, value in enumerate(arguments) if value == "--mount"]
     assert len(mounts) == 2
     assert "dst=/review/input,readonly" in mounts[0]
     assert "dst=/review/output" in mounts[1]
     assert all(str(run) in mount for mount in mounts)
+    assert "multitenant-security-agent/claude-reviewer:2.1.278" in arguments
     assert (run / "phase1" / "input" / "bundle-manifest.json").is_file()
 
 

@@ -148,5 +148,6 @@ git ls-remote origin refs/heads/assessment/v1-vulnerable refs/tags/appsec-v1-vul
 | `2026-09-19T21:09:33Z` | `codex` | 记录漏洞/修复 Git 引用及 GitHub Free 私有仓库保护限制；未移动任何引用，启动门槛仍保持开放 | 否（仅记录冻结控制） |
 | `2026-09-19T21:12:15Z` | `codex` | 为冻结分支和漏洞标签安装并测试本地 pre-push guard；服务端保护仍不可用 | 否（本地纵深防御控制） |
 | `2026-09-19T21:22:29Z` | `codex` | 完成 Claude reviewer 运行时准备审计；未安装或执行 Claude，未读取凭据内容，正式启动门槛保持开放 | 否（只记录运行准备状态） |
+| `2026-09-19T21:41:52Z` | `codex` | 实现并通过固定 Claude Code 2.1.278 Linux reviewer 镜像的无凭据、离线隔离 smoke test；未认证或调用模型，正式启动门槛保持开放 | 否（实现已批准的运行时基础） |
 
 正式批准后，任何影响 actor、asset、trust boundary、scope、expected behavior、工具权限或 finding 标准的改动，都必须新增记录并重新审批。仅修正文案拼写且不改变含义时，可以记录为无需重新审批。
