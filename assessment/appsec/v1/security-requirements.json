@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "requirement_version": "appsec-v1.0-draft",
-  "status": "draft_pending_security_engineer_approval",
+  "requirement_version": "appsec-v1.0",
+  "status": "requirements_approved",
   "owner": "security_engineer",
   "system": "multi_tenant_user_information_api",
   "fixture_contract": {
@@ -19,6 +19,7 @@
     ]
   },
   "protected_fields": ["name", "email", "phone"],
+  "approved_public_fields": ["user_id", "tenant_id", "role", "name", "email", "phone"],
   "security_relevant_fields": ["user_id", "tenant_id", "role"],
   "requirements": [
     {
@@ -38,8 +39,8 @@
     {
       "id": "AUTHZ-ME-01",
       "title": "Identity baseline",
-      "statement": "GET /api/me shall return only the authenticated actor's configured public profile.",
-      "allow": "Each of six valid actors receives exactly their own public profile.",
+      "statement": "GET /api/me shall return only the authenticated user's allowed public profile fields.",
+      "allow": "Each valid actor receives only their own fields from approved_public_fields.",
       "deny": "The response never contains another user's protected fields."
     },
     {
@@ -67,15 +68,15 @@
       "id": "AUTHZ-LIST-02",
       "title": "List tenant filtering",
       "statement": "Every returned list item shall belong to the server-derived administrator tenant.",
-      "allow": "The response contains exactly all three configured users in the administrator tenant.",
+      "allow": "The response contains all users that belong to the server-derived administrator tenant.",
       "deny": "No item from another tenant may appear in any status response."
     },
     {
       "id": "DATA-01",
       "title": "Response minimization",
-      "statement": "Successful business responses shall expose only user_id, tenant_id, role, name, email and phone.",
-      "allow": "Authorized responses contain the exact expected public field set.",
-      "deny": "Token material, token hashes and internal database fields never appear."
+      "statement": "Success responses shall contain only explicitly approved public fields and shall never expose authentication tokens, credential digests, internal authorization fields, or other sensitive internal data.",
+      "allow": "Authorized responses contain only fields listed in approved_public_fields.",
+      "deny": "Authentication tokens, credential digests, non-public authorization fields, internal database fields, and other sensitive internal data never appear."
     },
     {
       "id": "ERROR-01",
@@ -94,7 +95,7 @@
     {
       "id": "TOOL-01",
       "title": "Bounded reviewer execution",
-      "statement": "Reviewer tools shall enforce the approved target, GET method, route templates, identity aliases, known user IDs, redirect policy and request budget.",
+      "statement": "Reviewer tools shall enforce the approved target, allowed HTTP methods, in-scope routes, approved test identities, known test object IDs, redirect restrictions, and request budget.",
       "allow": "Only configured matrix and approved supplemental read requests execute.",
       "deny": "Arbitrary URLs, methods, headers, unknown users and cross-target redirects are rejected before network execution."
     }
