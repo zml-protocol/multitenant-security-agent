@@ -27,6 +27,27 @@
 | candidate_generated_at_utc | `2026-09-19T20:44:40.966113Z` |
 | candidate_status | `draft_not_for_claude` |
 
+### 冻结 Git 引用
+
+| 引用 | 目标 commit | 修改规则 |
+| --- | --- | --- |
+| `assessment/v1-vulnerable` | `14a7b48ae30b833962752e4d65b7e03ade5664a1` | 冻结；不得提交、删除、force push 或移动引用 |
+| `appsec-v1-vulnerable` | annotated tag 解引用后为 `14a7b48ae30b833962752e4d65b7e03ade5664a1` | 不可变的漏洞应用版本标记 |
+| `remediation/v1` | 初始为 `14a7b48ae30b833962752e4d65b7e03ade5664a1` | 只有 Security Engineer 确认 finding 后才允许写入 |
+| `appsec-v1-fixed` | 尚未创建 | 仅在修复回归和人工验收完成后创建 |
+
+GitHub 对 repository rulesets 和经典 branch protection 都返回 HTTP 403，原因是当前免费计划下的 private repository 不支持这些保护。仓库没有改为 public，也没有创建付费计划。在平台强制保护可用前，使用 annotated tag、禁止修改的流程规则和显式远端 SHA 校验作为冻结控制。
+
+当前电脑还安装了本地 `.git/hooks/pre-push` guard，用于拒绝删除或移动 `assessment/v1-vulnerable` 和 `appsec-v1-vulnerable`。测试已确认：引用保持不变时允许通过，删除冻结分支或标签时会被阻止。该 hook 只是本地纵深防御控制；它不进入版本管理，不能阻止其他 clone 发起的推送，也不能替代服务端保护。
+
+每次审核或部署前，不切换冻结分支，直接验证远端引用：
+
+```text
+git ls-remote origin refs/heads/assessment/v1-vulnerable refs/tags/appsec-v1-vulnerable "refs/tags/appsec-v1-vulnerable^{}"
+```
+
+分支值和 tag 解引用值必须都等于 `14a7b48ae30b833962752e4d65b7e03ade5664a1`。如不一致，立即停止评估或部署，并由 Security Engineer 审核。
+
 状态只能按以下顺序变化：
 
 `pending` → `requirements_approved` → `ready_for_claude_review`
@@ -124,5 +145,7 @@
 | `2026-09-19T19:41:06Z` | `project_owner` | 批准 bundle-only 两阶段 reviewer 访问模型 v2.0 | 否（已在本记录中批准） |
 | `2026-09-19T19:56:57Z` | `project_owner` | 授权实现隔离 runner 计划、第一阶段封存和第二阶段释放门禁；仍未授权执行 Claude | 否（实现已批准模型） |
 | `2026-09-19T20:44:40.966113Z` | `codex` | 基于已记录的干净 commit、新 fixture 和随机选择的中性场景生成正式冻结候选；启动门槛仍未勾选 | 否（仅生成候选） |
+| `2026-09-19T21:09:33Z` | `codex` | 记录漏洞/修复 Git 引用及 GitHub Free 私有仓库保护限制；未移动任何引用，启动门槛仍保持开放 | 否（仅记录冻结控制） |
+| `2026-09-19T21:12:15Z` | `codex` | 为冻结分支和漏洞标签安装并测试本地 pre-push guard；服务端保护仍不可用 | 否（本地纵深防御控制） |
 
 正式批准后，任何影响 actor、asset、trust boundary、scope、expected behavior、工具权限或 finding 标准的改动，都必须新增记录并重新审批。仅修正文案拼写且不改变含义时，可以记录为无需重新审批。

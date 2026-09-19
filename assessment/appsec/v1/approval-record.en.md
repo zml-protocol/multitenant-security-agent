@@ -27,6 +27,27 @@ This is the single formal sign-off location for workflow 1. Read the linked sour
 | candidate_generated_at_utc | `2026-09-19T20:44:40.966113Z` |
 | candidate_status | `draft_not_for_claude` |
 
+### Frozen Git References
+
+| Reference | Target commit | Mutation policy |
+| --- | --- | --- |
+| `assessment/v1-vulnerable` | `14a7b48ae30b833962752e4d65b7e03ade5664a1` | Frozen; no commits, deletion, force-push, or ref movement |
+| `appsec-v1-vulnerable` | `14a7b48ae30b833962752e4d65b7e03ade5664a1` after annotated-tag dereference | Immutable vulnerable application marker |
+| `remediation/v1` | Initially `14a7b48ae30b833962752e4d65b7e03ade5664a1` | Writable only after the Security Engineer confirms a finding |
+| `appsec-v1-fixed` | Not created | Create only after remediation regression and human acceptance |
+
+GitHub reported HTTP 403 for both repository rulesets and classic branch protection because this is a private repository on the current free plan. The repository was not made public and no paid plan was created. Until platform-enforced protection becomes available, the annotated tag, the no-mutation process rule, and explicit remote SHA verification are the freeze controls.
+
+This workstation also has a local `.git/hooks/pre-push` guard that rejects deletion or movement of `assessment/v1-vulnerable` and `appsec-v1-vulnerable`. Tests confirmed that an unchanged frozen reference is allowed while branch and tag deletion attempts are blocked. This hook is a local defense-in-depth control; it is not versioned, does not protect pushes from another clone, and does not replace server-side protection.
+
+Before review or deployment, verify the remote references without checking out the frozen branch:
+
+```text
+git ls-remote origin refs/heads/assessment/v1-vulnerable refs/tags/appsec-v1-vulnerable "refs/tags/appsec-v1-vulnerable^{}"
+```
+
+The branch value and dereferenced tag value must both equal `14a7b48ae30b833962752e4d65b7e03ade5664a1`. A mismatch stops the assessment or deployment and requires Security Engineer review.
+
 Status moves only in this order:
 
 `pending` → `requirements_approved` → `ready_for_claude_review`
@@ -124,5 +145,7 @@ When every item is complete, change `approval_status` to `ready_for_claude_revie
 | `2026-09-19T19:41:06Z` | `project_owner` | Approved bundle-only two-phase reviewer access model v2.0 | No (approved in this record) |
 | `2026-09-19T19:56:57Z` | `project_owner` | Authorized implementation of the isolated runner plan, phase 1 seal, and phase 2 release gate; Claude execution remains unauthorized | No (implementation of the approved model) |
 | `2026-09-19T20:44:40.966113Z` | `codex` | Generated the formal freeze candidate from the recorded clean commit, new fixture, and randomly selected neutral scenario; start-gate decisions remain unchecked | No (candidate generation only) |
+| `2026-09-19T21:09:33Z` | `codex` | Recorded vulnerable/remediation Git references and the GitHub Free private-repository protection limitation; no ref was moved and the start gate remains open | No (freeze-control record only) |
+| `2026-09-19T21:12:15Z` | `codex` | Installed and tested a local pre-push guard for the frozen branch and vulnerable tag; server-side protection remains unavailable | No (local defense-in-depth control) |
 
 After formal approval, any change affecting actors, assets, trust boundaries, scope, expected behavior, tool access, or the finding standard requires a new entry and reapproval. A spelling-only correction that does not change meaning may be recorded as not requiring reapproval.
