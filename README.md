@@ -2,7 +2,7 @@
 
 [English](README.en.md) | 中文
 
-用于安全工程师面试的双工作流安全实验项目。长期目标与路线见 [docs/project-vision.md](docs/project-vision.md)，需求基线见 [spec.md](spec.md)，本阶段实现说明见 [docs/phase1.md](docs/phase1.md)，Reviewer 隔离设计见 [docs/reviewer-bundle.md](docs/reviewer-bundle.md)，分阶段 runner 见 [docs/reviewer-runner.md](docs/reviewer-runner.md)。
+用于安全工程师面试的双工作流安全实验项目。长期目标与路线见 [docs/project-vision.md](docs/project-vision.md)，需求基线见 [spec.md](spec.md)，本阶段实现说明见 [docs/phase1.md](docs/phase1.md)，Reviewer 隔离设计见 [docs/reviewer-bundle.md](docs/reviewer-bundle.md)，分阶段 runner 见 [docs/reviewer-runner.md](docs/reviewer-runner.md)，Claude 运行时准备审计见 [docs/claude-runtime.md](docs/claude-runtime.md)。
 
 最终目标包含 human-in-the-loop 的白盒 AppSec AI Agent Flow，以及 Alibaba Cloud 上的 DDoS / Network Security Incident Response Flow。已实现第一阶段：FastAPI + SQLite、两个租户六个测试用户、三个 GET 接口、四种模式、独立权限矩阵、脱敏 JSON/Markdown 报告、结构化应用日志和修复复测。当前没有接入模型、阿里云、SLS 或响应执行器。
 

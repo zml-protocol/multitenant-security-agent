@@ -89,4 +89,4 @@ python -m reviewer.runner verify --run .local/reviewer-runs/<review-run-id>
 
 Verification walks the available hash chain for the current state. Any modification to the prepared bundle, sealed output, staged inputs, authorization record, or released phase 2 files causes failure.
 
-The formal start gate in the approval record remains open. A later approved step must freeze a clean commit, fixture, and neutral scenario, update the assessment status, select an approved reviewer runtime, and decide how tightly scoped network access and model credentials are provided.
+The formal start gate in the approval record remains open. A frozen candidate now records the code, fixture, and neutral scenario, but the formal assessment is not authorized. The [Claude runtime readiness audit](claude-runtime.en.md) records the verified host capabilities and the remaining gaps for a pinned Linux image, restricted egress proxy, and dedicated credential injection; implementing and validating those controls requires a later, separate approval.

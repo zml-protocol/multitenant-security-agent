@@ -2,7 +2,7 @@
 
 English | [中文](README.md)
 
-This is a dual-workflow security lab for a security engineering interview. See the [project vision and roadmap](docs/project-vision.en.md), the [requirements baseline](spec.en.md), the [current phase implementation notes](docs/phase1.en.md), the [reviewer isolation design](docs/reviewer-bundle.en.md), and the [staged reviewer runner](docs/reviewer-runner.en.md).
+This is a dual-workflow security lab for a security engineering interview. See the [project vision and roadmap](docs/project-vision.en.md), the [requirements baseline](spec.en.md), the [current phase implementation notes](docs/phase1.en.md), the [reviewer isolation design](docs/reviewer-bundle.en.md), the [staged reviewer runner](docs/reviewer-runner.en.md), and the [Claude runtime readiness audit](docs/claude-runtime.en.md).
 
 The final goal includes a human-in-the-loop, white-box AppSec AI Agent Flow and an Alibaba Cloud DDoS / Network Security Incident Response Flow. Phase 1 is complete: FastAPI + SQLite, two tenants and six test users, three GET endpoints, four modes, an independent authorization matrix, redacted JSON/Markdown reports, structured application logs, and remediation regression testing. No model, Alibaba Cloud resource, SLS integration, or response executor is connected yet.
 

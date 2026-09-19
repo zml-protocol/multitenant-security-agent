@@ -1,0 +1,92 @@
+# Claude Reviewer Runtime Readiness Audit
+
+English | [中文](claude-runtime.md)
+
+Status: `audited_not_installed_not_authorized`
+
+This document records the Claude Code runtime boundary required for the formal AppSec assessment. The audit checked only local capabilities and official requirements. It did not install or launch Claude, read credential contents, or change `approval_status`. Formal execution still requires separate Security Engineer approval.
+
+## Local audit results
+
+| Item | Observation | Formal-assessment impact |
+| --- | --- | --- |
+| Claude Code | The `claude` command is not installed | The reviewer cannot currently start |
+| Node.js / npm | Node.js `v22.17.0`, npm `10.9.2`; `npm.cmd` works | The host can support an install flow, but no install occurred |
+| Windows | Native Windows with Git for Windows installed | Claude can run on native Windows, but the official Bash sandbox does not support native Windows |
+| WSL | Only Docker Desktop's internal distribution was found; no user Linux distribution | There is no current WSL2 workspace for an interactive sandboxed Claude session |
+| Docker | Client and server `29.8.0`; `alpine:3.22` is present | The verified project runner can provide filesystem isolation |
+| Claude environment variables | No variable names beginning with `ANTHROPIC` or `CLAUDE` were found | No environment credential was found for reviewer use |
+| Claude user directory | `%USERPROFILE%\.claude` exists; its contents were not read | The host user directory must not be mounted into the reviewer container or treated as an approved credential source |
+
+The inspection did not read environment-variable values or files under `%USERPROFILE%\.claude`.
+
+## Official runtime requirements
+
+Anthropic documents Windows 10 1809 or later, at least 4 GB RAM, and an internet connection as requirements. Native installation is the recommended method and updates automatically by default. Native Windows does not support the Claude Code Bash sandbox. The sandbox supports Linux and WSL2, where it also requires `bubblewrap` and `socat`.
+
+The first interactive login normally opens a browser. Credential sources also include `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN`, and `apiKeyHelper`. Windows login credentials are stored by default in `%USERPROFILE%\.claude\.credentials.json`. This project will neither inspect nor reuse that host file.
+
+Claude Code's sandbox constrains Bash-style subprocesses; built-in Read/Edit/Write tools remain governed by the permission system. Sandboxed subprocesses inherit the parent environment by default. Anthropic provides `sandbox.credentials` and `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB` to restrict subprocess credential access, but those settings do not replace container mounts, egress control, or approval gates.
+
+## Runtime model selected for this project
+
+The formal reviewer should run in a version-pinned Linux container image rather than a native Windows host session. The container must enforce these boundaries:
+
+- mount only runner-validated phase input read-only at `/review/input`;
+- make only `/review/output` writable and keep the source repository, parent directory, `.git`, database, token files, `.env`, historical reports, and operator truth mapping inaccessible;
+- use an isolated `CLAUDE_CONFIG_DIR` and never mount the host `%USERPROFILE%\.claude`;
+- pin and record the Claude Code version, with automatic updates and plugin installation disabled during the formal run;
+- disable Claude.ai MCP connectors, Artifacts, nonessential traffic, and telemetry to reduce reachable hosts and data flows;
+- inject the Claude credential at runtime, never into the bundle, command line, logs, reports, or image layers; subprocesses must use environment scrubbing or explicit credential deny/mask rules;
+- keep the container root filesystem read-only and use separate controlled writable mounts for temporary data and reviewer output;
+- retain the existing `prepare`, phase 1 seal, human authorization, and phase 2 release state machine.
+
+The container is the primary isolation boundary. Claude Code's own sandbox may add defense in depth, but it cannot be the only control because it does not cover every built-in file tool.
+
+## Network egress boundary
+
+The runner's current `--network none` mode is suitable for offline isolation validation but cannot make a real Claude API request. Formal execution needs a separately implemented and tested restricted egress proxy. A Docker network alone does not reliably enforce a hostname allowlist.
+
+The minimum host set depends on the authentication method:
+
+| Host | Purpose | Project policy |
+| --- | --- | --- |
+| `api.anthropic.com` | Anthropic API requests | Required for the formal reviewer |
+| `platform.claude.com` | Console/OAuth token exchange, refresh, and revocation | Allow only when required by the selected authentication flow |
+| `claude.ai`, `claude.com` | Interactive claude.ai login | Prefer to avoid in the formal noninteractive container |
+| `mcp-proxy.anthropic.com` | Claude.ai MCP connectors | Deny and disable connectors |
+| `downloads.claude.ai`, `registry.npmjs.org` | Installation, updates, or plugin dependencies | Handle during image build; deny at formal runtime |
+| Datadog intake, `raw.githubusercontent.com`, `code.claude.com`, and other optional hosts | Telemetry, error reports, release notes, or documentation lookup | Deny at formal runtime and disable nonessential traffic |
+
+The egress proxy must also reject arbitrary IP addresses, redirects to hosts outside the allowlist, and reviewer attempts to add domains. Proxy logs may retain connection metadata only and must not record authorization headers, request bodies, or model content.
+
+## Credential lifecycle
+
+Before a formal run, select a dedicated, revocable, least-privilege reviewer credential. Prefer an external secret source or `apiKeyHelper` that supplies a short-lived credential at startup, with the secret source mounted outside the bundle. Do not expose a developer's personal Claude configuration directory to the container.
+
+The run may record the credential source type and a non-secret identifier, never the secret. Afterward, revoke or expire the credential, remove the temporary configuration directory, and verify that outputs contain no token. Before any real authentication, model call, or cost, separately approve the model, budget, credential mechanism, and network allowlist.
+
+## Readiness state
+
+| Control | State | Work before formal assessment |
+| --- | --- | --- |
+| Frozen bundle and hash verification | Implemented | Use the recorded formal candidate and verify it again |
+| Read-only input, writable output, no source-repository mount | Passed a real Docker smoke test | Repeat on the final Claude image |
+| Two-phase seal/release gate | Implemented | Retain human authorization |
+| Claude Code installation and version pin | Not implemented | Build and record a pinned image |
+| Linux runtime dependencies | Not verified | Verify Claude and selected sandbox dependencies in the image |
+| Restricted network egress | Not implemented | Implement the proxy allowlist, deny rules, and redacted-log tests |
+| Dedicated credential injection and subprocess scrubbing | Not implemented | Select a secret source and prove it cannot enter inputs, logs, or outputs |
+| Nonessential connections, plugins, and connectors disabled | Not implemented | Freeze managed settings and verify actual connections |
+| Model and cost budget | Not approved | Obtain separate Security Engineer approval |
+| Formal Claude execution | Not authorized | Complete Section 8 of the approval record and authorize separately |
+
+The current conclusion is that the offline runner isolation foundation exists, but the real Claude reviewer runtime is neither ready nor authorized to execute.
+
+## Official sources
+
+- [Claude Code setup](https://code.claude.com/docs/en/setup)
+- [Claude Code authentication](https://code.claude.com/docs/en/authentication)
+- [Claude Code network configuration](https://code.claude.com/docs/en/network-config)
+- [Claude Code settings](https://code.claude.com/docs/en/settings)
+- [Claude Code sandboxing](https://code.claude.com/docs/en/sandboxing)
