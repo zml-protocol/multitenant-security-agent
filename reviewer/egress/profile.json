@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "status": "egress_foundation_implemented_not_active",
+  "image": "multitenant-security-agent/reviewer-egress:1.0",
+  "base_image": "node:22.17.0-bookworm-slim",
+  "base_image_digest": "sha256:b04ce4ae4e95b522112c2e5c52f781471a5cbc3b594527bcddedee9bc48c03a0",
+  "container_user": "10002:10002",
+  "listen_port": 3128,
+  "allowed_connect_targets": [
+    "api.anthropic.com:443"
+  ],
+  "reviewer_network_internal": true,
+  "proxy_only_egress": true,
+  "request_headers_logged": false,
+  "request_bodies_logged": false,
+  "credential_injection": "disabled",
+  "model_invocation": "disabled",
+  "active_in_reviewer_runner": false,
+  "formal_execution_authorized": false
+}

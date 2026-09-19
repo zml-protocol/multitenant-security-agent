@@ -59,7 +59,7 @@ Smoke 只执行 `claude --version` 和本地边界探测。它没有认证、模
 
 ## 网络出口边界
 
-当前 runner 的 `--network none` 适用于离线隔离验证，无法完成真实 Claude API 调用。正式运行需要一个单独实现并验证的受限出口代理。Docker 网络本身不能按域名可靠地执行 allowlist。
+当前 runner 的 `--network none` 适用于离线隔离验证，无法完成真实 Claude API 调用。[受限出口基础](reviewer-egress.md)已经独立实现并验证内部网络、代理唯一出口和域名 allowlist，但尚未接入 runner。Docker 网络负责阻断 reviewer 直连，独立代理负责执行主机 allowlist。
 
 最小主机集合取决于认证方式：
 
@@ -89,7 +89,7 @@ Smoke 只执行 `claude --version` 和本地边界探测。它没有认证、模
 | 两阶段 seal/release 门禁 | 已实现 | 维持人工授权 |
 | Claude Code 安装与版本固定 | 已实现离线镜像基础 | 正式运行前记录不可变 registry digest |
 | Linux 运行基础 | 已验证 | 已验证二进制、非 root 身份和 Docker 文件边界；内置 Bash sandbox 尚未验证 |
-| 受限网络出口 | 未实现 | 实现代理 allowlist、拒绝规则与日志脱敏测试 |
+| 受限网络出口 | 独立基础已实现并通过 smoke | 选择认证方式后确定完整 allowlist，再绑定不可变镜像并接入 runner |
 | 专用凭据注入与子进程清理 | 未实现 | 选择 secret source，验证不进入输入、日志和输出 |
 | 非必要连接、插件和 connectors 禁用 | managed settings 已固化 | 联网前验证 Claude 实际加载设置及真实连接 |
 | 模型与费用预算 | 未批准 | 由 Security Engineer 单独批准 |

@@ -96,4 +96,4 @@ python -m reviewer.runner verify --run .local/reviewer-runs/<review-run-id>
 
 验证会按当前状态检查可用的完整哈希链。准备后的 bundle、封存输出、暂存输入、授权记录或第二阶段文件有任何改动都会失败。
 
-审批记录中的正式启动门槛仍未关闭。代码、fixture 与中性 scenario 已形成冻结候选，但尚未授权正式评估。[Claude 运行时准备审计](claude-runtime.md)记录了已验证的本机能力以及固定版本 Linux 镜像、受限出口代理和专用凭据注入方面的缺口；补齐并验证这些控制需要后续单独批准。
+审批记录中的正式启动门槛仍未关闭。代码、fixture 与中性 scenario 已形成冻结候选，但尚未授权正式评估。[Claude 运行时准备审计](claude-runtime.md)记录整体状态；[受限出口基础](reviewer-egress.md)已独立通过测试，但没有接入本 runner。选择正式认证、预算并批准联网前，Docker plan 继续强制 `--network none`。

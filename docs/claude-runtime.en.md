@@ -59,7 +59,7 @@ The smoke test executes only `claude --version` and local boundary probes. It pe
 
 ## Network egress boundary
 
-The runner's current `--network none` mode is suitable for offline isolation validation but cannot make a real Claude API request. Formal execution needs a separately implemented and tested restricted egress proxy. A Docker network alone does not reliably enforce a hostname allowlist.
+The runner's current `--network none` mode is suitable for offline isolation validation but cannot make a real Claude API request. The independent [restricted egress foundation](reviewer-egress.en.md) now verifies an internal network, proxy-only egress, and a hostname allowlist, but is not connected to the runner. The Docker network blocks direct reviewer connections while the separate proxy enforces the host allowlist.
 
 The minimum host set depends on the authentication method:
 
@@ -89,7 +89,7 @@ The run may record the credential source type and a non-secret identifier, never
 | Two-phase seal/release gate | Implemented | Retain human authorization |
 | Claude Code installation and version pin | Offline image foundation implemented | Record an immutable registry digest before formal execution |
 | Linux runtime foundation | Verified | Binary, non-root identity, and Docker filesystem boundaries passed; the built-in Bash sandbox remains unverified |
-| Restricted network egress | Not implemented | Implement the proxy allowlist, deny rules, and redacted-log tests |
+| Restricted network egress | Independent foundation implemented and smoke-tested | Select authentication, finalize the complete allowlist, bind immutable images, and connect it to the runner |
 | Dedicated credential injection and subprocess scrubbing | Not implemented | Select a secret source and prove it cannot enter inputs, logs, or outputs |
 | Nonessential connections, plugins, and connectors disabled | Managed settings frozen | Verify that Claude loads them and observe actual connections before enabling egress |
 | Model and cost budget | Not approved | Obtain separate Security Engineer approval |
