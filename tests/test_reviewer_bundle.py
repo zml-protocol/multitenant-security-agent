@@ -58,7 +58,7 @@ def test_bundle_isolated_and_behavior_preserved(lab, tmp_path, label, record):
     assert reviewer_access["isolation_requirements"]["bundle_is_only_accessible_workspace"] is True
     assert reviewer_access["isolation_requirements"]["prompt_only_restriction_is_sufficient"] is False
     assert "readable_inputs" not in reviewer_access
-    assert reviewer_access["tool_access_status"] == "not_implemented_not_authorized"
+    assert reviewer_access["tool_access_status"] == "isolation_and_phase_gates_implemented_not_authorized"
 
     policy = load_bundled_policy(destination / "app" / "policy.py", record["scenario_id"])
     with TestClient(create_app(directory / "app.sqlite3", policy)) as client:

@@ -119,5 +119,6 @@ When every item is complete, change `approval_status` to `ready_for_claude_revie
 | --- | --- | --- | --- |
 | `2026-09-19T18:42:29Z` | `project_owner` | Approved AppSec requirements v1.0 (Sections 2–7) | No (initial approval) |
 | `2026-09-19T19:41:06Z` | `project_owner` | Approved bundle-only two-phase reviewer access model v2.0 | No (approved in this record) |
+| `2026-09-19T19:56:57Z` | `project_owner` | Authorized implementation of the isolated runner plan, phase 1 seal, and phase 2 release gate; Claude execution remains unauthorized | No (implementation of the approved model) |
 
 After formal approval, any change affecting actors, assets, trust boundaries, scope, expected behavior, tool access, or the finding standard requires a new entry and reapproval. A spelling-only correction that does not change meaning may be recorded as not requiring reapproval.

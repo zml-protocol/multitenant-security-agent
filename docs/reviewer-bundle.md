@@ -2,7 +2,7 @@
 
 [English](reviewer-bundle.en.md) | 中文
 
-状态：`access_model_approved_runner_pending`
+状态：`staged_runner_implemented_not_authorized`
 
 本文描述工作流一中用于 Claude 独立白盒评估的隔离输入。实现已经通过本地测试，但尚未满足 `ready_for_claude_review` 启动门槛，当前生成的 bundle 一律标记为 `draft_not_for_claude`。
 
@@ -62,7 +62,7 @@ manifest 只是 allowlist 和完整性记录，不是操作系统访问控制。
 1. Decision-path 与独立矩阵阶段：只提供当前 bundle。Claude 先提交并封存 decision path 和测试矩阵。
 2. Difference review 阶段：经 Security Engineer 明确授权后，再提供固定权限矩阵与脱敏确定性测试结果，用于比较遗漏和差异、提出补充测试、建立 evidence index 并起草 finding；不允许回写第一阶段结果。
 
-正式 `reviewer-input-manifest.json` 现已升级到 v2.0，定义 bundle-only 访问和两阶段披露边界。它会复制进每个生成的 bundle，使 reviewer 在无法访问源仓库的前提下获得已批准规则。隔离 runner 和第二阶段释放机制尚未实现；本次同步不授权启动 Claude，也不选择正式场景。
+正式 `reviewer-input-manifest.json` v2.0 定义了 bundle-only 访问和两阶段披露边界。它会复制进每个生成的 bundle，使 reviewer 在无法访问源仓库的前提下获得已批准规则。本地 runner 现已实现 bundle 校验与隔离复制、受限离线 Docker 计划、第一阶段输出封存，以及绑定完整性与人工授权记录的第二阶段释放门禁。详见 [Reviewer Runner](reviewer-runner.md)。本次实现不授权启动 Claude，也不选择正式场景。
 
 ## 已验证行为
 

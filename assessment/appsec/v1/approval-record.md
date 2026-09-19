@@ -119,5 +119,6 @@
 | --- | --- | --- | --- |
 | `2026-09-19T18:42:29Z` | `project_owner` | 批准 AppSec requirements v1.0（第 2–7 节） | 否（初始批准） |
 | `2026-09-19T19:41:06Z` | `project_owner` | 批准 bundle-only 两阶段 reviewer 访问模型 v2.0 | 否（已在本记录中批准） |
+| `2026-09-19T19:56:57Z` | `project_owner` | 授权实现隔离 runner 计划、第一阶段封存和第二阶段释放门禁；仍未授权执行 Claude | 否（实现已批准模型） |
 
 正式批准后，任何影响 actor、asset、trust boundary、scope、expected behavior、工具权限或 finding 标准的改动，都必须新增记录并重新审批。仅修正文案拼写且不改变含义时，可以记录为无需重新审批。

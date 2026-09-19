@@ -2,7 +2,7 @@
 
 [English](README.en.md) | 中文
 
-用于安全工程师面试的双工作流安全实验项目。长期目标与路线见 [docs/project-vision.md](docs/project-vision.md)，需求基线见 [spec.md](spec.md)，本阶段实现说明见 [docs/phase1.md](docs/phase1.md)，Reviewer 隔离设计见 [docs/reviewer-bundle.md](docs/reviewer-bundle.md)。
+用于安全工程师面试的双工作流安全实验项目。长期目标与路线见 [docs/project-vision.md](docs/project-vision.md)，需求基线见 [spec.md](spec.md)，本阶段实现说明见 [docs/phase1.md](docs/phase1.md)，Reviewer 隔离设计见 [docs/reviewer-bundle.md](docs/reviewer-bundle.md)，分阶段 runner 见 [docs/reviewer-runner.md](docs/reviewer-runner.md)。
 
 最终目标包含 human-in-the-loop 的白盒 AppSec AI Agent Flow，以及 Alibaba Cloud 上的 DDoS / Network Security Incident Response Flow。已实现第一阶段：FastAPI + SQLite、两个租户六个测试用户、三个 GET 接口、四种模式、独立权限矩阵、脱敏 JSON/Markdown 报告、结构化应用日志和修复复测。当前没有接入模型、阿里云、SLS 或响应执行器。
 
@@ -80,6 +80,7 @@ $env:LAB_MODE = 'same_tenant_bypass'
 - `app/policy.py`：默认安全授权实现。
 - `evaluation/`：操作者专用的中性场景与 truth mapping，不进入 reviewer bundle。
 - `reviewer/bundle.py`：构建单场景、脱敏、带完整性哈希的 reviewer bundle。
+- `reviewer/runner.py`：准备隔离阶段输入、封存第一阶段输出，并强制执行人工批准的第二阶段释放门禁。
 - `fixtures/permissions.v1.json`：独立的显式权限预期。
 - `fixtures/request-template.v1.json`：正常请求模板，不含凭据。
 - `scanner/`：固定矩阵、响应证据判定和报告。

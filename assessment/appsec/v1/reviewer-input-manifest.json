@@ -63,5 +63,5 @@
     "modify application code",
     "claim remediation success without regression evidence"
   ],
-  "tool_access_status": "not_implemented_not_authorized"
+  "tool_access_status": "isolation_and_phase_gates_implemented_not_authorized"
 }

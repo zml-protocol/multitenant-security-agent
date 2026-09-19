@@ -2,7 +2,7 @@
 
 English | [中文](reviewer-bundle.md)
 
-Status: `access_model_approved_runner_pending`
+Status: `staged_runner_implemented_not_authorized`
 
 This document describes the isolated input for Claude's independent white-box assessment in workflow 1. The implementation passes local tests but has not met the `ready_for_claude_review` start gate. Every current bundle is marked `draft_not_for_claude`.
 
@@ -62,7 +62,7 @@ The formal reviewer tool should use staged disclosure:
 1. Decision-path and independent-matrix phase: expose this bundle only. Claude submits and seals its decision path and test matrix first.
 2. Difference-review phase: after explicit Security Engineer authorization, release the fixed authorization matrix and redacted deterministic results for omission/difference comparison, supplemental test proposals, evidence indexing, and draft findings. Phase 1 output cannot be rewritten.
 
-The formal `reviewer-input-manifest.json` now defines bundle-only access and the two-phase release boundary as version 2.0. It is copied into every generated bundle so the reviewer receives the approved rules without access to the source repository. The isolated runner and phase 2 release mechanism are not implemented, and this synchronization does not authorize a Claude run or select the formal scenario.
+The formal `reviewer-input-manifest.json` defines bundle-only access and the two-phase release boundary as version 2.0. It is copied into every generated bundle so the reviewer receives the approved rules without access to the source repository. The local runner now validates and copies the bundle into an isolated phase input, produces a locked-down offline Docker plan, seals phase 1 output, and gates phase 2 release on an integrity-bound human authorization record. See [Reviewer Runner](reviewer-runner.en.md). This implementation does not authorize a Claude run or select the formal scenario.
 
 ## Verified Behavior
 

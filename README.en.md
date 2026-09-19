@@ -2,7 +2,7 @@
 
 English | [中文](README.md)
 
-This is a dual-workflow security lab for a security engineering interview. See the [project vision and roadmap](docs/project-vision.en.md), the [requirements baseline](spec.en.md), the [current phase implementation notes](docs/phase1.en.md), and the [reviewer isolation design](docs/reviewer-bundle.en.md).
+This is a dual-workflow security lab for a security engineering interview. See the [project vision and roadmap](docs/project-vision.en.md), the [requirements baseline](spec.en.md), the [current phase implementation notes](docs/phase1.en.md), the [reviewer isolation design](docs/reviewer-bundle.en.md), and the [staged reviewer runner](docs/reviewer-runner.en.md).
 
 The final goal includes a human-in-the-loop, white-box AppSec AI Agent Flow and an Alibaba Cloud DDoS / Network Security Incident Response Flow. Phase 1 is complete: FastAPI + SQLite, two tenants and six test users, three GET endpoints, four modes, an independent authorization matrix, redacted JSON/Markdown reports, structured application logs, and remediation regression testing. No model, Alibaba Cloud resource, SLS integration, or response executor is connected yet.
 
@@ -80,6 +80,7 @@ For remediation validation, stop the application, set `LAB_MODE` back to `secure
 - `app/policy.py`: the default secure authorization implementation.
 - `evaluation/`: operator-only neutral scenarios and truth mapping, excluded from reviewer bundles.
 - `reviewer/bundle.py`: builds a single-scenario, redacted reviewer bundle with integrity hashes.
+- `reviewer/runner.py`: prepares isolated phase inputs, seals phase 1 output, and enforces the human-approved phase 2 release gate.
 - `fixtures/permissions.v1.json`: independent, explicit authorization expectations.
 - `fixtures/request-template.v1.json`: a normal request template with no credentials.
 - `scanner/`: the fixed matrix, response evidence assessment, and reporting.
