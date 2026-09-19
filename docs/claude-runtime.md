@@ -90,12 +90,12 @@ Smoke 只执行 `claude --version` 和本地边界探测。它没有认证、模
 | Claude Code 安装与版本固定 | 已实现离线镜像基础 | 正式运行前记录不可变 registry digest |
 | Linux 运行基础 | 已验证 | 已验证二进制、非 root 身份和 Docker 文件边界；内置 Bash sandbox 尚未验证 |
 | 受限网络出口 | 独立基础已实现并通过 smoke | 选择认证方式后确定完整 allowlist，再绑定不可变镜像并接入 runner |
-| 专用凭据注入与子进程清理 | 未实现 | 选择 secret source，验证不进入输入、日志和输出 |
+| 专用凭据注入与子进程清理 | 专用 workspace API key 来源已提议，synthetic sentinel 本地验证已通过 | 审批后在最终容器中实现运行时注入，并重复泄漏验证 |
 | 非必要连接、插件和 connectors 禁用 | managed settings 已固化 | 联网前验证 Claude 实际加载设置及真实连接 |
-| 模型与费用预算 | 未批准 | 由 Security Engineer 单独批准 |
+| 模型与费用预算 | 固定模型与单次预算提案已实现，尚未批准 | 由 Security Engineer 单独批准，并实现外部 fail-closed 监督 |
 | 正式 Claude 执行 | 未授权 | 完成审批记录第 8 节后另行授权 |
 
-因此当前结论是：固定版本的离线 reviewer 容器基础已经实现并通过 smoke test，但受限出口、专用凭据和真实设置加载仍未验证，正式 Claude reviewer 也未获执行授权。
+因此当前结论是：固定版本的离线 reviewer 容器、独立受限出口和 synthetic credential 边界均已分别通过 smoke test；真实凭据注入、组合后的联网边界和真实设置加载仍未验证，正式 Claude reviewer 也未获执行授权。
 
 ## 官方资料
 

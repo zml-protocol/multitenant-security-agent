@@ -90,12 +90,12 @@ The run may record the credential source type and a non-secret identifier, never
 | Claude Code installation and version pin | Offline image foundation implemented | Record an immutable registry digest before formal execution |
 | Linux runtime foundation | Verified | Binary, non-root identity, and Docker filesystem boundaries passed; the built-in Bash sandbox remains unverified |
 | Restricted network egress | Independent foundation implemented and smoke-tested | Select authentication, finalize the complete allowlist, bind immutable images, and connect it to the runner |
-| Dedicated credential injection and subprocess scrubbing | Not implemented | Select a secret source and prove it cannot enter inputs, logs, or outputs |
+| Dedicated credential injection and subprocess scrubbing | A dedicated workspace API-key source is proposed and the local synthetic-sentinel check passed | Implement runtime injection in the final container after approval and repeat the leakage check |
 | Nonessential connections, plugins, and connectors disabled | Managed settings frozen | Verify that Claude loads them and observe actual connections before enabling egress |
-| Model and cost budget | Not approved | Obtain separate Security Engineer approval |
+| Model and cost budget | Fixed-model and per-run budget proposal implemented but not approved | Obtain separate Security Engineer approval and implement external fail-closed supervision |
 | Formal Claude execution | Not authorized | Complete Section 8 of the approval record and authorize separately |
 
-The current conclusion is that the pinned offline reviewer-container foundation is implemented and smoke-tested, while restricted egress, dedicated credentials, and real settings loading remain unverified, and formal Claude reviewer execution is still unauthorized.
+The pinned offline reviewer container, independent restricted egress, and synthetic credential boundary have each passed their smoke tests. Real credential injection, the combined online boundary, and real settings loading remain unverified, and formal Claude reviewer execution is still unauthorized.
 
 ## Official sources
 

@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "status": "proposed_tested_not_approved",
+  "formal_execution_authorized": false,
+  "model_invocation_enabled": false,
+  "credential": {
+    "type": "dedicated_anthropic_workspace_api_key",
+    "runtime_environment_variable": "ANTHROPIC_API_KEY",
+    "key_identifier": null,
+    "host_personal_claude_login_allowed": false,
+    "bundle_storage_allowed": false,
+    "command_line_allowed": false,
+    "image_layer_storage_allowed": false,
+    "log_or_output_storage_allowed": false,
+    "revocation_required_after_run": true
+  },
+  "model": {
+    "provider": "anthropic",
+    "model_id": "claude-sonnet-5",
+    "selection_status": "proposed_not_approved",
+    "lifecycle_recheck_required_before_run": true
+  },
+  "budget": {
+    "maximum_aggregate_input_tokens": 100000,
+    "maximum_aggregate_output_tokens": 20000,
+    "maximum_model_api_calls": 12,
+    "maximum_supplemental_tool_calls": 30,
+    "maximum_run_duration_seconds": 900,
+    "standard_input_usd_per_million_tokens": "2.00",
+    "standard_output_usd_per_million_tokens": "10.00",
+    "standard_planning_cost_usd": "0.40",
+    "maximum_approved_cost_usd": "1.00",
+    "currency": "USD",
+    "provider_workspace_spend_limit_required": true,
+    "post_run_usage_reconciliation_required": true
+  },
+  "approval": {
+    "approved": false,
+    "approved_by": null,
+    "approved_at_utc": null,
+    "approval_record": "assessment/appsec/v1/approval-record.md",
+    "approved_profile_sha256": null
+  },
+  "limitations": {
+    "claude_code_native_hard_limit_for_aggregate_tokens_and_api_calls_verified": false,
+    "local_preflight_is_a_planning_gate_not_a_provider_billing_control": true,
+    "formal_run_requires_external_observation_and_fail_closed_supervision": true
+  }
+}

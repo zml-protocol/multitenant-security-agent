@@ -2,7 +2,7 @@
 
 English | [中文](README.md)
 
-This is a dual-workflow security lab for a security engineering interview. See the [project vision and roadmap](docs/project-vision.en.md), the [requirements baseline](spec.en.md), the [current phase implementation notes](docs/phase1.en.md), the [reviewer isolation design](docs/reviewer-bundle.en.md), the [staged reviewer runner](docs/reviewer-runner.en.md), the [Claude runtime readiness audit](docs/claude-runtime.en.md), and the [restricted egress design](docs/reviewer-egress.en.md).
+This is a dual-workflow security lab for a security engineering interview. See the [project vision and roadmap](docs/project-vision.en.md), the [requirements baseline](spec.en.md), the [current phase implementation notes](docs/phase1.en.md), the [reviewer isolation design](docs/reviewer-bundle.en.md), the [staged reviewer runner](docs/reviewer-runner.en.md), the [Claude runtime readiness audit](docs/claude-runtime.en.md), the [restricted egress design](docs/reviewer-egress.en.md), and the [credential and budget gate](docs/reviewer-auth-budget.en.md).
 
 The final goal includes a human-in-the-loop, white-box AppSec AI Agent Flow and an Alibaba Cloud DDoS / Network Security Incident Response Flow. Phase 1 is complete: FastAPI + SQLite, two tenants and six test users, three GET endpoints, four modes, an independent authorization matrix, redacted JSON/Markdown reports, structured application logs, and remediation regression testing. No model, Alibaba Cloud resource, SLS integration, or response executor is connected yet.
 
@@ -83,10 +83,11 @@ For remediation validation, stop the application, set `LAB_MODE` back to `secure
 - `reviewer/runner.py`: prepares isolated phase inputs, seals phase 1 output, and enforces the human-approved phase 2 release gate.
 - `reviewer/runtime/`: defines the Linux reviewer image with a pinned Claude Code version, base-image digest, npm integrity lock, and enforced managed settings.
 - `reviewer/egress/`: defines the inactive, default-deny, proxy-only egress foundation with a fixed `api.anthropic.com:443` allowlist.
+- `reviewer/auth_budget/`: defines the unapproved dedicated API-key source, fixed model, budget approval fields, and synthetic-sentinel leakage checks.
 - `fixtures/permissions.v1.json`: independent, explicit authorization expectations.
 - `fixtures/request-template.v1.json`: a normal request template with no credentials.
 - `scanner/`: the fixed matrix, response evidence assessment, and reporting.
 - `tests/`: full matrix tests, mode isolation, remediation retests, error/timeout fixtures, log correlation, and redaction.
-- `scripts/demo.py`: in-process complete demo; `scripts/smoke.py`: real HTTP verification; `scripts/reviewer_runtime_smoke.py`: credential-free, offline reviewer-container isolation verification; `scripts/reviewer_egress_smoke.py`: proxy allowlist and direct-egress blocking verification.
+- `scripts/demo.py`: in-process complete demo; `scripts/smoke.py`: real HTTP verification; `scripts/reviewer_runtime_smoke.py`: credential-free, offline reviewer-container isolation verification; `scripts/reviewer_egress_smoke.py`: proxy allowlist and direct-egress blocking verification; `scripts/reviewer_auth_budget_smoke.py`: network-free, cost-free synthetic credential boundary verification.
 
 `.local/`, databases, tokens, runtime logs, and local reports are ignored by Git. Raw responses are not persisted; reports retain only user/tenant test IDs, matched field names, and evidence references. The current authentication scheme is for a local lab and is not a production identity platform.

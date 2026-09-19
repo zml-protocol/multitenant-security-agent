@@ -63,6 +63,6 @@ Smoke test 使用已构建的 reviewer 镜像作为探针，并验证：
 - 当前 reviewer Docker plan 没有启用该代理，仍为 `--network none`。
 - 尚未选择 API key、OAuth 或其他正式认证方式。
 - 尚未验证真实 Claude 会话读取 managed settings 或只使用代理。
-- 尚未实现模型、输入/输出 token、工具调用次数和费用预算。
+- 模型、输入/输出 token、工具调用次数和费用预算提案已经固化但尚未批准，也尚未接入可硬停止的运行监督器。
 - OAuth 流程所需的其他 Anthropic 主机不在 allowlist；任何新增主机都需要单独审核和测试。
 - 正式运行前必须把 reviewer 与代理镜像改为不可变 registry digest，并把准确网络、凭据和预算绑定到人工批准记录。

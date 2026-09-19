@@ -2,3 +2,4 @@
 Dockerfile text eol=lf
 reviewer/runtime/** text eol=lf
 reviewer/egress/** text eol=lf
+reviewer/auth_budget/** text eol=lf

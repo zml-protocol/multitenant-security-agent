@@ -63,6 +63,6 @@ Results are written under the Git-ignored `.local/reviewer-egress/`. The most re
 - The current reviewer Docker plan does not enable this proxy and remains on `--network none`.
 - API key, OAuth, or another formal authentication method has not been selected.
 - No real Claude session has verified that managed settings load or that Claude uses only the proxy.
-- Model, input/output token, tool-call, and spending budgets are not implemented.
+- The model, input/output-token, tool-call, and cost-budget proposal is frozen but remains unapproved and is not yet connected to a supervisor that can stop the run.
 - Additional Anthropic hosts needed for OAuth are outside the allowlist; every added host requires separate review and testing.
 - Before formal execution, reviewer and proxy images must use immutable registry digests, and the exact network, credential, and budget must be bound to a human approval record.
