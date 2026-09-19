@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "operator_only": true,
+  "scenarios": {
+    "secure": {
+      "scenario_id": "scenario-7f3a",
+      "module": "evaluation.scenarios.s_7f3a",
+      "expected_confirmed_violations": 0
+    },
+    "same_tenant_bypass": {
+      "scenario_id": "scenario-b814",
+      "module": "evaluation.scenarios.s_b814",
+      "expected_confirmed_violations": 8
+    },
+    "cross_tenant_bypass": {
+      "scenario_id": "scenario-c29e",
+      "module": "evaluation.scenarios.s_c29e",
+      "expected_confirmed_violations": 18
+    },
+    "list_role_bypass": {
+      "scenario_id": "scenario-e506",
+      "module": "evaluation.scenarios.s_e506",
+      "expected_confirmed_violations": 4
+    }
+  }
+}

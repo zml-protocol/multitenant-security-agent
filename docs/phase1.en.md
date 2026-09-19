@@ -46,7 +46,7 @@ Interview explanation: “A 200 is only a transport result; an authorization iss
 ## Verification Record and Boundaries
 
 - Environment: Windows, Python 3.13.5; exact dependency versions are recorded in `requirements.txt`.
-- Automated tests: 34 passing tests covering the complete matrix, all three vulnerable modes and secure retests, authorization bypass counterexamples, template boundary enforcement, abnormal result classification, log correlation, and redaction.
+- Automated tests: 39 passing tests covering the complete matrix, all three vulnerable modes and secure retests, authorization bypass counterexamples, template boundary enforcement, abnormal result classification, log correlation, redaction, and reviewer bundle isolation.
 - Demo evidence: `reports/local/demo/comparison.json` and each scenario report. All scenarios use one fixture ID; secure mode has 0 violations, the vulnerable modes have 8/18/4, and all three remediation retests return to 0.
 - Real HTTP evidence: `reports/local/http-secure/report.json` records 54 passing checks: 48 matrix cases plus 6 authentication cases. Logs are in `.local/smoke-access.log`.
 - Starlette TestClient currently emits two third-party deprecation warnings about HTTPX/AnyIO. Functional tests pass; the warnings are not hidden.

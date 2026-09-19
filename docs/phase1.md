@@ -46,7 +46,7 @@
 ## 验证记录与边界
 
 - 环境：Windows，Python 3.13.5，依赖精确版本记录于 `requirements.txt`。
-- 自动化测试：34 项通过，覆盖完整矩阵、三种漏洞及安全复测、权限绕过反例、模板越界、异常判定、日志关联与脱敏。
+- 自动化测试：39 项通过，覆盖完整矩阵、三种漏洞及安全复测、权限绕过反例、模板越界、异常判定、日志关联、脱敏和 reviewer bundle 隔离。
 - 演示证据：`reports/local/demo/comparison.json` 及各场景报告；同一个 fixture_id，安全模式 0 个违规，三种漏洞分别 8/18/4，三次修复复测都为 0。
 - 真实 HTTP 证据：`reports/local/http-secure/report.json`，54 项通过，48 个矩阵用例 + 6 个认证用例；日志见 `.local/smoke-access.log`。
 - 第三方 Starlette 的 TestClient 对 HTTPX/AnyIO 有两条弃用警告，当前功能测试通过；未通过屏蔽警告掩盖问题。

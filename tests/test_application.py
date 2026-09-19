@@ -7,8 +7,9 @@ import uuid
 from fastapi.testclient import TestClient
 import pytest
 
-from app.main import create_app, MODES
+from app.main import create_app
 from app.seed import initialize
+from evaluation.operator import catalog, load_policy
 from scanner.run import run_matrix
 
 
@@ -16,7 +17,7 @@ from scanner.run import run_matrix
                                        ("cross_tenant_bypass", 18), ("list_role_bypass", 4)])
 def test_complete_matrix_and_independent_modes(lab, mode, count):
     path, fixture, credentials = lab
-    with TestClient(create_app(path / "app.sqlite3", mode)) as client:
+    with TestClient(create_app(path / "app.sqlite3", load_policy(mode))) as client:
         report = run_matrix(client, fixture, credentials, interval=0)
     assert report["summary"]["matrix_executed"] == 48
     assert report["summary"]["authentication_executed"] == 6
@@ -37,7 +38,7 @@ def test_complete_matrix_and_independent_modes(lab, mode, count):
     assert {r["case_id"] for r in report["results"] if r["outcome"] == "confirmed_violation"} == expected_cases
     assert all(r["passed"] for r in report["results"] if r["group"] == "authentication")
     if mode != "secure":
-        with TestClient(create_app(path / "app.sqlite3", "secure")) as client:
+        with TestClient(create_app(path / "app.sqlite3", load_policy("secure"))) as client:
             fixed = run_matrix(client, fixture, credentials, interval=0)
         assert fixed["fixture_id"] == report["fixture_id"]
         assert fixed["summary"]["passed"] == 54
@@ -62,7 +63,7 @@ def test_credentials_random_but_snapshot_reproducible(lab, tmp_path):
     assert (path / "app.sqlite3").read_bytes() == before
 
 
-@pytest.mark.parametrize("mode", MODES)
+@pytest.mark.parametrize("mode", tuple(catalog()))
 def test_spoofing_malformed_auth_and_read_only(lab, mode):
     path, fixture, credentials = lab
     users = {u["alias"]: u for u in fixture["users"]}
@@ -70,7 +71,7 @@ def test_spoofing_malformed_auth_and_read_only(lab, mode):
                "X-Tenant-ID": "tenant_b", "X-Role": "admin", "X-User-ID": users["b_admin"]["user_id"],
                "X-Lab-Mode": "cross_tenant_bypass"}
     before = (path / "app.sqlite3").read_bytes()
-    with TestClient(create_app(path / "app.sqlite3", mode)) as client:
+    with TestClient(create_app(path / "app.sqlite3", load_policy(mode))) as client:
         response = client.get("/api/me?mode=cross_tenant_bypass", headers=headers)
         assert response.json()["user_id"] == users["a_user1"]["user_id"]
         assert response.json()["role"] == "user"
@@ -101,16 +102,18 @@ def test_fail_closed_config_and_default(lab, monkeypatch):
     path, _, _ = lab
     monkeypatch.delenv("LAB_MODE", raising=False)
     assert len(create_app(path / "app.sqlite3").routes) == 3
-    with pytest.raises(ValueError, match="Unknown LAB_MODE"):
-        create_app(path / "app.sqlite3", "typo")
+    with pytest.raises(ValueError, match="Unknown evaluation scenario"):
+        load_policy("typo")
+    with pytest.raises(ValueError, match="Authorization policy"):
+        create_app(path / "app.sqlite3", object())
     with pytest.raises(ValueError, match="Database missing"):
-        create_app(path / "missing.sqlite3", "secure")
+        create_app(path / "missing.sqlite3")
 
 
 def test_log_correlation_and_no_secrets(lab, caplog):
     path, fixture, credentials = lab
     with caplog.at_level(logging.INFO, logger="lab.access"):
-        with TestClient(create_app(path / "app.sqlite3", "secure")) as client:
+        with TestClient(create_app(path / "app.sqlite3")) as client:
             report = run_matrix(client, fixture, credentials, interval=0)
             client.get("/api/users/untrusted-secret?token=untrusted-secret",
                        headers={"X-Request-ID": "untrusted-secret", "X-Run-ID": "untrusted-secret"})

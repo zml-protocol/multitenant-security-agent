@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.main import create_app
+from evaluation.operator import catalog, load_policy
 from scanner.run import run_matrix, write_report
 
 
@@ -16,12 +17,13 @@ def main():
     args = parser.parse_args()
     fixture = json.loads((args.directory / "fixture.json").read_text(encoding="utf-8"))
     credentials = json.loads((args.directory / "credentials.json").read_text(encoding="utf-8"))
-    scenarios = [("secure", "secure", 0)]
-    for mode, expected in (("same_tenant_bypass", 8), ("cross_tenant_bypass", 18), ("list_role_bypass", 4)):
-        scenarios.extend([(mode, mode, expected), (f"{mode}_fixed", "secure", 0)])
+    truth = catalog()
+    scenarios = [("secure", "secure", truth["secure"]["expected_confirmed_violations"])]
+    for label in ("same_tenant_bypass", "cross_tenant_bypass", "list_role_bypass"):
+        scenarios.extend([(label, label, truth[label]["expected_confirmed_violations"]), (f"{label}_fixed", "secure", 0)])
     comparisons = []
     for label, mode, expected in scenarios:
-        with TestClient(create_app(args.directory / "app.sqlite3", mode)) as client:
+        with TestClient(create_app(args.directory / "app.sqlite3", load_policy(mode))) as client:
             report = run_matrix(client, fixture, credentials, interval=0)
         report["transport"] = "in_process_testclient"
         write_report(report, args.output / label)

@@ -71,9 +71,11 @@
 
 ## 5. Claude Reviewer 权限与职责分离
 
-- [x] Claude 可以读取 `reviewer-input-manifest.json` 的 `readable_inputs`。
+- [x] 第一阶段中，Claude 只能读取已冻结生成 bundle 的 `readable_files`；该 bundle 是其唯一可访问工作区。
+- [x] Claude 无法访问源仓库及其父目录；manifest allowlist 由执行环境强制实施，不能只依赖 prompt 约束。
 - [x] Claude 不能读取原始 token、SQLite 数据库、`.env`、历史本地报告或操作者场景答案。
 - [x] 第一轮不向 Claude 提供现有测试代码和漏洞 truth label，避免把现成答案当作独立评审结果。
+- [x] 只有第一阶段输出已封存且 Security Engineer 明确授权第二阶段后，才释放固定权限矩阵和脱敏确定性结果；之后不得回写第一阶段输出。
 - [x] Claude 可以追踪代码路径、提出和执行受限 negative tests、收集证据并起草 finding。
 - [x] Claude 不能修改安全需求、应用代码、最终 finding 状态或严重性。
 - [x] Codex 负责实现和修复，但不能把应用授权函数作为独立 oracle，也不能批准自己的修复。
@@ -116,5 +118,6 @@
 | UTC 时间 | 修改人 | 变更 | 是否需要重新审批 |
 | --- | --- | --- | --- |
 | `2026-09-19T18:42:29Z` | `project_owner` | 批准 AppSec requirements v1.0（第 2–7 节） | 否（初始批准） |
+| `2026-09-19T19:41:06Z` | `project_owner` | 批准 bundle-only 两阶段 reviewer 访问模型 v2.0 | 否（已在本记录中批准） |
 
 正式批准后，任何影响 actor、asset、trust boundary、scope、expected behavior、工具权限或 finding 标准的改动，都必须新增记录并重新审批。仅修正文案拼写且不改变含义时，可以记录为无需重新审批。

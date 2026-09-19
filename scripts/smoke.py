@@ -20,7 +20,7 @@ def main():
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 8000))
     log_path = directory / "smoke-access.log"
-    env = {**os.environ, "LAB_MODE": "secure", "LAB_DB": str((directory / "app.sqlite3").resolve())}
+    env = {**os.environ, "LAB_SCENARIO": "scenario-7f3a", "LAB_DB": str((directory / "app.sqlite3").resolve())}
     with log_path.open("w", encoding="utf-8") as log:
         process = subprocess.Popen([sys.executable, "-m", "app.serve"], env=env, stdout=log, stderr=log)
         try:

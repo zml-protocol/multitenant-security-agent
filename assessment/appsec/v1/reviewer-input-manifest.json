@@ -1,32 +1,58 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "status": "requirements_approved",
   "reviewer": "claude",
-  "readable_inputs": [
-    "assessment/appsec/v1/assessment-brief.md",
-    "assessment/appsec/v1/security-requirements.json",
-    "app/main.py",
-    "app/seed.py",
-    "fixtures/permissions.v1.json",
-    "fixtures/request-template.v1.json",
-    "scanner/assess.py",
-    "scanner/matrix.py",
-    "scanner/run.py"
+  "access_model": "generated_bundle_only",
+  "approved_access_change": {
+    "approved_by": "project_owner",
+    "approved_at_utc": "2026-09-19T19:41:06Z"
+  },
+  "isolation_requirements": {
+    "bundle_is_only_accessible_workspace": true,
+    "source_repository_and_parent_are_inaccessible": true,
+    "bundle_manifest_readable_files_is_enforced_allowlist": true,
+    "prompt_only_restriction_is_sufficient": false
+  },
+  "review_phases": [
+    {
+      "phase": "decision_path_and_independent_matrix",
+      "input_source": "bundle-manifest.json readable_files",
+      "source_repository_access": false,
+      "required_outputs": [
+        "authentication_authorization_decision_path",
+        "independent_test_matrix",
+        "limitations_and_unexecuted_tests"
+      ],
+      "seal_outputs_before_next_phase": true
+    },
+    {
+      "phase": "difference_review",
+      "release_conditions": [
+        "phase 1 outputs are persisted and immutable",
+        "Security Engineer explicitly authorizes phase 2"
+      ],
+      "additional_inputs": [
+        "fixed authorization matrix",
+        "redacted deterministic result summary and evidence index"
+      ],
+      "required_outputs": [
+        "matrix_difference_review",
+        "proposed_supplemental_negative_tests",
+        "evidence_gaps",
+        "evidence_index",
+        "draft_findings"
+      ],
+      "may_modify_phase_1_outputs": false
+    }
   ],
   "forbidden_inputs": [
-    ".local/credentials.json",
-    ".local/app.sqlite3",
+    "raw credentials",
+    "SQLite databases",
     ".env",
-    "reports/local/",
-    "operator scenario ground-truth labels"
-  ],
-  "required_outputs": [
-    "authentication_authorization_decision_path",
-    "independent_test_matrix",
-    "matrix_difference_review",
-    "evidence_index",
-    "draft_findings",
-    "limitations_and_unexecuted_tests"
+    "operator scenario mappings or ground-truth labels",
+    "other scenario implementations",
+    "historical raw reports or responses",
+    "source repository and parent directories"
   ],
   "reviewer_may_not": [
     "change security requirements",
@@ -36,5 +62,6 @@
     "approve its own finding or severity",
     "modify application code",
     "claim remediation success without regression evidence"
-  ]
+  ],
+  "tool_access_status": "not_implemented_not_authorized"
 }

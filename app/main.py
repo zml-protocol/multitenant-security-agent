@@ -10,8 +10,9 @@ import uuid
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 
+from app import policy as default_policy
 
-MODES = ("secure", "same_tenant_bypass", "cross_tenant_bypass", "list_role_bypass")
+
 FIELDS = ("user_id", "tenant_id", "role", "name", "email", "phone")
 logger = logging.getLogger("lab.access")
 
@@ -23,10 +24,10 @@ def correlation_id(value):
         return str(uuid.uuid4())
 
 
-def create_app(db_path=None, mode=None):
-    mode = mode if mode is not None else os.getenv("LAB_MODE", "secure")
-    if mode not in MODES:
-        raise ValueError(f"Unknown LAB_MODE; choose one of {MODES}")
+def create_app(db_path=None, policy=None):
+    policy = policy or default_policy
+    if not callable(getattr(policy, "authorize_list", None)) or not callable(getattr(policy, "authorize_detail", None)):
+        raise ValueError("Authorization policy must provide authorize_list and authorize_detail")
     path = Path(db_path or os.getenv("LAB_DB", ".local/app.sqlite3")).resolve()
     if not path.is_file():
         raise ValueError("Database missing; run python -m app.seed first.")
@@ -100,9 +101,10 @@ def create_app(db_path=None, mode=None):
 
     @api.get("/api/users")
     def users(request: Request, actor=Depends(authenticate)):
-        if actor["role"] != "admin" and mode != "list_role_bypass":
-            deny(request, 403, "admin_required")
-        allow(request, "tenant_filtered_list")
+        permitted, reason = policy.authorize_list(actor)
+        if not permitted:
+            deny(request, 403, reason)
+        allow(request, reason)
         return [public(user) for user in query("SELECT * FROM users WHERE tenant_id = ? ORDER BY alias", (actor["tenant_id"],))]
 
     @api.get("/api/users/{user_id}")
@@ -112,16 +114,10 @@ def create_app(db_path=None, mode=None):
             deny(request, 404, "unknown_user")
         target = rows[0]
         request.state.target_user_id = target["user_id"]
-        if actor["tenant_id"] != target["tenant_id"]:
-            if mode != "cross_tenant_bypass":
-                deny(request, 403, "tenant_boundary")
-            allow(request, "lab_cross_tenant_bypass")
-        elif actor["user_id"] == target["user_id"] or actor["role"] == "admin":
-            allow(request, "self_or_tenant_admin")
-        elif mode == "same_tenant_bypass":
-            allow(request, "lab_same_tenant_bypass")
-        else:
-            deny(request, 403, "owner_required")
+        permitted, reason = policy.authorize_detail(actor, target)
+        if not permitted:
+            deny(request, 403, reason)
+        allow(request, reason)
         return public(target)
 
     return api

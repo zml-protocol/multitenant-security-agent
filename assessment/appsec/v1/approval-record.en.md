@@ -71,9 +71,11 @@ Change each decision from `pending` to `approved` or `change_requested`. For `ch
 
 ## 5. Claude Reviewer Access and Separation of Duties
 
-- [x] Claude may read the `readable_inputs` in `reviewer-input-manifest.json`.
+- [x] In phase 1, Claude may read only the `readable_files` in the frozen generated bundle; the bundle is its only accessible workspace.
+- [x] The source repository and its parent directories are inaccessible to Claude, and the manifest allowlist is enforced by the execution environment rather than by prompt instructions alone.
 - [x] Claude cannot read raw tokens, the SQLite database, `.env`, historical local reports, or operator scenario answers.
 - [x] Existing test code and vulnerability truth labels are withheld in the first pass so Claude cannot treat an existing answer as independent review work.
+- [x] The fixed authorization matrix and redacted deterministic results are released only after phase 1 outputs are sealed and the Security Engineer explicitly authorizes phase 2; phase 1 outputs cannot then be rewritten.
 - [x] Claude may trace code paths, propose and execute bounded negative tests, collect evidence, and draft findings.
 - [x] Claude cannot modify security requirements, application code, final finding status, or severity.
 - [x] Codex implements and remediates but cannot use the application authorization function as an independent oracle or approve its own fix.
@@ -116,5 +118,6 @@ When every item is complete, change `approval_status` to `ready_for_claude_revie
 | UTC time | Changed by | Change | Reapproval required? |
 | --- | --- | --- | --- |
 | `2026-09-19T18:42:29Z` | `project_owner` | Approved AppSec requirements v1.0 (Sections 2–7) | No (initial approval) |
+| `2026-09-19T19:41:06Z` | `project_owner` | Approved bundle-only two-phase reviewer access model v2.0 | No (approved in this record) |
 
 After formal approval, any change affecting actors, assets, trust boundaries, scope, expected behavior, tool access, or the finding standard requires a new entry and reapproval. A spelling-only correction that does not change meaning may be recorded as not requiring reapproval.
