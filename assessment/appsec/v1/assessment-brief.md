@@ -2,7 +2,7 @@
 
 [English](assessment-brief.en.md) | 中文
 
-状态：`draft_pending_security_engineer_approval`
+状态：`requirements_approved`
 
 所有者：Security Engineer（项目所有者）
 
@@ -10,7 +10,7 @@ Reviewer：Claude（独立白盒 reviewer）
 
 Implementer：Codex
 
-本文件是工作流一的人工输入草案。Security Engineer 批准前，Claude 可以指出歧义，但不能擅自修改安全需求或把草案当作最终风险结论。
+本文件及关联安全需求已由 Security Engineer 批准。Claude 仍不得开始正式评估，直到 [approval-record.md](approval-record.md) 的代码、fixture 和场景冻结条件全部满足，状态变为 `ready_for_claude_review`。Claude 不能擅自修改安全需求，也不能把 reviewer 输出当作最终风险结论。
 
 ## 1. 业务背景
 
@@ -143,11 +143,11 @@ Codex 应在 finding 获确认后提交：最小修复、针对根因的测试�
 
 在开始 Claude 正式评估前，Security Engineer 需要确认：
 
-- [ ] 业务描述、actor、asset 和数据分类准确。
-- [ ] 三条接口及明确的范围外项目准确。
-- [ ] `security-requirements.json` 中每个需求和 expected behavior 准确。
-- [ ] 允许 Claude 读取的代码与文档清单准确。
-- [ ] 目标、速率、凭据隔离和证据保留规则可接受。
+- [x] 业务描述、actor、asset 和数据分类准确。
+- [x] 三条接口及明确的范围外项目准确。
+- [x] `security-requirements.json` 中每个需求和 expected behavior 准确。
+- [x] 允许 Claude 读取的代码与文档清单准确。
+- [x] 目标、速率、凭据隔离和证据保留规则可接受。
 - [ ] 当前评估场景已冻结，评估期间不修改代码或 fixture。
 
-批准记录应包含 approver、UTC 时间、Git commit 和 requirement version。当前工作区尚未提交，因此本草案不能标记为正式批准。
+需求批准记录已经包含 approver、UTC 时间和 requirement version。正式评估使用的 Git commit、fixture ID 和中性 scenario ID 尚未冻结，因此当前状态仍不是 `ready_for_claude_review`。

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "status": "draft_pending_security_engineer_approval",
+  "status": "requirements_approved",
   "reviewer": "claude",
   "readable_inputs": [
     "assessment/appsec/v1/assessment-brief.md",

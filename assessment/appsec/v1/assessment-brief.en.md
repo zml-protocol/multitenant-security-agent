@@ -2,7 +2,7 @@
 
 English | [中文](assessment-brief.md)
 
-Status: `draft_pending_security_engineer_approval`
+Status: `requirements_approved`
 
 Owner: Security Engineer (project owner)
 
@@ -10,7 +10,7 @@ Reviewer: Claude (independent white-box reviewer)
 
 Implementer: Codex
 
-This document is a draft human input for workflow 1. Before Security Engineer approval, Claude may identify ambiguity but may not change the security requirements or treat the draft as a final risk decision.
+This document and its associated security requirements have been approved by the Security Engineer. Claude still may not begin a formal assessment until the code, fixture, and scenario freeze conditions in [approval-record.en.md](approval-record.en.md) are complete and the status becomes `ready_for_claude_review`. Claude may not change the security requirements or treat reviewer output as a final risk decision.
 
 ## 1. Business Context
 
@@ -143,11 +143,11 @@ Record the formal decision in [approval-record.en.md](approval-record.en.md). Th
 
 Before a formal Claude assessment starts, the Security Engineer must confirm:
 
-- [ ] The business description, actors, assets, and data classifications are accurate.
-- [ ] The three endpoints and explicit exclusions are accurate.
-- [ ] Every requirement and expected behavior in `security-requirements.json` is accurate.
-- [ ] The list of code and documents Claude may read is accurate.
-- [ ] The target, rate, credential isolation, and evidence retention rules are acceptable.
+- [x] The business description, actors, assets, and data classifications are accurate.
+- [x] The three endpoints and explicit exclusions are accurate.
+- [x] Every requirement and expected behavior in `security-requirements.json` is accurate.
+- [x] The list of code and documents Claude may read is accurate.
+- [x] The target, rate, credential isolation, and evidence retention rules are acceptable.
 - [ ] The assessment scenario is frozen and neither code nor fixture will change during review.
 
-The approval record must contain the approver, UTC timestamp, Git commit, and requirement version. The current worktree has not been committed, so this draft cannot yet be marked formally approved.
+The requirements approval record now contains the approver, UTC timestamp, and requirement version. The Git commit used for formal assessment, fixture ID, and neutral scenario ID are not yet frozen, so the current status is not `ready_for_claude_review`.
