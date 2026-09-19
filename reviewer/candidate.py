@@ -27,6 +27,8 @@ EXPECTED = {
     "requirement_version": "appsec-v1.0",
 }
 CONTROL_FILES = (
+    "reviewer/auth_budget/gate.py",
+    "reviewer/start_approval.py",
     "reviewer/execution/controller.py",
     "reviewer/runtime/Dockerfile",
     "reviewer/runtime/managed-settings.json",
@@ -149,7 +151,8 @@ def main() -> int:
         args.bundle, args.fixture_directory, args.runtime_image_id, args.egress_image_id
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(attestation, indent=2) + "\n", encoding="utf-8")
+    with args.output.open("w", encoding="utf-8", newline="\n") as output:
+        output.write(json.dumps(attestation, indent=2) + "\n")
     print(json.dumps(attestation, indent=2))
     return 0
 

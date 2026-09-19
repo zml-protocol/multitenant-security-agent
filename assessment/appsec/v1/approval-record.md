@@ -25,9 +25,12 @@
 | assessment_scenario_id | `scenario-7f3a` |
 | candidate_bundle_id | `bundle-6a1a247aca19153c0d22` |
 | candidate_generated_at_utc | `2026-09-19T20:44:40.966113Z` |
-| candidate_validated_at_utc | `2026-09-19T22:38:01.535170Z` |
+| candidate_validated_at_utc | `2026-09-19T22:54:07.417730Z` |
 | candidate_status | `validated_waiting_formal_start_approval` |
 | candidate_attestation | `formal-candidate-attestation.json` |
+| candidate_attestation_sha256 | `8a2d419e75754557c8ef61e03dd52b8acd8882d92d9bd53bde764b73e86272bb` |
+| formal_start_approval_package | `formal-start-approval-package.json` |
+| formal_start_approval_package_sha256 | `fe0b63ffdd00aa5c3b7d44f95615e2aef7cc7570092fe7eefe4add17c8f0059b` |
 | bundle_manifest_sha256 | `69049b3e03d58c6742bcd475bdc090465aef3b510c2f6ae4134efad3507fc7be` |
 | approved_auth_budget_subject_sha256 | `a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4` |
 
@@ -131,6 +134,8 @@ git ls-remote origin refs/heads/assessment/v1-vulnerable refs/tags/appsec-v1-vul
 
 ## 8. 正式评估启动门槛
 
+最终启动批准包已经准备完成，见 [说明](../../../docs/formal-start-approval.md)和 `formal-start-approval-package.json`。批准包仍为 `prepared_not_approved`，以下两项仍须由 Security Engineer 明确确认。
+
 - [x] 当前 requirement version 已去掉 `-draft`，JSON 与本记录一致。
 - [x] 评估代码已冻结，并填写了完整 Git commit SHA。
 - [x] 评估 fixture 已冻结，并填写了 fixture ID。
@@ -162,5 +167,6 @@ git ls-remote origin refs/heads/assessment/v1-vulnerable refs/tags/appsec-v1-vul
 | `2026-09-19T22:33:53Z` | `codex` | 使用修复后的 reviewer image `sha256:d496…642a` 重新生成正式候选 attestation；旧 attestation 被替换，正式启动状态不变 | 否（候选重新绑定） |
 | `2026-09-19T22:37:07Z` | `codex` | 在固定命令中显式禁止 MCP、slash commands 和 Chrome，并重新绑定最终 command hash；正式执行仍未授权 | 否（执行面收紧与候选重新绑定） |
 | `2026-09-19T22:38:01Z` | `codex` | 将 controller、runtime wrapper/settings 和 egress proxy 的逐文件 SHA-256 加入 attestation，绑定未提交工作区中的准确控制面实现 | 否（候选完整性强化） |
+| `2026-09-19T22:55:58Z` | `codex` | 准备最终启动批准包，绑定候选证明、固定预算和 14 个原子开关变更；补充批准状态一致性校验、跨平台 LF 哈希稳定性和官方 Workspace/key 操作说明，所有开关仍关闭 | 否（只准备批准对象，未授权或执行模型） |
 
 正式批准后，任何影响 actor、asset、trust boundary、scope、expected behavior、工具权限或 finding 标准的改动，都必须新增记录并重新审批。仅修正文案拼写且不改变含义时，可以记录为无需重新审批。

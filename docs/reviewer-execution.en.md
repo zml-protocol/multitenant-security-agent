@@ -60,6 +60,8 @@ Formal execution still requires:
 - one atomic binding of the start gate and runtime, egress, execution, and auth execution switches to the approved attestation; and
 - registry digests instead of local image IDs before cloud deployment.
 
+The [final start approval package](formal-start-approval.en.md) now consolidates these decisions, exact switch transitions, and Anthropic Console steps. That package remains unapproved.
+
 ## Official sources
 
 - [Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference)

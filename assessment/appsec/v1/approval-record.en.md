@@ -25,9 +25,12 @@ This is the single formal sign-off location for workflow 1. Read the linked sour
 | assessment_scenario_id | `scenario-7f3a` |
 | candidate_bundle_id | `bundle-6a1a247aca19153c0d22` |
 | candidate_generated_at_utc | `2026-09-19T20:44:40.966113Z` |
-| candidate_validated_at_utc | `2026-09-19T22:38:01.535170Z` |
+| candidate_validated_at_utc | `2026-09-19T22:54:07.417730Z` |
 | candidate_status | `validated_waiting_formal_start_approval` |
 | candidate_attestation | `formal-candidate-attestation.json` |
+| candidate_attestation_sha256 | `8a2d419e75754557c8ef61e03dd52b8acd8882d92d9bd53bde764b73e86272bb` |
+| formal_start_approval_package | `formal-start-approval-package.json` |
+| formal_start_approval_package_sha256 | `fe0b63ffdd00aa5c3b7d44f95615e2aef7cc7570092fe7eefe4add17c8f0059b` |
 | bundle_manifest_sha256 | `69049b3e03d58c6742bcd475bdc090465aef3b510c2f6ae4134efad3507fc7be` |
 | approved_auth_budget_subject_sha256 | `a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4` |
 
@@ -131,6 +134,8 @@ After Sections 2–7 are complete, change `approval_status` to `requirements_app
 
 ## 8. Formal Assessment Start Gate
 
+The final start approval package is prepared; see its [guide](../../../docs/formal-start-approval.en.md) and `formal-start-approval-package.json`. The package remains `prepared_not_approved`, and the Security Engineer must explicitly decide the two remaining items below.
+
 - [x] The requirement version no longer contains `-draft`, and the JSON matches this record.
 - [x] Assessment code is frozen and the full Git commit SHA is recorded.
 - [x] The assessment fixture is frozen and its fixture ID is recorded.
@@ -162,5 +167,6 @@ When every item is complete, change `approval_status` to `ready_for_claude_revie
 | `2026-09-19T22:33:53Z` | `codex` | Regenerated the formal candidate attestation against repaired reviewer image `sha256:d496…642a`; the previous attestation was replaced and formal-start status did not change | No (candidate rebinding) |
 | `2026-09-19T22:37:07Z` | `codex` | Explicitly disabled MCP, slash commands, and Chrome in the fixed command, then rebound the final command hash; formal execution remains unauthorized | No (execution-surface reduction and candidate rebinding) |
 | `2026-09-19T22:38:01Z` | `codex` | Added per-file SHA-256 values for the controller, runtime wrapper/settings, and egress proxy to the attestation, binding the exact control-plane implementation in the uncommitted workspace | No (candidate-integrity strengthening) |
+| `2026-09-19T22:55:58Z` | `codex` | Prepared the final start approval package, binding the candidate attestation, fixed budget, and 14 atomic switch changes; added approval-state consistency validation, cross-platform LF hash stability, and official Workspace/key instructions while leaving every switch closed | No (approval subject preparation only; no model authorization or execution) |
 
 After formal approval, any change affecting actors, assets, trust boundaries, scope, expected behavior, tool access, or the finding standard requires a new entry and reapproval. A spelling-only correction that does not change meaning may be recorded as not requiring reapproval.

@@ -54,8 +54,17 @@ def test_profile_rejects_premature_authorization():
     profile = read_profile()
     profile["formal_execution_authorized"] = True
 
-    with pytest.raises(ValueError, match="must not authorize"):
+    with pytest.raises(ValueError, match="status and formal authorization must agree"):
         validate_profile(profile)
+
+
+def test_profile_accepts_only_a_consistent_future_authorized_state():
+    profile = read_profile()
+    profile["status"] = "formally_authorized"
+    profile["formal_execution_authorized"] = True
+    profile["model_invocation_enabled"] = True
+
+    validate_profile(profile)
 
 
 def test_synthetic_smoke_leaves_no_sentinel_in_outputs(tmp_path: Path):

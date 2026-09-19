@@ -5,5 +5,16 @@
   "approved_by": null,
   "approved_at_utc": null,
   "candidate_attestation": "assessment/appsec/v1/formal-candidate-attestation.json",
-  "authorized_attestation_sha256": null
+  "authorized_attestation_sha256": null,
+  "approval_package": "assessment/appsec/v1/formal-start-approval-package.json",
+  "authorized_approval_package_sha256": null,
+  "immutability_commitment_accepted": false,
+  "external_prerequisites": {
+    "anthropic_workspace_name": null,
+    "api_key_label": null,
+    "workspace_spend_limit_usd": null,
+    "workspace_spend_limit_period": null,
+    "auto_reload_enabled": null,
+    "dedicated_api_key_created": false
+  }
 }

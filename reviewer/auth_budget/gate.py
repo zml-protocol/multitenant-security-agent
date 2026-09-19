@@ -49,15 +49,18 @@ def approval_subject_sha256(profile: Mapping[str, Any]) -> str:
 
 
 def validate_profile(profile: Mapping[str, Any]) -> None:
-    if profile.get("formal_execution_authorized") is not False:
-        raise ValueError("Credential and budget profile must not authorize formal execution")
-    if profile.get("model_invocation_enabled") is not False:
-        raise ValueError("Model invocation must remain disabled")
-    if profile.get("status") not in {
+    status = profile.get("status")
+    if status not in {
         "proposed_tested_not_approved",
         "approved_not_formally_authorized",
+        "formally_authorized",
     }:
         raise ValueError("Credential and budget profile status is invalid")
+    authorized = status == "formally_authorized"
+    if profile.get("formal_execution_authorized") is not authorized:
+        raise ValueError("Credential profile status and formal authorization must agree")
+    if profile.get("model_invocation_enabled") is not authorized:
+        raise ValueError("Credential profile status and model invocation must agree")
     credential = profile["credential"]
     if credential.get("type") != "dedicated_anthropic_workspace_api_key":
         raise ValueError("A dedicated Anthropic workspace API key is required")
@@ -92,7 +95,7 @@ def validate_profile(profile: Mapping[str, Any]) -> None:
     if planning_cost(profile) > Decimal(budget["maximum_approved_cost_usd"]):
         raise ValueError("Planning cost exceeds the proposed per-run cost ceiling")
     approval = profile["approval"]
-    if profile["status"] == "proposed_tested_not_approved":
+    if status == "proposed_tested_not_approved":
         if approval.get("approved") is not False or any(
             approval.get(field) is not None
             for field in ("approved_by", "approved_at_utc", "approved_profile_sha256")

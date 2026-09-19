@@ -60,6 +60,8 @@ python -m scripts.reviewer_combined_smoke
 - 将 start gate 及 runtime、egress、execution、auth profile 的执行开关一次性绑定到已批准 attestation；
 - 云部署前使用 registry digest 代替本地 image ID。
 
+这些决定、逐项开关变化和 Anthropic Console 操作已经汇总到[最终启动批准包](formal-start-approval.md)。该批准包当前仍未获批准。
+
 ## 官方依据
 
 - [Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference)

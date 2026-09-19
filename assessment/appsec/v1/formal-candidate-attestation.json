@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "status": "validated_waiting_formal_start_approval",
-  "validated_at_utc": "2026-09-19T22:38:01.535170Z",
+  "validated_at_utc": "2026-09-19T22:54:07.417730Z",
   "source_commit": "14a7b48ae30b833962752e4d65b7e03ade5664a1",
   "fixture_id": "fixture-256eb13b57860e22",
   "scenario_id": "scenario-7f3a",
@@ -21,7 +21,9 @@
     "approved_auth_budget_subject_sha256": "a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4"
   },
   "control_files_sha256": {
-    "reviewer/execution/controller.py": "e06b81f04ea10e4029698f7ff208f202a8ae08f134de21c26e515845d3b02da1",
+    "reviewer/auth_budget/gate.py": "1ab1658bbf2db17c770740adf94c84b64e97550c86913e354948d18888411c99",
+    "reviewer/start_approval.py": "668946ed829c002f10404e37bd8787c412c6d7d01dfc46987da98e8045a3d8a8",
+    "reviewer/execution/controller.py": "5436d6b03189c1007aabe3956793d5991432b0e7cad8a8a61e959656c164bc71",
     "reviewer/runtime/Dockerfile": "312cb5125eae33369b3ac9f143eb187f7f4c6a746b0695a179cabed87f913735",
     "reviewer/runtime/managed-settings.json": "330e58e1baa370f7a8e60c0b74da8a158e4daf14357cd952d831823a3fd03791",
     "reviewer/runtime/credential-exec.sh": "15c5565f90bf398c2937a24f2f0c017afdcbf4db55dc5bb4c84b926d5bc4a704",

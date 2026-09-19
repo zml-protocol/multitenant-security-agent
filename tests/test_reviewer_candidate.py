@@ -42,3 +42,6 @@ def test_machine_start_gate_remains_closed():
     assert gate["approved_by"] is None
     assert gate["approved_at_utc"] is None
     assert gate["authorized_attestation_sha256"] is None
+    assert gate["authorized_approval_package_sha256"] is None
+    assert gate["immutability_commitment_accepted"] is False
+    assert gate["external_prerequisites"]["dedicated_api_key_created"] is False

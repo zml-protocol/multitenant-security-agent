@@ -12,6 +12,7 @@ import time
 import uuid
 
 from reviewer.auth_budget.gate import planning_cost, read_profile as read_auth_profile, validate_profile
+from reviewer.start_approval import validate_authorized_start
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -150,6 +151,7 @@ def assert_execution_authorized() -> None:
     missing = [name for name, value in checks.items() if value is not True]
     if missing:
         raise PermissionError("Formal reviewer execution is not authorized: " + ", ".join(missing))
+    validate_authorized_start()
 
 
 def _run(command: list[str], *, capture: bool = False, check: bool = True) -> subprocess.CompletedProcess:
