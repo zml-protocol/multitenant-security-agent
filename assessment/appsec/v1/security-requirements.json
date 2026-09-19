@@ -1,0 +1,109 @@
+{
+  "schema_version": "1.0",
+  "requirement_version": "appsec-v1.0-draft",
+  "status": "draft_pending_security_engineer_approval",
+  "owner": "security_engineer",
+  "system": "multi_tenant_user_information_api",
+  "fixture_contract": {
+    "tenants": 2,
+    "ordinary_users_per_tenant": 2,
+    "tenant_admins_per_tenant": 1,
+    "total_identities": 6,
+    "aliases": [
+      "a_user1",
+      "a_user2",
+      "a_admin",
+      "b_user1",
+      "b_user2",
+      "b_admin"
+    ]
+  },
+  "protected_fields": ["name", "email", "phone"],
+  "security_relevant_fields": ["user_id", "tenant_id", "role"],
+  "requirements": [
+    {
+      "id": "AUTHN-01",
+      "title": "Server-validated bearer identity",
+      "statement": "Every business endpoint shall derive the actor from a valid opaque bearer token mapped by the server.",
+      "allow": "A configured valid token maps to exactly one configured actor.",
+      "deny": "Missing, malformed or unknown credentials receive 401 and no protected fields."
+    },
+    {
+      "id": "AUTHN-02",
+      "title": "Client identity claims are untrusted",
+      "statement": "Client headers, query parameters and path values shall not override the server-derived actor, tenant or role.",
+      "allow": "Server-derived identity remains unchanged when client identity claims are present.",
+      "deny": "No client-provided tenant, role or user claim grants additional access."
+    },
+    {
+      "id": "AUTHZ-ME-01",
+      "title": "Identity baseline",
+      "statement": "GET /api/me shall return only the authenticated actor's configured public profile.",
+      "allow": "Each of six valid actors receives exactly their own public profile.",
+      "deny": "The response never contains another user's protected fields."
+    },
+    {
+      "id": "AUTHZ-OBJ-01",
+      "title": "Ordinary user object ownership",
+      "statement": "An ordinary user may read only their own user object.",
+      "allow": "The actor and target user_id identify the same user.",
+      "deny": "Same-tenant and cross-tenant targets are denied without protected fields."
+    },
+    {
+      "id": "AUTHZ-OBJ-02",
+      "title": "Tenant administrator object scope",
+      "statement": "A tenant administrator may read user objects only within their own tenant.",
+      "allow": "The target tenant equals the server-derived actor tenant.",
+      "deny": "Every cross-tenant target is denied, including for tenant administrators."
+    },
+    {
+      "id": "AUTHZ-LIST-01",
+      "title": "List role restriction",
+      "statement": "GET /api/users shall be callable only by a tenant administrator.",
+      "allow": "A configured tenant administrator receives a list response.",
+      "deny": "Every ordinary user is denied without protected fields."
+    },
+    {
+      "id": "AUTHZ-LIST-02",
+      "title": "List tenant filtering",
+      "statement": "Every returned list item shall belong to the server-derived administrator tenant.",
+      "allow": "The response contains exactly all three configured users in the administrator tenant.",
+      "deny": "No item from another tenant may appear in any status response."
+    },
+    {
+      "id": "DATA-01",
+      "title": "Response minimization",
+      "statement": "Successful business responses shall expose only user_id, tenant_id, role, name, email and phone.",
+      "allow": "Authorized responses contain the exact expected public field set.",
+      "deny": "Token material, token hashes and internal database fields never appear."
+    },
+    {
+      "id": "ERROR-01",
+      "title": "Safe failure",
+      "statement": "Authentication, authorization, not-found and server errors shall not contain protected fields or credentials.",
+      "allow": "Expected denials use generic error bodies.",
+      "deny": "Protected data in any error status is a confirmed confidentiality violation when ownership can be established."
+    },
+    {
+      "id": "AUDIT-01",
+      "title": "Correlated and minimized audit evidence",
+      "statement": "Every executed test shall be correlatable without logging credentials or complete profile responses.",
+      "allow": "Client evidence and server logs agree on request_id, run_id and status.",
+      "deny": "Authorization headers, bearer tokens, complete name, email, phone or raw response bodies are never persisted."
+    },
+    {
+      "id": "TOOL-01",
+      "title": "Bounded reviewer execution",
+      "statement": "Reviewer tools shall enforce the approved target, GET method, route templates, identity aliases, known user IDs, redirect policy and request budget.",
+      "allow": "Only configured matrix and approved supplemental read requests execute.",
+      "deny": "Arbitrary URLs, methods, headers, unknown users and cross-target redirects are rejected before network execution."
+    }
+  ],
+  "result_taxonomy": {
+    "confirmed_violation": "Observed protected data or behavior proves a requirement violation and cites valid evidence.",
+    "no_violation_observed": "Executed evidence matches the requirement within the stated scope.",
+    "inconclusive": "Timeout, rate limit, server error, redirect, missing evidence, fixture mismatch or ambiguous response prevents a conclusion.",
+    "functional_authentication_anomaly": "Expected allowed behavior failed and shall not be counted as an authorization pass."
+  },
+  "matrix_reference": "../../../fixtures/permissions.v1.json"
+}

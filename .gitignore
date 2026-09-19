@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local lab credentials, database and generated evidence
+.local/
+*.sqlite3
+*.sqlite3-*
+credentials*.json
+reports/local/

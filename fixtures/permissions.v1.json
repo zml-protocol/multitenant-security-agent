@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "aliases": ["a_user1", "a_user2", "a_admin", "b_user1", "b_user2", "b_admin"],
+  "detail_allow": {
+    "a_user1": ["a_user1"],
+    "a_user2": ["a_user2"],
+    "a_admin": ["a_user1", "a_user2", "a_admin"],
+    "b_user1": ["b_user1"],
+    "b_user2": ["b_user2"],
+    "b_admin": ["b_user1", "b_user2", "b_admin"]
+  },
+  "list_allow": {
+    "a_user1": [], "a_user2": [],
+    "a_admin": ["a_user1", "a_user2", "a_admin"],
+    "b_user1": [], "b_user2": [],
+    "b_admin": ["b_user1", "b_user2", "b_admin"]
+  }
+}

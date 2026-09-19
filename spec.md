@@ -1,5 +1,7 @@
 # 多租户云应用安全测试与响应 Agent：需求与行为规格说明书
 
+[English](spec.en.md) | 中文
+
 英文名称：Multi-Tenant Cloud Security Agent — Requirements and Behavior Specification
 
 版本：v0.1 ｜ 日期：2026-09-19 ｜ 状态：需求基线，尚未实现或部署

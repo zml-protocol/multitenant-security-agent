@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "method": "GET",
+  "path": "/api/users/{user_id}",
+  "identity_alias": "a_user1",
+  "target_alias": "a_user1"
+}
