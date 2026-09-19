@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0",
+  "status": "awaiting_final_approval",
+  "formal_execution_authorized": false,
+  "approved_by": null,
+  "approved_at_utc": null,
+  "candidate_attestation": "assessment/appsec/v1/formal-candidate-attestation.json",
+  "authorized_attestation_sha256": null
+}

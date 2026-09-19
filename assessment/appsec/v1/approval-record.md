@@ -25,7 +25,11 @@
 | assessment_scenario_id | `scenario-7f3a` |
 | candidate_bundle_id | `bundle-6a1a247aca19153c0d22` |
 | candidate_generated_at_utc | `2026-09-19T20:44:40.966113Z` |
-| candidate_status | `draft_not_for_claude` |
+| candidate_validated_at_utc | `2026-09-19T22:38:01.535170Z` |
+| candidate_status | `validated_waiting_formal_start_approval` |
+| candidate_attestation | `formal-candidate-attestation.json` |
+| bundle_manifest_sha256 | `69049b3e03d58c6742bcd475bdc090465aef3b510c2f6ae4134efad3507fc7be` |
+| approved_auth_budget_subject_sha256 | `a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4` |
 
 ### 冻结 Git 引用
 
@@ -127,13 +131,13 @@ git ls-remote origin refs/heads/assessment/v1-vulnerable refs/tags/appsec-v1-vul
 
 ## 8. 正式评估启动门槛
 
-- [ ] 当前 requirement version 已去掉 `-draft`，JSON 与本记录一致。
-- [ ] 评估代码已冻结，并填写了完整 Git commit SHA。
-- [ ] 评估 fixture 已冻结，并填写了 fixture ID。
-- [ ] 漏洞场景已去除明显的 `*_bypass` 答案标签，并填写了中性 scenario ID。
+- [x] 当前 requirement version 已去掉 `-draft`，JSON 与本记录一致。
+- [x] 评估代码已冻结，并填写了完整 Git commit SHA。
+- [x] 评估 fixture 已冻结，并填写了 fixture ID。
+- [x] 漏洞场景已去除明显的 `*_bypass` 答案标签，并填写了中性 scenario ID。
 - [ ] 评估期间不修改代码、requirements、fixture 或 reviewer manifest。
 - [ ] approver 和 `approved_at_utc` 已填写。
-- [ ] 已再次确认 Claude 不会获得 raw credentials 或 ground-truth label。
+- [x] 已再次确认 Claude 不会获得 raw credentials 或 ground-truth label。
 
 全部完成后，将 `approval_status` 改为 `ready_for_claude_review`。这一状态才授权进入 Claude 的正式 decision-path review 和独立测试矩阵阶段。
 
@@ -151,5 +155,12 @@ git ls-remote origin refs/heads/assessment/v1-vulnerable refs/tags/appsec-v1-vul
 | `2026-09-19T21:41:52Z` | `codex` | 实现并通过固定 Claude Code 2.1.278 Linux reviewer 镜像的无凭据、离线隔离 smoke test；未认证或调用模型，正式启动门槛保持开放 | 否（实现已批准的运行时基础） |
 | `2026-09-19T21:53:33Z` | `codex` | 实现并通过未启用的代理唯一出口 smoke test；只允许 `api.anthropic.com:443` TLS 握手，未发送 API 请求、注入凭据或调用模型，正式 runner 仍保持离线 | 否（实现已批准的出口基础） |
 | `2026-09-19T22:03:20Z` | `codex` | 固化未批准的专用 Anthropic workspace API key 来源、`claude-sonnet-5` 与单次运行预算提案，并通过 synthetic sentinel 本地泄漏验证；未使用真实凭据、网络或模型 | 否（实现已批准的凭据与预算门禁设计） |
+| `2026-09-19T22:22:24Z` | `project_owner` | 批准项目专用可撤销 Anthropic workspace API key、`claude-sonnet-5`、100k/20k token 规划边界、12 次模型 API 调用审批边界、12 agentic turns、30 次工具调用、900 秒和单次 `$1.00` 上限；不批准模型执行 | 否（运行方案批准，正式启动门仍开放） |
+| `2026-09-19T22:27:14Z` | `codex` | 实现固定 Claude 命令和 fail-closed supervisor，并通过 synthetic secret、managed settings 文件、proxy allowlist、非 allowlist 拒绝和直连阻断的组合 smoke；未调用模型或产生费用 | 否（执行控制与无费用验证） |
+| `2026-09-19T22:27:21Z` | `codex` | 验证正式候选并生成 attestation，绑定冻结 commit、fixture、scenario、bundle、profile hash 和本地镜像 ID；启动门 7 项中 5 项已有证据，正式执行仍未授权 | 否（候选验证） |
+| `2026-09-19T22:29:53Z` | `codex` | `claude doctor` 发现并修复 reviewer 镜像缺少 `bubblewrap`/`socat` 的真实启动问题；重建后 doctor 与组合 smoke 通过，未使用真实凭据或模型 | 否（运行时修复与重新验证） |
+| `2026-09-19T22:33:53Z` | `codex` | 使用修复后的 reviewer image `sha256:d496…642a` 重新生成正式候选 attestation；旧 attestation 被替换，正式启动状态不变 | 否（候选重新绑定） |
+| `2026-09-19T22:37:07Z` | `codex` | 在固定命令中显式禁止 MCP、slash commands 和 Chrome，并重新绑定最终 command hash；正式执行仍未授权 | 否（执行面收紧与候选重新绑定） |
+| `2026-09-19T22:38:01Z` | `codex` | 将 controller、runtime wrapper/settings 和 egress proxy 的逐文件 SHA-256 加入 attestation，绑定未提交工作区中的准确控制面实现 | 否（候选完整性强化） |
 
 正式批准后，任何影响 actor、asset、trust boundary、scope、expected behavior、工具权限或 finding 标准的改动，都必须新增记录并重新审批。仅修正文案拼写且不改变含义时，可以记录为无需重新审批。

@@ -5,6 +5,7 @@ import pytest
 
 from reviewer.auth_budget.gate import (
     PROFILE_PATH,
+    approval_subject_sha256,
     execution_envelope,
     planning_cost,
     read_profile,
@@ -14,7 +15,7 @@ from reviewer.auth_budget.gate import (
 )
 
 
-def test_proposed_profile_is_fixed_and_not_authorized():
+def test_approved_profile_is_fixed_but_execution_is_not_authorized():
     profile = read_profile()
 
     validate_profile(profile)
@@ -22,7 +23,9 @@ def test_proposed_profile_is_fixed_and_not_authorized():
     assert profile["model_invocation_enabled"] is False
     assert profile["model"]["model_id"] == "claude-sonnet-5"
     assert str(planning_cost(profile)) == "0.40"
-    assert profile["approval"]["approved"] is False
+    assert profile["approval"]["approved"] is True
+    assert profile["approval"]["approved_by"] == "project_owner"
+    assert profile["approval"]["approved_profile_sha256"] == approval_subject_sha256(profile)
     assert PROFILE_PATH.is_file()
 
 

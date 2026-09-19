@@ -19,6 +19,7 @@ def test_runtime_profile_matches_pinned_image_definition():
     assert profile["base_image_digest"].startswith("sha256:")
     assert f"{profile['base_image']}@{profile['base_image_digest']}" in dockerfile
     assert "npm ci --omit=dev --no-audit --no-fund" in dockerfile
+    assert "bubblewrap socat ca-certificates" in dockerfile
     lock = json.loads((RUNTIME / "package-lock.json").read_text(encoding="utf-8"))
     locked = lock["packages"]["node_modules/@anthropic-ai/claude-code"]
     assert locked["version"] == profile["claude_code_version"]
@@ -31,6 +32,8 @@ def test_runtime_profile_matches_pinned_image_definition():
         "!package.json",
         "!package-lock.json",
         "!smoke.sh",
+        "!credential-exec.sh",
+        "!credential-probe.sh",
     }
 
     assert settings["allowManagedPermissionRulesOnly"] is True
@@ -38,7 +41,12 @@ def test_runtime_profile_matches_pinned_image_definition():
     assert settings["enableArtifact"] is False
     assert settings["syncClaudeAiSkills"] is False
     assert settings["syncClaudeAiPlugins"] is False
+    assert settings["availableModels"] == ["claude-sonnet-5"]
     assert settings["permissions"]["disableBypassPermissionsMode"] == "disable"
     assert settings["env"]["DISABLE_AUTOUPDATER"] == "1"
     assert settings["env"]["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] == "1"
     assert settings["env"]["CLAUDE_CODE_SUBPROCESS_ENV_SCRUB"] == "1"
+    assert settings["env"]["CLAUDE_CODE_SKIP_PROMPT_HISTORY"] == "1"
+    assert settings["env"]["DISABLE_UPDATES"] == "1"
+    assert "reviewer-credential-exec" in dockerfile
+    assert "reviewer-credential-probe" in dockerfile

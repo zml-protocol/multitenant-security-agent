@@ -51,15 +51,17 @@ The container is the primary isolation boundary. Claude Code's own sandbox may a
 - Claude Code `2.1.278` with a `package-lock.json` that contains platform-package integrity values;
 - `/etc/claude-code/managed-settings.json`, which disables bypass permission mode, Claude.ai connectors, Artifacts, skill/plugin synchronization, automatic updates, telemetry, error reporting, and nonessential traffic, and enables subprocess environment scrubbing;
 - non-root UID/GID `10001:10001`;
+- `bubblewrap` and `socat`, required for Claude Code subprocess isolation;
+- an in-container launcher that reads credentials only from `/run/secrets/anthropic_api_key`;
 - runner-generated arguments for read-only input, writable output, a read-only root filesystem, restricted tmpfs mounts, dropped capabilities, `no-new-privileges`, and `--network none`.
 
 `python -m scripts.reviewer_runtime_smoke` passed on Docker Desktop and verified the version, UID, filesystem boundaries, temporary configuration, absence of a default route, and absence of credential environment variables. The script runs the smoke test against the image ID from that build and records the ID in the local result. A formal run must still use and record an immutable registry digest.
 
-The smoke test executes only `claude --version` and local boundary probes. It performed no authentication, model call, or API spending, and it does not yet prove that Claude applies the managed settings during a real session.
+The foundation smoke executes only `claude --version` and local boundary probes. The later combined smoke also ran credential-free, network-free `claude doctor`, confirming that the CLI accepts the managed environment with no installation issue. The canary must still provide final settings evidence from a real model session.
 
 ## Network egress boundary
 
-The runner's current `--network none` mode is suitable for offline isolation validation but cannot make a real Claude API request. The independent [restricted egress foundation](reviewer-egress.en.md) now verifies an internal network, proxy-only egress, and a hostname allowlist, but is not connected to the runner. The Docker network blocks direct reviewer connections while the separate proxy enforces the host allowlist.
+The legacy runner's `--network none` mode is suitable for offline validation but cannot make a real Claude API request. [Restricted egress](reviewer-egress.en.md) has passed both independent and combined smoke tests. After final approval, the new [controlled executor](reviewer-execution.en.md) creates the internal-plus-proxy topology. Docker networking blocks direct reviewer connections while the separate proxy enforces the host allowlist.
 
 The minimum host set depends on the authentication method:
 
@@ -88,14 +90,14 @@ The run may record the credential source type and a non-secret identifier, never
 | Read-only input, writable output, no source-repository mount | Passed a real Docker smoke test | Repeat on the final Claude image |
 | Two-phase seal/release gate | Implemented | Retain human authorization |
 | Claude Code installation and version pin | Offline image foundation implemented | Record an immutable registry digest before formal execution |
-| Linux runtime foundation | Verified | Binary, non-root identity, and Docker filesystem boundaries passed; the built-in Bash sandbox remains unverified |
-| Restricted network egress | Independent foundation implemented and smoke-tested | Select authentication, finalize the complete allowlist, bind immutable images, and connect it to the runner |
-| Dedicated credential injection and subprocess scrubbing | A dedicated workspace API-key source is proposed and the local synthetic-sentinel check passed | Implement runtime injection in the final container after approval and repeat the leakage check |
+| Linux runtime foundation | Verified | Binary, non-root identity, Docker filesystem boundaries, and a clean `claude doctor` result passed |
+| Restricted network egress | Combined smoke passed | Enable only the verified internal-plus-proxy topology after formal start approval |
+| Dedicated credential injection and subprocess scrubbing | The dedicated workspace API-key design is approved, and the secret-file wrapper passed the combined synthetic-sentinel check | Create the real dedicated key and repeat leakage validation during the final canary |
 | Nonessential connections, plugins, and connectors disabled | Managed settings frozen | Verify that Claude loads them and observe actual connections before enabling egress |
-| Model and cost budget | Fixed-model and per-run budget proposal implemented but not approved | Obtain separate Security Engineer approval and implement external fail-closed supervision |
+| Model and cost budget | Fixed model and per-run budget approved; CLI cost/turn limits and fail-closed supervisor implemented | Reconcile real usage after formal start approval |
 | Formal Claude execution | Not authorized | Complete Section 8 of the approval record and authorize separately |
 
-The pinned offline reviewer container, independent restricted egress, and synthetic credential boundary have each passed their smoke tests. Real credential injection, the combined online boundary, and real settings loading remain unverified, and formal Claude reviewer execution is still unauthorized.
+The pinned reviewer container, combined restricted egress, synthetic credential injection, and `claude doctor` have passed. No real key or model session has run, and formal Claude reviewer execution remains unauthorized.
 
 ## Official sources
 

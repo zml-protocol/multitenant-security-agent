@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "status": "proposed_tested_not_approved",
+  "status": "approved_not_formally_authorized",
   "formal_execution_authorized": false,
   "model_invocation_enabled": false,
   "credential": {
@@ -17,13 +17,14 @@
   "model": {
     "provider": "anthropic",
     "model_id": "claude-sonnet-5",
-    "selection_status": "proposed_not_approved",
+    "selection_status": "approved",
     "lifecycle_recheck_required_before_run": true
   },
   "budget": {
     "maximum_aggregate_input_tokens": 100000,
     "maximum_aggregate_output_tokens": 20000,
     "maximum_model_api_calls": 12,
+    "maximum_agentic_turns": 12,
     "maximum_supplemental_tool_calls": 30,
     "maximum_run_duration_seconds": 900,
     "standard_input_usd_per_million_tokens": "2.00",
@@ -35,11 +36,11 @@
     "post_run_usage_reconciliation_required": true
   },
   "approval": {
-    "approved": false,
-    "approved_by": null,
-    "approved_at_utc": null,
+    "approved": true,
+    "approved_by": "project_owner",
+    "approved_at_utc": "2026-09-19T22:22:24Z",
     "approval_record": "assessment/appsec/v1/approval-record.md",
-    "approved_profile_sha256": null
+    "approved_profile_sha256": "a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4"
   },
   "limitations": {
     "claude_code_native_hard_limit_for_aggregate_tokens_and_api_calls_verified": false,

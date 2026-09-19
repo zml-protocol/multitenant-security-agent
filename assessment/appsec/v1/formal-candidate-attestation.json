@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "status": "validated_waiting_formal_start_approval",
+  "validated_at_utc": "2026-09-19T22:38:01.535170Z",
+  "source_commit": "14a7b48ae30b833962752e4d65b7e03ade5664a1",
+  "fixture_id": "fixture-256eb13b57860e22",
+  "scenario_id": "scenario-7f3a",
+  "bundle_id": "bundle-6a1a247aca19153c0d22",
+  "requirement_version": "appsec-v1.0",
+  "bundle_embedded_status": "draft_not_for_claude",
+  "bundle_manifest_sha256": "69049b3e03d58c6742bcd475bdc090465aef3b510c2f6ae4134efad3507fc7be",
+  "frozen_ref_targets": {
+    "assessment/v1-vulnerable": "14a7b48ae30b833962752e4d65b7e03ade5664a1",
+    "remediation/v1": "14a7b48ae30b833962752e4d65b7e03ade5664a1",
+    "appsec-v1-vulnerable^{}": "14a7b48ae30b833962752e4d65b7e03ade5664a1"
+  },
+  "profiles": {
+    "runtime_sha256": "4d001220864c53e7a31e7f7228eafeb5e4def802209349f544ce9c205c45a420",
+    "egress_sha256": "ef2a28e34faf5bcc37f54783658fdad9e492b1023756045f8d667815ca97b57b",
+    "execution_sha256": "c75c068ac4cb5e72c1aab7d2e15504217dce94a4dbf8c9c9ef9472ef264d532b",
+    "approved_auth_budget_subject_sha256": "a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4"
+  },
+  "control_files_sha256": {
+    "reviewer/execution/controller.py": "e06b81f04ea10e4029698f7ff208f202a8ae08f134de21c26e515845d3b02da1",
+    "reviewer/runtime/Dockerfile": "312cb5125eae33369b3ac9f143eb187f7f4c6a746b0695a179cabed87f913735",
+    "reviewer/runtime/managed-settings.json": "330e58e1baa370f7a8e60c0b74da8a158e4daf14357cd952d831823a3fd03791",
+    "reviewer/runtime/credential-exec.sh": "15c5565f90bf398c2937a24f2f0c017afdcbf4db55dc5bb4c84b926d5bc4a704",
+    "reviewer/runtime/credential-probe.sh": "ab5793d1c75b0ff9e8da32d15ceba66602ec1062cbf331f25d77ee0122ea2f23",
+    "reviewer/egress/Dockerfile": "564694760ee56b0bee560451adcdb275235b78dd5c9b74e487ec87ac2d63e65d",
+    "reviewer/egress/proxy.js": "e9b1644b0cf7eb3da0671049c3a9ffe4ad4ed00c556f567d4112211756993766"
+  },
+  "images": {
+    "runtime_local_image_id": "sha256:d49654657cc6a7977adb7c50a03f613afa62b7fa71f70a1d78d83de8807b642a",
+    "egress_local_image_id": "sha256:dc4b0704ba84407d472ae93dd04dc01f80bbf2fb4f16d2adf12c93d1518ae235",
+    "registry_digest_required_for_cloud_deployment": true
+  },
+  "claude_command_sha256": "b092170f02890c2c3f018b6c54dd9bb8b560a6cb15a870dd781e4994cf165668",
+  "checks": {
+    "bundle_allowlist_and_hashes_valid": true,
+    "source_commit_and_fixture_frozen": true,
+    "neutral_scenario_recorded": true,
+    "ground_truth_markers_absent": true,
+    "raw_application_credentials_absent": true,
+    "credential_model_budget_approved": true,
+    "formal_execution_still_unauthorized": true
+  },
+  "formal_execution_authorized": false
+}

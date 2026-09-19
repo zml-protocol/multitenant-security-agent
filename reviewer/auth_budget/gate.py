@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -38,13 +39,25 @@ def planning_cost(profile: Mapping[str, Any]) -> Decimal:
     return (input_cost + output_cost).quantize(Decimal("0.01"))
 
 
+def approval_subject_sha256(profile: Mapping[str, Any]) -> str:
+    subject = {
+        key: profile[key]
+        for key in ("credential", "model", "budget", "limitations")
+    }
+    serialized = json.dumps(subject, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(serialized).hexdigest()
+
+
 def validate_profile(profile: Mapping[str, Any]) -> None:
     if profile.get("formal_execution_authorized") is not False:
         raise ValueError("Credential and budget profile must not authorize formal execution")
     if profile.get("model_invocation_enabled") is not False:
         raise ValueError("Model invocation must remain disabled")
-    if profile.get("status") != "proposed_tested_not_approved":
-        raise ValueError("Profile must remain proposed and unapproved")
+    if profile.get("status") not in {
+        "proposed_tested_not_approved",
+        "approved_not_formally_authorized",
+    }:
+        raise ValueError("Credential and budget profile status is invalid")
     credential = profile["credential"]
     if credential.get("type") != "dedicated_anthropic_workspace_api_key":
         raise ValueError("A dedicated Anthropic workspace API key is required")
@@ -68,6 +81,7 @@ def validate_profile(profile: Mapping[str, Any]) -> None:
         "maximum_aggregate_input_tokens",
         "maximum_aggregate_output_tokens",
         "maximum_model_api_calls",
+        "maximum_agentic_turns",
         "maximum_supplemental_tool_calls",
         "maximum_run_duration_seconds",
     ):
@@ -78,11 +92,21 @@ def validate_profile(profile: Mapping[str, Any]) -> None:
     if planning_cost(profile) > Decimal(budget["maximum_approved_cost_usd"]):
         raise ValueError("Planning cost exceeds the proposed per-run cost ceiling")
     approval = profile["approval"]
-    if approval.get("approved") is not False or any(
-        approval.get(field) is not None
-        for field in ("approved_by", "approved_at_utc", "approved_profile_sha256")
-    ):
-        raise ValueError("Approval fields must remain empty before human approval")
+    if profile["status"] == "proposed_tested_not_approved":
+        if approval.get("approved") is not False or any(
+            approval.get(field) is not None
+            for field in ("approved_by", "approved_at_utc", "approved_profile_sha256")
+        ):
+            raise ValueError("Approval fields must remain empty before human approval")
+    else:
+        if approval.get("approved") is not True:
+            raise ValueError("Approved profile must record approval")
+        if not approval.get("approved_by") or not approval.get("approved_at_utc"):
+            raise ValueError("Approved profile must record approver and time")
+        if approval.get("approved_profile_sha256") != approval_subject_sha256(profile):
+            raise ValueError("Approved profile hash does not match the approval subject")
+        if profile["model"].get("selection_status") != "approved":
+            raise ValueError("Approved profile must record the model decision")
 
 
 def sanitized_subprocess_environment(environment: Mapping[str, str]) -> dict[str, str]:
@@ -111,6 +135,7 @@ def execution_envelope(profile: Mapping[str, Any]) -> dict[str, Any]:
                 "maximum_aggregate_input_tokens",
                 "maximum_aggregate_output_tokens",
                 "maximum_model_api_calls",
+                "maximum_agentic_turns",
                 "maximum_supplemental_tool_calls",
                 "maximum_run_duration_seconds",
                 "standard_planning_cost_usd",

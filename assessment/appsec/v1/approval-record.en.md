@@ -25,7 +25,11 @@ This is the single formal sign-off location for workflow 1. Read the linked sour
 | assessment_scenario_id | `scenario-7f3a` |
 | candidate_bundle_id | `bundle-6a1a247aca19153c0d22` |
 | candidate_generated_at_utc | `2026-09-19T20:44:40.966113Z` |
-| candidate_status | `draft_not_for_claude` |
+| candidate_validated_at_utc | `2026-09-19T22:38:01.535170Z` |
+| candidate_status | `validated_waiting_formal_start_approval` |
+| candidate_attestation | `formal-candidate-attestation.json` |
+| bundle_manifest_sha256 | `69049b3e03d58c6742bcd475bdc090465aef3b510c2f6ae4134efad3507fc7be` |
+| approved_auth_budget_subject_sha256 | `a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4` |
 
 ### Frozen Git References
 
@@ -127,13 +131,13 @@ After Sections 2–7 are complete, change `approval_status` to `requirements_app
 
 ## 8. Formal Assessment Start Gate
 
-- [ ] The requirement version no longer contains `-draft`, and the JSON matches this record.
-- [ ] Assessment code is frozen and the full Git commit SHA is recorded.
-- [ ] The assessment fixture is frozen and its fixture ID is recorded.
-- [ ] Obvious `*_bypass` answer labels have been removed from the vulnerability scenario and a neutral scenario ID is recorded.
+- [x] The requirement version no longer contains `-draft`, and the JSON matches this record.
+- [x] Assessment code is frozen and the full Git commit SHA is recorded.
+- [x] The assessment fixture is frozen and its fixture ID is recorded.
+- [x] Obvious `*_bypass` answer labels have been removed from the vulnerability scenario and a neutral scenario ID is recorded.
 - [ ] Code, requirements, fixture, and reviewer manifest will not change during assessment.
 - [ ] Approver and `approved_at_utc` are complete.
-- [ ] Claude is again confirmed to have no raw credentials or ground-truth label.
+- [x] Claude is again confirmed to have no raw credentials or ground-truth label.
 
 When every item is complete, change `approval_status` to `ready_for_claude_review`. Only this state authorizes formal Claude decision-path review and independent test-matrix generation.
 
@@ -151,5 +155,12 @@ When every item is complete, change `approval_status` to `ready_for_claude_revie
 | `2026-09-19T21:41:52Z` | `codex` | Implemented and passed the credential-free, offline isolation smoke test for the pinned Claude Code 2.1.278 Linux reviewer image; no authentication or model call occurred, and the formal start gate remains open | No (implementation of the approved runtime foundation) |
 | `2026-09-19T21:53:33Z` | `codex` | Implemented and passed the inactive proxy-only egress smoke test; only a TLS handshake to `api.anthropic.com:443` was allowed, with no API request, credential injection, or model call, and the formal runner remains offline | No (implementation of the approved egress foundation) |
 | `2026-09-19T22:03:20Z` | `codex` | Froze an unapproved dedicated Anthropic workspace API-key source, `claude-sonnet-5`, and per-run budget proposal, then passed a local synthetic-sentinel leakage check; no real credential, network, or model was used | No (implementation of the approved credential and budget gate design) |
+| `2026-09-19T22:22:24Z` | `project_owner` | Approved a dedicated revocable Anthropic workspace API key, `claude-sonnet-5`, 100k/20k token planning boundaries, a 12 model-API-call approval boundary, 12 agentic turns, 30 tool calls, 900 seconds, and a `$1.00` per-run ceiling; model execution was not approved | No (run design approved; formal start gate remains open) |
+| `2026-09-19T22:27:14Z` | `codex` | Implemented the fixed Claude command and fail-closed supervisor, then passed a combined synthetic-secret, managed-settings-file, proxy-allowlist, non-allowlist denial, and direct-egress blocking smoke test; no model or cost was involved | No (execution control and cost-free validation) |
+| `2026-09-19T22:27:21Z` | `codex` | Validated and attested the formal candidate, binding the frozen commit, fixture, scenario, bundle, profile hashes, and local image IDs; five of seven start-gate items now have evidence and formal execution remains unauthorized | No (candidate validation) |
+| `2026-09-19T22:29:53Z` | `codex` | `claude doctor` exposed and drove the fix for missing `bubblewrap`/`socat` in the reviewer image; doctor and the combined smoke passed after rebuilding, with no real credential or model | No (runtime repair and revalidation) |
+| `2026-09-19T22:33:53Z` | `codex` | Regenerated the formal candidate attestation against repaired reviewer image `sha256:d496…642a`; the previous attestation was replaced and formal-start status did not change | No (candidate rebinding) |
+| `2026-09-19T22:37:07Z` | `codex` | Explicitly disabled MCP, slash commands, and Chrome in the fixed command, then rebound the final command hash; formal execution remains unauthorized | No (execution-surface reduction and candidate rebinding) |
+| `2026-09-19T22:38:01Z` | `codex` | Added per-file SHA-256 values for the controller, runtime wrapper/settings, and egress proxy to the attestation, binding the exact control-plane implementation in the uncommitted workspace | No (candidate-integrity strengthening) |
 
 After formal approval, any change affecting actors, assets, trust boundaries, scope, expected behavior, tool access, or the finding standard requires a new entry and reapproval. A spelling-only correction that does not change meaning may be recorded as not requiring reapproval.

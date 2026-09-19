@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "status": "implemented_not_formally_authorized",
+  "formal_execution_authorized": false,
+  "credential_file_in_container": "/run/secrets/anthropic_api_key",
+  "credential_wrapper": "/usr/local/bin/reviewer-credential-exec",
+  "proxy_url": "http://egress-proxy:3128",
+  "network_mode": "internal_proxy_only",
+  "source_repository_mounted": false,
+  "session_persistence": false,
+  "permission_prompts": "none",
+  "allowed_tools": [
+    "Read",
+    "Glob",
+    "Grep"
+  ],
+  "maximum_captured_output_bytes": 1048576,
+  "phases": {
+    "decision_path_and_independent_matrix": {
+      "prompt": "reviewer/execution/prompts/phase1.txt",
+      "output_schema": "reviewer/execution/schemas/phase1.schema.json"
+    },
+    "difference_review": {
+      "prompt": "reviewer/execution/prompts/phase2.txt",
+      "output_schema": "reviewer/execution/schemas/phase2.schema.json"
+    }
+  }
+}

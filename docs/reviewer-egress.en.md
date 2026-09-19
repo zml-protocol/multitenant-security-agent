@@ -4,7 +4,7 @@ English | [中文](reviewer-egress.md)
 
 Status: `implemented_tested_not_active_not_authorized`
 
-This implementation provides a proxy-only network egress foundation for a future Claude reviewer. It is not connected to the current runner, injects no credential, invokes no model, and does not authorize a formal assessment. The current runner continues to use `--network none`.
+This implementation provides a proxy-only network egress foundation for a future Claude reviewer. The combined smoke temporarily connected it to the reviewer runtime and verified the boundary, and the formal controller now implements that topology, while every formal execution switch remains off. No model was invoked and no formal assessment was authorized.
 
 ## Network boundary
 
@@ -60,9 +60,9 @@ Results are written under the Git-ignored `.local/reviewer-egress/`. The most re
 
 ## Gates not yet complete
 
-- The current reviewer Docker plan does not enable this proxy and remains on `--network none`.
-- API key, OAuth, or another formal authentication method has not been selected.
+- The legacy offline runner Docker plan remains on `--network none`; the new controlled executor enables the ephemeral internal-plus-proxy topology only after final start approval.
+- The dedicated workspace API-key design is approved, but no real key has been created or injected.
 - No real Claude session has verified that managed settings load or that Claude uses only the proxy.
-- The model, input/output-token, tool-call, and cost-budget proposal is frozen but remains unapproved and is not yet connected to a supervisor that can stop the run.
+- The model and budget are approved, and CLI cost/turn limits plus the supervisor are implemented; API-call and aggregate-token totals still require post-run reconciliation.
 - Additional Anthropic hosts needed for OAuth are outside the allowlist; every added host requires separate review and testing.
 - Before formal execution, reviewer and proxy images must use immutable registry digests, and the exact network, credential, and budget must be bound to a human approval record.

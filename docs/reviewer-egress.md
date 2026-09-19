@@ -4,7 +4,7 @@
 
 状态：`implemented_tested_not_active_not_authorized`
 
-本实现为未来 Claude reviewer 提供代理唯一的网络出口基础。它没有接入当前 runner、没有注入凭据、没有调用模型，也没有授权正式评估。当前 runner 继续使用 `--network none`。
+本实现为未来 Claude reviewer 提供代理唯一的网络出口基础。组合 smoke 已把它临时接入 reviewer runtime 并验证边界；正式执行控制器也已实现该拓扑，但所有正式执行开关仍关闭。没有调用模型，也没有授权正式评估。
 
 ## 网络边界
 
@@ -60,9 +60,9 @@ Smoke test 使用已构建的 reviewer 镜像作为探针，并验证：
 
 ## 尚未完成的门禁
 
-- 当前 reviewer Docker plan 没有启用该代理，仍为 `--network none`。
-- 尚未选择 API key、OAuth 或其他正式认证方式。
+- 旧的离线 runner Docker plan 仍为 `--network none`；新的受控执行器只会在最终启动批准后启用临时 internal + proxy 拓扑。
+- 已批准项目专用 workspace API key 方案，但尚未创建或注入真实 key。
 - 尚未验证真实 Claude 会话读取 managed settings 或只使用代理。
-- 模型、输入/输出 token、工具调用次数和费用预算提案已经固化但尚未批准，也尚未接入可硬停止的运行监督器。
+- 模型与预算已批准，CLI 费用/turn 限制和运行监督器已实现；API 调用数与累计 token 仍需运行后核对。
 - OAuth 流程所需的其他 Anthropic 主机不在 allowlist；任何新增主机都需要单独审核和测试。
 - 正式运行前必须把 reviewer 与代理镜像改为不可变 registry digest，并把准确网络、凭据和预算绑定到人工批准记录。

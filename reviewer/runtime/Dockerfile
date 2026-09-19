@@ -2,6 +2,10 @@ FROM node:22.17.0-bookworm-slim@sha256:b04ce4ae4e95b522112c2e5c52f781471a5cbc3b5
 
 ARG CLAUDE_CODE_VERSION
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends bubblewrap socat ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /opt/claude-code
 COPY --chown=root:root package.json package-lock.json ./
 
@@ -19,6 +23,8 @@ RUN groupadd --gid 10001 reviewer \
 
 COPY --chown=root:root --chmod=0444 managed-settings.json /etc/claude-code/managed-settings.json
 COPY --chown=root:root --chmod=0555 smoke.sh /usr/local/bin/reviewer-runtime-smoke
+COPY --chown=root:root --chmod=0555 credential-exec.sh /usr/local/bin/reviewer-credential-exec
+COPY --chown=root:root --chmod=0555 credential-probe.sh /usr/local/bin/reviewer-credential-probe
 
 ENV CLAUDE_CODE_EXPECTED_VERSION=$CLAUDE_CODE_VERSION \
     CLAUDE_CONFIG_DIR=/run/claude-config \

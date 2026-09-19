@@ -2,7 +2,7 @@
 
 [English](README.en.md) | 中文
 
-用于安全工程师面试的双工作流安全实验项目。长期目标与路线见 [docs/project-vision.md](docs/project-vision.md)，需求基线见 [spec.md](spec.md)，本阶段实现说明见 [docs/phase1.md](docs/phase1.md)，Reviewer 隔离设计见 [docs/reviewer-bundle.md](docs/reviewer-bundle.md)，分阶段 runner 见 [docs/reviewer-runner.md](docs/reviewer-runner.md)，Claude 运行时准备审计见 [docs/claude-runtime.md](docs/claude-runtime.md)，受限出口设计见 [docs/reviewer-egress.md](docs/reviewer-egress.md)，凭据与预算门禁见 [docs/reviewer-auth-budget.md](docs/reviewer-auth-budget.md)。
+用于安全工程师面试的双工作流安全实验项目。长期目标与路线见 [docs/project-vision.md](docs/project-vision.md)，需求基线见 [spec.md](spec.md)，本阶段实现说明见 [docs/phase1.md](docs/phase1.md)，Reviewer 隔离设计见 [docs/reviewer-bundle.md](docs/reviewer-bundle.md)，分阶段 runner 见 [docs/reviewer-runner.md](docs/reviewer-runner.md)，Claude 运行时准备审计见 [docs/claude-runtime.md](docs/claude-runtime.md)，受限出口设计见 [docs/reviewer-egress.md](docs/reviewer-egress.md)，凭据与预算门禁见 [docs/reviewer-auth-budget.md](docs/reviewer-auth-budget.md)，组合执行控制见 [docs/reviewer-execution.md](docs/reviewer-execution.md)。
 
 最终目标包含 human-in-the-loop 的白盒 AppSec AI Agent Flow，以及 Alibaba Cloud 上的 DDoS / Network Security Incident Response Flow。已实现第一阶段：FastAPI + SQLite、两个租户六个测试用户、三个 GET 接口、四种模式、独立权限矩阵、脱敏 JSON/Markdown 报告、结构化应用日志和修复复测。当前没有接入模型、阿里云、SLS 或响应执行器。
 
@@ -83,11 +83,12 @@ $env:LAB_MODE = 'same_tenant_bypass'
 - `reviewer/runner.py`：准备隔离阶段输入、封存第一阶段输出，并强制执行人工批准的第二阶段释放门禁。
 - `reviewer/runtime/`：固定 Claude Code 版本、基础镜像摘要、npm 完整性锁和强制 managed settings 的 Linux reviewer 镜像定义。
 - `reviewer/egress/`：默认拒绝、代理唯一、固定 `api.anthropic.com:443` allowlist 的未启用出口基础。
-- `reviewer/auth_budget/`：未批准的专用 API key 来源、固定模型、预算审批字段和 synthetic sentinel 泄漏验证。
+- `reviewer/auth_budget/`：已批准但未获准执行的专用 API key 来源、固定模型、预算字段和 synthetic sentinel 泄漏验证。
+- `reviewer/execution/`：固定 Claude 命令、阶段 prompt/schema、secret 文件注入和 fail-closed supervisor。
 - `fixtures/permissions.v1.json`：独立的显式权限预期。
 - `fixtures/request-template.v1.json`：正常请求模板，不含凭据。
 - `scanner/`：固定矩阵、响应证据判定和报告。
 - `tests/`：完整矩阵、模式独立性、修复复测、错误/超时夹具与日志脱敏。
-- `scripts/demo.py`：进程内完整演示；`scripts/smoke.py`：真实 HTTP 验证；`scripts/reviewer_runtime_smoke.py`：无凭据、离线 reviewer 容器隔离验证；`scripts/reviewer_egress_smoke.py`：代理 allowlist 与直连阻断验证；`scripts/reviewer_auth_budget_smoke.py`：无网络、无费用的 synthetic credential 边界验证。
+- `scripts/demo.py`：进程内完整演示；`scripts/smoke.py`：真实 HTTP 验证；`scripts/reviewer_runtime_smoke.py`：无凭据、离线 reviewer 容器隔离验证；`scripts/reviewer_egress_smoke.py`：代理 allowlist 与直连阻断验证；`scripts/reviewer_auth_budget_smoke.py`：无网络、无费用的 synthetic credential 边界验证；`scripts/reviewer_combined_smoke.py`：组合容器边界验证；`scripts/reviewer_execute.py`：正式执行门禁入口。
 
 `.local/`、数据库、令牌、运行日志和本地报告已被 Git 忽略。原始响应不落盘；报告只保留用户/租户测试 ID、命中的字段名和证据引用。当前为本地实验认证方案，不是生产身份平台。

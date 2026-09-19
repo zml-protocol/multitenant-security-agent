@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authentication_authorization_decision_path",
+    "independent_test_matrix",
+    "limitations_and_unexecuted_tests"
+  ],
+  "properties": {
+    "authentication_authorization_decision_path": {
+      "type": "object"
+    },
+    "independent_test_matrix": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "limitations_and_unexecuted_tests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

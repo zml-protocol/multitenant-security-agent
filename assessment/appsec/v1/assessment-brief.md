@@ -150,4 +150,4 @@ Codex 应在 finding 获确认后提交：最小修复、针对根因的测试�
 - [x] 目标、速率、凭据隔离和证据保留规则可接受。
 - [ ] 当前评估场景已冻结，评估期间不修改代码或 fixture。
 
-审批记录现在已填写正式冻结候选的干净 Git commit、fixture ID、中性 scenario ID、bundle ID 和生成时间。启动门槛仍未勾选，候选 bundle 仍是 `draft_not_for_claude`，因此当前状态依然不是 `ready_for_claude_review`。
+审批记录现在已填写正式冻结候选的干净 Git commit、fixture ID、中性 scenario ID、bundle ID 和生成时间。候选已经通过 attestation 验证，但内嵌 bundle 状态仍是 `draft_not_for_claude`，不可变性承诺和正式启动批准尚未完成，因此当前状态依然不是 `ready_for_claude_review`。

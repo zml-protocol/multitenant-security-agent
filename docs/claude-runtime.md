@@ -51,15 +51,17 @@ Claude Code 的沙箱只约束 Bash 类子进程；内置 Read/Edit/Write 工具
 - Claude Code `2.1.278` 和包含各平台包 integrity 的 `package-lock.json`；
 - `/etc/claude-code/managed-settings.json`，禁止 bypass permission mode、Claude.ai connectors、Artifacts、skills/plugins 同步、自动更新、遥测、错误报告和非必要流量，并启用子进程环境清理；
 - 非 root UID/GID `10001:10001`；
+- Claude Code 子进程隔离所需的 `bubblewrap` 与 `socat`；
+- 只从 `/run/secrets/anthropic_api_key` 读取凭据的容器内启动包装器；
 - 由现有 runner 生成的只读输入、可写输出、只读根文件系统、受限 tmpfs、删除 capabilities、`no-new-privileges` 和 `--network none` 参数。
 
 `python -m scripts.reviewer_runtime_smoke` 已在 Docker Desktop 上通过，并确认版本、UID、文件系统边界、临时配置、无默认路由和无凭据环境变量。脚本使用本次构建的镜像 ID 执行 smoke 并把 ID 写入本地结果；正式运行仍须使用并记录不可变 registry digest。
 
-Smoke 只执行 `claude --version` 和本地边界探测。它没有认证、模型调用或 API 费用，也尚未证明 Claude 在真实会话中应用了 managed settings。
+基础 smoke 只执行 `claude --version` 和本地边界探测。后续组合 smoke 又执行了无网络、无凭据的 `claude doctor`，确认 CLI 接受 managed environment 且没有安装问题；真实模型会话中的最终设置证据仍须由 canary 提供。
 
 ## 网络出口边界
 
-当前 runner 的 `--network none` 适用于离线隔离验证，无法完成真实 Claude API 调用。[受限出口基础](reviewer-egress.md)已经独立实现并验证内部网络、代理唯一出口和域名 allowlist，但尚未接入 runner。Docker 网络负责阻断 reviewer 直连，独立代理负责执行主机 allowlist。
+旧 runner 的 `--network none` 适用于离线隔离验证，无法完成真实 Claude API 调用。[受限出口](reviewer-egress.md)已经通过独立和组合 smoke；新的[受控执行器](reviewer-execution.md)在最终批准后才会创建 internal + proxy 拓扑。Docker 网络负责阻断 reviewer 直连，独立代理负责执行主机 allowlist。
 
 最小主机集合取决于认证方式：
 
@@ -88,14 +90,14 @@ Smoke 只执行 `claude --version` 和本地边界探测。它没有认证、模
 | 只读输入、可写输出、无源仓库挂载 | 已通过真实 Docker smoke test | 在最终 Claude 镜像上重复验证 |
 | 两阶段 seal/release 门禁 | 已实现 | 维持人工授权 |
 | Claude Code 安装与版本固定 | 已实现离线镜像基础 | 正式运行前记录不可变 registry digest |
-| Linux 运行基础 | 已验证 | 已验证二进制、非 root 身份和 Docker 文件边界；内置 Bash sandbox 尚未验证 |
-| 受限网络出口 | 独立基础已实现并通过 smoke | 选择认证方式后确定完整 allowlist，再绑定不可变镜像并接入 runner |
-| 专用凭据注入与子进程清理 | 专用 workspace API key 来源已提议，synthetic sentinel 本地验证已通过 | 审批后在最终容器中实现运行时注入，并重复泄漏验证 |
+| Linux 运行基础 | 已验证 | 已验证二进制、非 root 身份、Docker 文件边界，且 `claude doctor` 无安装问题 |
+| 受限网络出口 | 组合 smoke 已通过 | 正式启动后只启用已验证的 internal + proxy 拓扑 |
+| 专用凭据注入与子进程清理 | 专用 workspace API key 已批准，secret-file 包装器与 synthetic sentinel 组合验证已通过 | 创建真实专用 key 后，在最终 canary 中重复泄漏验证 |
 | 非必要连接、插件和 connectors 禁用 | managed settings 已固化 | 联网前验证 Claude 实际加载设置及真实连接 |
-| 模型与费用预算 | 固定模型与单次预算提案已实现，尚未批准 | 由 Security Engineer 单独批准，并实现外部 fail-closed 监督 |
+| 模型与费用预算 | 固定模型与单次预算已批准，CLI 费用/turn 限制和 fail-closed supervisor 已实现 | 正式启动批准后核对真实 usage |
 | 正式 Claude 执行 | 未授权 | 完成审批记录第 8 节后另行授权 |
 
-因此当前结论是：固定版本的离线 reviewer 容器、独立受限出口和 synthetic credential 边界均已分别通过 smoke test；真实凭据注入、组合后的联网边界和真实设置加载仍未验证，正式 Claude reviewer 也未获执行授权。
+因此当前结论是：固定版本 reviewer 容器、组合受限出口、synthetic credential 注入和 `claude doctor` 均已通过；真实 key 与真实模型会话仍未运行，正式 Claude reviewer 也未获执行授权。
 
 ## 官方资料
 
