@@ -150,4 +150,4 @@ Before a formal Claude assessment starts, the Security Engineer must confirm:
 - [x] The target, rate, credential isolation, and evidence retention rules are acceptable.
 - [ ] The assessment scenario is frozen and neither code nor fixture will change during review.
 
-The requirements approval record now contains the approver, UTC timestamp, and requirement version. The Git commit used for formal assessment, fixture ID, and neutral scenario ID are not yet frozen, so the current status is not `ready_for_claude_review`.
+The approval record now contains a formal freeze candidate with a clean Git commit, fixture ID, neutral scenario ID, bundle ID, and generation time. The start-gate decisions remain unchecked and the candidate bundle remains `draft_not_for_claude`, so the current status is still not `ready_for_claude_review`.

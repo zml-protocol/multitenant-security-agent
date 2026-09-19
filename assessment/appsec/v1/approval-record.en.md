@@ -20,9 +20,12 @@ This is the single formal sign-off location for workflow 1. Read the linked sour
 | approver | `project_owner` |
 | approved_at_utc | `2026-09-19T18:42:29Z` |
 | requirement_version | `appsec-v1.0` |
-| git_commit | Full commit SHA after code freeze |
-| fixture_id | To be completed after the assessment data is frozen |
-| assessment_scenario_id | To be completed after scenario delabeling |
+| git_commit | `14a7b48ae30b833962752e4d65b7e03ade5664a1` |
+| fixture_id | `fixture-256eb13b57860e22` |
+| assessment_scenario_id | `scenario-7f3a` |
+| candidate_bundle_id | `bundle-6a1a247aca19153c0d22` |
+| candidate_generated_at_utc | `2026-09-19T20:44:40.966113Z` |
+| candidate_status | `draft_not_for_claude` |
 
 Status moves only in this order:
 
@@ -120,5 +123,6 @@ When every item is complete, change `approval_status` to `ready_for_claude_revie
 | `2026-09-19T18:42:29Z` | `project_owner` | Approved AppSec requirements v1.0 (Sections 2–7) | No (initial approval) |
 | `2026-09-19T19:41:06Z` | `project_owner` | Approved bundle-only two-phase reviewer access model v2.0 | No (approved in this record) |
 | `2026-09-19T19:56:57Z` | `project_owner` | Authorized implementation of the isolated runner plan, phase 1 seal, and phase 2 release gate; Claude execution remains unauthorized | No (implementation of the approved model) |
+| `2026-09-19T20:44:40.966113Z` | `codex` | Generated the formal freeze candidate from the recorded clean commit, new fixture, and randomly selected neutral scenario; start-gate decisions remain unchecked | No (candidate generation only) |
 
 After formal approval, any change affecting actors, assets, trust boundaries, scope, expected behavior, tool access, or the finding standard requires a new entry and reapproval. A spelling-only correction that does not change meaning may be recorded as not requiring reapproval.

@@ -20,9 +20,12 @@
 | approver | `project_owner` |
 | approved_at_utc | `2026-09-19T18:42:29Z` |
 | requirement_version | `appsec-v1.0` |
-| git_commit | 待代码冻结后填写完整 commit SHA |
-| fixture_id | 待评估数据冻结后填写 |
-| assessment_scenario_id | 待去标签化场景完成后填写 |
+| git_commit | `14a7b48ae30b833962752e4d65b7e03ade5664a1` |
+| fixture_id | `fixture-256eb13b57860e22` |
+| assessment_scenario_id | `scenario-7f3a` |
+| candidate_bundle_id | `bundle-6a1a247aca19153c0d22` |
+| candidate_generated_at_utc | `2026-09-19T20:44:40.966113Z` |
+| candidate_status | `draft_not_for_claude` |
 
 状态只能按以下顺序变化：
 
@@ -120,5 +123,6 @@
 | `2026-09-19T18:42:29Z` | `project_owner` | 批准 AppSec requirements v1.0（第 2–7 节） | 否（初始批准） |
 | `2026-09-19T19:41:06Z` | `project_owner` | 批准 bundle-only 两阶段 reviewer 访问模型 v2.0 | 否（已在本记录中批准） |
 | `2026-09-19T19:56:57Z` | `project_owner` | 授权实现隔离 runner 计划、第一阶段封存和第二阶段释放门禁；仍未授权执行 Claude | 否（实现已批准模型） |
+| `2026-09-19T20:44:40.966113Z` | `codex` | 基于已记录的干净 commit、新 fixture 和随机选择的中性场景生成正式冻结候选；启动门槛仍未勾选 | 否（仅生成候选） |
 
 正式批准后，任何影响 actor、asset、trust boundary、scope、expected behavior、工具权限或 finding 标准的改动，都必须新增记录并重新审批。仅修正文案拼写且不改变含义时，可以记录为无需重新审批。
