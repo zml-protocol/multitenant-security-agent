@@ -1,0 +1,52 @@
+{
+    "schema_version":  "1.0",
+    "status":  "claude_draft_awaiting_security_engineer_adjudication",
+    "review_run_id":  "appsec-v1-phase1-ready-v4",
+    "bundle_id":  "bundle-6a1a247aca19153c0d22",
+    "source_commit":  "14a7b48ae30b833962752e4d65b7e03ade5664a1",
+    "generated_at_utc":  "2026-09-20T03:12:00Z",
+    "formal_dynamic_requests_executed":  0,
+    "raw_outputs_immutable":  true,
+    "files":  [
+                  {
+                      "path":  "raw/findings.en.md",
+                      "sha256":  "4ce3d241fdb5b793649d97aa015fc8e3c3c69f2f830e9f81d235bfe82c0bca02",
+                      "bytes":  9037
+                  },
+                  {
+                      "path":  "raw/findings.json",
+                      "sha256":  "b92a4cf6d19b16eeb73dae76eca01d91c47ef218c97e97b7430805152442d0fd",
+                      "bytes":  21736
+                  },
+                  {
+                      "path":  "raw/findings.md",
+                      "sha256":  "d90a6039b05cf168bd982dcd06abd2130762dd38e16fb8efd67ca087bebc03da",
+                      "bytes":  8635
+                  },
+                  {
+                      "path":  "raw/limitations.en.md",
+                      "sha256":  "48c0cdd45a50f1aa3839c742d547dae5e6f433c13c81ae25aad990640642d381",
+                      "bytes":  6107
+                  },
+                  {
+                      "path":  "raw/limitations.md",
+                      "sha256":  "e133139692e521e8b9fe07bf2de3eaf4cac95dfbfd6138f5bac113d8d1dc1cd1",
+                      "bytes":  5573
+                  },
+                  {
+                      "path":  "raw/remediation-advice.en.md",
+                      "sha256":  "cca4fb3d36d6b304675b04b177b153ce0a37387112716ef890e1931b19a06f70",
+                      "bytes":  5204
+                  },
+                  {
+                      "path":  "raw/remediation-advice.md",
+                      "sha256":  "fb668ce57c8696791d0d8450f46b1032dd652085a9a06a144f00833aa7ce8d80",
+                      "bytes":  4387
+                  },
+                  {
+                      "path":  "raw/static-review-log.json",
+                      "sha256":  "c8ef42ee82910b4c93d2ff10b5d208f85a6438a7414ae58bd2f08c4c0d50dc80",
+                      "bytes":  4931
+                  }
+              ]
+}

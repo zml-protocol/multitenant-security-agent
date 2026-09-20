@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "status": "validated_waiting_formal_start_approval",
-  "validated_at_utc": "2026-09-19T22:54:07.417730Z",
+  "status": "validated_waiting_security_engineer_manual_launch_approval",
+  "validated_at_utc": "2026-09-20T02:59:43.552673Z",
   "source_commit": "14a7b48ae30b833962752e4d65b7e03ade5664a1",
   "fixture_id": "fixture-256eb13b57860e22",
   "scenario_id": "scenario-7f3a",
@@ -15,28 +15,28 @@
     "appsec-v1-vulnerable^{}": "14a7b48ae30b833962752e4d65b7e03ade5664a1"
   },
   "profiles": {
-    "runtime_sha256": "4d001220864c53e7a31e7f7228eafeb5e4def802209349f544ce9c205c45a420",
-    "egress_sha256": "ef2a28e34faf5bcc37f54783658fdad9e492b1023756045f8d667815ca97b57b",
-    "execution_sha256": "c75c068ac4cb5e72c1aab7d2e15504217dce94a4dbf8c9c9ef9472ef264d532b",
-    "approved_auth_budget_subject_sha256": "a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4"
+    "runtime_sha256": "35318339400a63aecb2c689d74b1cecfd6b9d27237f7a7f4bd1c23f78c4b7489",
+    "egress_sha256": "88b480669602996ea097c8dc6af22530519ff5beb647d728446425dd6364c1a5",
+    "execution_sha256": "1634de6fc75787b4aa1567fe08c0078d802a805fbc25442db9d4ca060adaced0",
+    "approved_auth_budget_subject_sha256": "b8cbce947582c280578585dff4e240a0b6e22a0d466024ddb90165910d8548f1"
   },
   "control_files_sha256": {
-    "reviewer/auth_budget/gate.py": "1ab1658bbf2db17c770740adf94c84b64e97550c86913e354948d18888411c99",
-    "reviewer/start_approval.py": "668946ed829c002f10404e37bd8787c412c6d7d01dfc46987da98e8045a3d8a8",
-    "reviewer/execution/controller.py": "5436d6b03189c1007aabe3956793d5991432b0e7cad8a8a61e959656c164bc71",
-    "reviewer/runtime/Dockerfile": "312cb5125eae33369b3ac9f143eb187f7f4c6a746b0695a179cabed87f913735",
-    "reviewer/runtime/managed-settings.json": "330e58e1baa370f7a8e60c0b74da8a158e4daf14357cd952d831823a3fd03791",
-    "reviewer/runtime/credential-exec.sh": "15c5565f90bf398c2937a24f2f0c017afdcbf4db55dc5bb4c84b926d5bc4a704",
-    "reviewer/runtime/credential-probe.sh": "ab5793d1c75b0ff9e8da32d15ceba66602ec1062cbf331f25d77ee0122ea2f23",
+    "reviewer/auth_budget/gate.py": "2f95eb24004e0568f865b013a5730d88d6d64b51e97dbd1d27d49258f623a1f7",
+    "reviewer/start_approval.py": "872963b0376c8cb4fd24baaaff3912a3be461d5e35551e61e18fc7492c188bb6",
+    "reviewer/execution/controller.py": "f69c0200f69f66dc84cccca7b9633d917b47773ed43a14cb6277b909c5c509c4",
+    "reviewer/runtime/Dockerfile": "44844ca541334061f7b6605f3bdd1edeee5eb2a58e348803507ede83f76ab24e",
+    "reviewer/runtime/managed-settings.json": "ce5d5256e4e6eae106e7be740d7107aa0d3b255139a45b3072836eefd2c9fdda",
+    "reviewer/runtime/credential-exec.sh": "6f6996a58a4fcffe5250383218f04d7b696a602a644b02611a4912165acc508e",
+    "reviewer/runtime/credential-probe.sh": "052fcdfb5fef2889c128e86fa95b5dc058ce4ff1efa5b48cfb3ec68614df7340",
     "reviewer/egress/Dockerfile": "564694760ee56b0bee560451adcdb275235b78dd5c9b74e487ec87ac2d63e65d",
     "reviewer/egress/proxy.js": "e9b1644b0cf7eb3da0671049c3a9ffe4ad4ed00c556f567d4112211756993766"
   },
   "images": {
-    "runtime_local_image_id": "sha256:d49654657cc6a7977adb7c50a03f613afa62b7fa71f70a1d78d83de8807b642a",
-    "egress_local_image_id": "sha256:dc4b0704ba84407d472ae93dd04dc01f80bbf2fb4f16d2adf12c93d1518ae235",
+    "runtime_local_image_id": "sha256:d2d65e9251bf1b2eeeb806b13a66de2ab25950e15be895fc4547521f4af3f7bc",
+    "egress_local_image_id": "sha256:2868e3ad34b4dee3c78483b476397e6629bbad86145bc67530afa18bf276b441",
     "registry_digest_required_for_cloud_deployment": true
   },
-  "claude_command_sha256": "b092170f02890c2c3f018b6c54dd9bb8b560a6cb15a870dd781e4994cf165668",
+  "claude_command_sha256": "b03ff6fb4f8d8a830a7c345921a42784b7edd8b501f9bb1c264e173b8d3e45ce",
   "checks": {
     "bundle_allowlist_and_hashes_valid": true,
     "source_commit_and_fixture_frozen": true,
@@ -44,7 +44,9 @@
     "ground_truth_markers_absent": true,
     "raw_application_credentials_absent": true,
     "credential_model_budget_approved": true,
-    "formal_execution_still_unauthorized": true
+    "codex_execution_absent": true,
+    "manual_launch_still_unapproved": true
   },
-  "formal_execution_authorized": false
+  "codex_execution_authorized": false,
+  "manual_launch_approved": false
 }

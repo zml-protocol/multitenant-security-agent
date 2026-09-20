@@ -1,20 +1,48 @@
 {
   "schema_version": "1.0",
-  "status": "awaiting_final_approval",
-  "formal_execution_authorized": false,
-  "approved_by": null,
-  "approved_at_utc": null,
+  "status": "approved_for_security_engineer_manual_launch",
+  "manual_launch_approved": true,
+  "codex_may_launch_claude": false,
+  "approved_by": "project_owner",
+  "approved_at_utc": "2026-09-20T03:02:30.589534Z",
   "candidate_attestation": "assessment/appsec/v1/formal-candidate-attestation.json",
-  "authorized_attestation_sha256": null,
+  "authorized_attestation_sha256": "c2cd87005bf1333be573df341e86837eca0f9c755fb6938fd0b6a2b1b01e76e7",
   "approval_package": "assessment/appsec/v1/formal-start-approval-package.json",
-  "authorized_approval_package_sha256": null,
-  "immutability_commitment_accepted": false,
-  "external_prerequisites": {
-    "anthropic_workspace_name": null,
-    "api_key_label": null,
-    "workspace_spend_limit_usd": null,
-    "workspace_spend_limit_period": null,
-    "auto_reload_enabled": null,
-    "dedicated_api_key_created": false
-  }
+  "prepared_handoff_manifest": ".local/reviewer-handoffs/appsec-v1-phase1-ready-v4/handoff-manifest.json",
+  "prepared_handoff_manifest_sha256": "9dc4e0e2dc2f9b6cf9b93ba8994762df5e260062ba44c9dfd05820a828c7d5ad",
+  "authorized_handoff_manifest_sha256": "9dc4e0e2dc2f9b6cf9b93ba8994762df5e260062ba44c9dfd05820a828c7d5ad",
+  "immutability_commitment_accepted": true,
+  "security_engineer_supplies_credential_at_manual_launch": true,
+  "previous_attempts": [
+    {
+      "status": "approved_for_security_engineer_manual_launch",
+      "approved_by": "project_owner",
+      "approved_at_utc": "2026-09-20T01:15:24.846905Z",
+      "authorized_attestation_sha256": "2c6c9195fbcdc233e0281e6eea54384bf5acb2ec8d5d325ab19b5b461f79e364",
+      "authorized_handoff_manifest_sha256": "fcff248e4053225d88a2fdffd4b2e3247961291ca94ff3c0e1f66f4a6c87ec68",
+      "run_id": "appsec-v1-phase1-ready",
+      "outcome": "reviewer_infrastructure_failure_no_assessment_performed",
+      "output_files_created": 0
+    },
+    {
+      "status": "approved_for_security_engineer_manual_launch",
+      "approved_by": "project_owner",
+      "approved_at_utc": "2026-09-20T02:15:02.184847Z",
+      "authorized_attestation_sha256": "4fcc714da24dfee9b70d28b3cd3deed148ade5959b53eecbdbb9ef255c35625d",
+      "authorized_handoff_manifest_sha256": "cb37a3fadfb93fa9e8668e968c1a533aac4a1276e1ce42dc057fc65c46f7ae34",
+      "run_id": "appsec-v1-phase1-ready-v2",
+      "outcome": "reviewer_infrastructure_failure_tool_result_missing",
+      "output_files_created": 0
+    },
+    {
+      "status": "approved_for_security_engineer_manual_launch",
+      "approved_by": "project_owner",
+      "approved_at_utc": "2026-09-20T02:35:32.009233Z",
+      "authorized_attestation_sha256": "744aaa8b6abf48f250e09c46952ab29b5c95526425e679da5c7c5b296117411d",
+      "authorized_handoff_manifest_sha256": "ffd98c269fbef2272fb9e5ba841b03089ca5b5773d4e7b2dc4e46ca10c2e937c",
+      "run_id": "appsec-v1-phase1-ready-v3",
+      "outcome": "reviewer_infrastructure_failure_cli_prompt_parsed_as_deny_rules",
+      "output_files_created": 0
+    }
+  ]
 }

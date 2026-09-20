@@ -84,11 +84,11 @@ $env:LAB_MODE = 'same_tenant_bypass'
 - `reviewer/runtime/`：固定 Claude Code 版本、基础镜像摘要、npm 完整性锁和强制 managed settings 的 Linux reviewer 镜像定义。
 - `reviewer/egress/`：默认拒绝、代理唯一、固定 `api.anthropic.com:443` allowlist 的未启用出口基础。
 - `reviewer/auth_budget/`：已批准但未获准执行的专用 API key 来源、固定模型、预算字段和 synthetic sentinel 泄漏验证。
-- `reviewer/execution/`：固定 Claude 命令、阶段 prompt/schema、secret 文件注入和 fail-closed supervisor。
+- `reviewer/execution/`：生成 interactive static-only Claude 命令、只读输入/独立输出、隔离 Compose handoff 和 Windows Terminal 一键启动入口；项目与 Codex 不启动 Claude。
 - `fixtures/permissions.v1.json`：独立的显式权限预期。
 - `fixtures/request-template.v1.json`：正常请求模板，不含凭据。
 - `scanner/`：固定矩阵、响应证据判定和报告。
 - `tests/`：完整矩阵、模式独立性、修复复测、错误/超时夹具与日志脱敏。
-- `scripts/demo.py`：进程内完整演示；`scripts/smoke.py`：真实 HTTP 验证；`scripts/reviewer_runtime_smoke.py`：无凭据、离线 reviewer 容器隔离验证；`scripts/reviewer_egress_smoke.py`：代理 allowlist 与直连阻断验证；`scripts/reviewer_auth_budget_smoke.py`：无网络、无费用的 synthetic credential 边界验证；`scripts/reviewer_combined_smoke.py`：组合容器边界验证；`scripts/reviewer_execute.py`：正式执行门禁入口。
+- `scripts/demo.py`：进程内完整演示；`scripts/smoke.py`：真实 HTTP 验证；`scripts/reviewer_runtime_smoke.py`：无凭据、离线 reviewer 容器隔离验证；`scripts/reviewer_egress_smoke.py`：代理 allowlist 与直连阻断验证；`scripts/reviewer_auth_budget_smoke.py`：无网络、无费用的 synthetic credential 边界验证；`scripts/reviewer_combined_smoke.py`：组合容器边界验证；`scripts/reviewer_execute.py`：只准备或批准手工 handoff，不启动 Claude。
 
 `.local/`、数据库、令牌、运行日志和本地报告已被 Git 忽略。原始响应不落盘；报告只保留用户/租户测试 ID、命中的字段名和证据引用。当前为本地实验认证方案，不是生产身份平台。

@@ -25,7 +25,6 @@ COPY --chown=root:root --chmod=0444 managed-settings.json /etc/claude-code/manag
 COPY --chown=root:root --chmod=0555 smoke.sh /usr/local/bin/reviewer-runtime-smoke
 COPY --chown=root:root --chmod=0555 credential-exec.sh /usr/local/bin/reviewer-credential-exec
 COPY --chown=root:root --chmod=0555 credential-probe.sh /usr/local/bin/reviewer-credential-probe
-
 ENV CLAUDE_CODE_EXPECTED_VERSION=$CLAUDE_CODE_VERSION \
     CLAUDE_CONFIG_DIR=/run/claude-config \
     HOME=/home/reviewer \

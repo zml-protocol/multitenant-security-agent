@@ -4,7 +4,7 @@
 
 状态：`runtime_foundation_implemented_not_authorized_for_claude`
 
-本 runner 实现已批准的 bundle-only 两阶段交接，但不会自行调用 Claude、注入凭据、选择正式场景或授权开始评估。它生成的旧 Docker plan 仍是离线准备证据；正式命令、凭据与代理拓扑由独立的 [受控执行器](reviewer-execution.md) 管理，并在最终启动门批准前 fail closed。
+本 runner 实现已批准的 bundle-only 两阶段交接，但不会自行调用 Claude、注入凭据、选择正式场景或授权开始评估。它生成的旧 Docker plan 仍是离线准备证据；新的 [isolated handoff preparer](reviewer-execution.md) 只生成正式命令、容器拓扑和人工启动门，Security Engineer 必须单独启动。
 
 ## 状态机
 
@@ -96,4 +96,4 @@ python -m reviewer.runner verify --run .local/reviewer-runs/<review-run-id>
 
 验证会按当前状态检查可用的完整哈希链。准备后的 bundle、封存输出、暂存输入、授权记录或第二阶段文件有任何改动都会失败。
 
-审批记录中的正式启动门槛仍未关闭。代码、fixture 与中性 scenario 已形成经过 attestation 验证的冻结候选，但尚未授权正式评估。[Claude 运行时准备审计](claude-runtime.md)记录整体状态；[受控执行器](reviewer-execution.md)已经把运行时、secret-file 凭据路径和[受限出口](reviewer-egress.md)组合验证。旧 Docker plan 继续强制 `--network none`，正式执行器则在最终启动门批准前拒绝运行。
+首次手工启动因工具 allow 规则缺失而失败，未形成评估结果；修复后的 v2 已获得新的正式启动批准。[Claude 运行时准备审计](claude-runtime.md)记录整体状态；[isolated handoff](reviewer-execution.md)继续强制交互式 static-only、只读输入、独立输出和受限出口。Codex 不能启动 Claude。

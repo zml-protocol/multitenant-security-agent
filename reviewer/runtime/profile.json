@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "status": "image_definition_implemented_execution_not_authorized",
+  "status": "manual_launch_image_definition",
   "image": "multitenant-security-agent/claude-reviewer:2.1.278",
   "claude_code_version": "2.1.278",
   "claude_code_npm_integrity": "sha512-mfNRqC0GaEXqmP97NiwJBeYBmRuqe2VzgLUreUUaEhyJxJWx2Z6ClW1tBOncGNNXdhj6EY4LPvUIWP+oq311CA==",
@@ -12,5 +12,7 @@
   "network_mode": "none",
   "credential_injection": "disabled",
   "formal_execution_authorized": false,
+  "codex_may_launch_claude": false,
+  "human_supplies_credential_at_manual_launch": true,
   "image_digest_required_before_formal_execution": true
 }

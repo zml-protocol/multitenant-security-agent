@@ -84,11 +84,11 @@ For remediation validation, stop the application, set `LAB_MODE` back to `secure
 - `reviewer/runtime/`: defines the Linux reviewer image with a pinned Claude Code version, base-image digest, npm integrity lock, and enforced managed settings.
 - `reviewer/egress/`: defines the inactive, default-deny, proxy-only egress foundation with a fixed `api.anthropic.com:443` allowlist.
 - `reviewer/auth_budget/`: defines the approved but execution-disabled dedicated API-key source, fixed model, budget fields, and synthetic-sentinel leakage checks.
-- `reviewer/execution/`: defines the fixed Claude command, phase prompts/schemas, secret-file injection, and fail-closed supervisor.
+- `reviewer/execution/`: generates the interactive static-only Claude command, read-only input/separate output, isolated Compose handoff, and one-command Windows Terminal entry point; neither the project nor Codex launches Claude.
 - `fixtures/permissions.v1.json`: independent, explicit authorization expectations.
 - `fixtures/request-template.v1.json`: a normal request template with no credentials.
 - `scanner/`: the fixed matrix, response evidence assessment, and reporting.
 - `tests/`: full matrix tests, mode isolation, remediation retests, error/timeout fixtures, log correlation, and redaction.
-- `scripts/demo.py`: in-process complete demo; `scripts/smoke.py`: real HTTP verification; `scripts/reviewer_runtime_smoke.py`: credential-free, offline reviewer-container isolation verification; `scripts/reviewer_egress_smoke.py`: proxy allowlist and direct-egress blocking verification; `scripts/reviewer_auth_budget_smoke.py`: network-free, cost-free synthetic credential boundary verification; `scripts/reviewer_combined_smoke.py`: combined container-boundary verification; `scripts/reviewer_execute.py`: formal execution gate entry point.
+- `scripts/demo.py`: in-process complete demo; `scripts/smoke.py`: real HTTP verification; `scripts/reviewer_runtime_smoke.py`: credential-free, offline reviewer-container isolation verification; `scripts/reviewer_egress_smoke.py`: proxy allowlist and direct-egress blocking verification; `scripts/reviewer_auth_budget_smoke.py`: network-free, cost-free synthetic credential boundary verification; `scripts/reviewer_combined_smoke.py`: combined container-boundary verification; `scripts/reviewer_execute.py`: prepares or approves a manual handoff and never launches Claude.
 
 `.local/`, databases, tokens, runtime logs, and local reports are ignored by Git. Raw responses are not persisted; reports retain only user/tenant test IDs, matched field names, and evidence references. The current authentication scheme is for a local lab and is not a production identity platform.

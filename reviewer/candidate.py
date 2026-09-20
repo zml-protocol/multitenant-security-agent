@@ -89,8 +89,8 @@ def validate_candidate(bundle: Path, fixture_directory: Path, runtime_image_id: 
     if auth["approval"].get("approved") is not True:
         raise ValueError("Credential, model, and budget proposal is not approved")
     start = read_json(START_GATE_PATH)
-    if start.get("formal_execution_authorized") is not False:
-        raise ValueError("Candidate validation must occur before formal start authorization")
+    if start.get("manual_launch_approved") is not False or start.get("codex_may_launch_claude") is not False:
+        raise ValueError("Candidate validation must occur before Security Engineer manual-launch approval")
     execution = read_json(EXECUTION_PROFILE_PATH)
     if execution.get("formal_execution_authorized") is not False:
         raise ValueError("Execution profile must remain unauthorized")
@@ -104,7 +104,7 @@ def validate_candidate(bundle: Path, fixture_directory: Path, runtime_image_id: 
 
     return {
         "schema_version": "1.0",
-        "status": "validated_waiting_formal_start_approval",
+        "status": "validated_waiting_security_engineer_manual_launch_approval",
         "validated_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         **EXPECTED,
         "bundle_embedded_status": manifest["status"],
@@ -133,9 +133,11 @@ def validate_candidate(bundle: Path, fixture_directory: Path, runtime_image_id: 
             "ground_truth_markers_absent": True,
             "raw_application_credentials_absent": True,
             "credential_model_budget_approved": True,
-            "formal_execution_still_unauthorized": True,
+            "codex_execution_absent": True,
+            "manual_launch_still_unapproved": True,
         },
-        "formal_execution_authorized": False,
+        "codex_execution_authorized": False,
+        "manual_launch_approved": False,
     }
 
 

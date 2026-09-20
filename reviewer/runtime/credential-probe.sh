@@ -13,6 +13,6 @@ child_present="$(env -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN -u CLAUDE_CODE
   printf false
 ')"
 
-node -e 'const fs=require("fs"); const p="/etc/claude-code/managed-settings.json"; const s=JSON.parse(fs.readFileSync(p,"utf8")); if(s.availableModels?.[0]!=="claude-sonnet-5" || s.env?.CLAUDE_CODE_SUBPROCESS_ENV_SCRUB!=="1" || s.env?.CLAUDE_CODE_SKIP_PROMPT_HISTORY!=="1") process.exit(1)'
+node -e 'const fs=require("fs"); const p="/etc/claude-code/managed-settings.json"; const s=JSON.parse(fs.readFileSync(p,"utf8")); const allowed=["Read","Glob","Grep","Edit"]; const denied=["Edit(/review/input/**)"]; if(s.availableModels?.[0]!=="claude-sonnet-5" || s.env?.CLAUDE_CODE_SUBPROCESS_ENV_SCRUB!=="1" || s.env?.CLAUDE_CODE_SKIP_PROMPT_HISTORY!=="1" || !allowed.every(rule=>s.permissions?.allow?.includes(rule)) || !denied.every(rule=>s.permissions?.deny?.includes(rule))) process.exit(1)'
 
 printf '{"credential_present_in_wrapper":true,"sensitive_environment_present_in_probe_child":%s,"managed_settings_valid":true}\n' "$child_present"

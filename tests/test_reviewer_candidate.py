@@ -17,8 +17,9 @@ def file_sha256(path: Path) -> str:
 def test_formal_candidate_attestation_is_validated_but_not_authorized():
     attestation = json.loads(ATTESTATION.read_text(encoding="utf-8"))
 
-    assert attestation["status"] == "validated_waiting_formal_start_approval"
-    assert attestation["formal_execution_authorized"] is False
+    assert attestation["status"] == "validated_waiting_security_engineer_manual_launch_approval"
+    assert attestation["codex_execution_authorized"] is False
+    assert attestation["manual_launch_approved"] is False
     assert {key: attestation[key] for key in EXPECTED} == EXPECTED
     assert attestation["bundle_embedded_status"] == "draft_not_for_claude"
     assert all(attestation["checks"].values())
@@ -34,14 +35,18 @@ def test_formal_candidate_attestation_is_validated_but_not_authorized():
     assert attestation["images"]["egress_local_image_id"].startswith("sha256:")
 
 
-def test_machine_start_gate_remains_closed():
+def test_machine_start_gate_allows_only_security_engineer_to_launch_v4():
     gate = json.loads((ROOT / "assessment/appsec/v1/start-gate.json").read_text(encoding="utf-8"))
 
-    assert gate["status"] == "awaiting_final_approval"
-    assert gate["formal_execution_authorized"] is False
-    assert gate["approved_by"] is None
-    assert gate["approved_at_utc"] is None
-    assert gate["authorized_attestation_sha256"] is None
-    assert gate["authorized_approval_package_sha256"] is None
-    assert gate["immutability_commitment_accepted"] is False
-    assert gate["external_prerequisites"]["dedicated_api_key_created"] is False
+    assert gate["status"] == "approved_for_security_engineer_manual_launch"
+    assert gate["manual_launch_approved"] is True
+    assert gate["codex_may_launch_claude"] is False
+    assert gate["approved_by"] == "project_owner"
+    assert gate["approved_at_utc"]
+    assert gate["authorized_attestation_sha256"] == file_sha256(ATTESTATION)
+    assert gate["authorized_handoff_manifest_sha256"] == gate["prepared_handoff_manifest_sha256"]
+    assert gate["prepared_handoff_manifest_sha256"]
+    assert gate["immutability_commitment_accepted"] is True
+    assert gate["security_engineer_supplies_credential_at_manual_launch"] is True
+    assert gate["previous_attempts"][-1]["outcome"] == "reviewer_infrastructure_failure_cli_prompt_parsed_as_deny_rules"
+    assert gate["previous_attempts"][-1]["output_files_created"] == 0

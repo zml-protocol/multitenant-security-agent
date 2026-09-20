@@ -1,70 +1,53 @@
-# Claude Reviewer Final Start Approval Package
+# Claude Reviewer Manual-Launch Approval Package
 
 English | [中文](formal-start-approval.md)
 
-Status: `prepared_not_approved`
+Status: `approved_for_security_engineer_manual_launch`
 
-This package separates approval of the run design from authorization to perform this specific formal Claude assessment. The candidate, budget, containers, and egress controls have been validated, but the Security Engineer has not accepted the assessment-window immutability commitment or supplied the final approver and time. Every execution switch therefore remains closed. No real API key has been created or read, no model was called, and no cost was incurred.
+This package binds the validated vulnerable candidate and generated isolated reviewer workspace. Codex completed preparation and container validation. With explicit project-owner authorization, it ran one isolated model preflight that could see only a fixed probe file; it did not mount or read the reviewer bundle and did not expose the API-key value. The formal assessment has not started.
 
 ## Bound objects
 
-The machine-readable package is `assessment/appsec/v1/formal-start-approval-package.json`:
-
-| Object | Bound value |
+| Object | Value |
 | --- | --- |
-| Candidate-attestation SHA-256 | `8a2d419e75754557c8ef61e03dd52b8acd8882d92d9bd53bde764b73e86272bb` |
-| Approval-package SHA-256 | `fe0b63ffdd00aa5c3b7d44f95615e2aef7cc7570092fe7eefe4add17c8f0059b` |
+| Candidate-attestation SHA-256 | `c2cd87005bf1333be573df341e86837eca0f9c755fb6938fd0b6a2b1b01e76e7` |
+| Start-approval-package SHA-256 | `258148e4c18dd68b8f241d07291469c0b3a81529362ea444089aedef55798193` |
+| Handoff-manifest SHA-256 | `9dc4e0e2dc2f9b6cf9b93ba8994762df5e260062ba44c9dfd05820a828c7d5ad` |
 | Vulnerable-code commit | `14a7b48ae30b833962752e4d65b7e03ade5664a1` |
-| Fixture | `fixture-256eb13b57860e22` |
-| Scenario | `scenario-7f3a` |
-| Bundle | `bundle-6a1a247aca19153c0d22` |
+| Fixture / scenario / bundle | `fixture-256eb13b57860e22` / `scenario-7f3a` / `bundle-6a1a247aca19153c0d22` |
+| Workspace | `.local/reviewer-handoffs/appsec-v1-phase1-ready-v4/` |
+| Separate results directory | `.local/reviewer-results/appsec-v1-phase1-ready-v4/` |
 | Model | `claude-sonnet-5` |
-| Per-run limits | `$1.00`, 12 turns, 900 seconds, 1 MiB captured output |
-| Tools | `Read`, `Glob`, `Grep` |
-| Egress | `api.anthropic.com:443` only |
+| Claude tools | `Read`, `Glob`, `Grep`, and `Write` restricted to `/review/output` |
+| Prohibited tools | `Bash`, `Edit`, `WebFetch`, `WebSearch`, MCP, and browsers |
+| Egress | no direct reviewer egress; the proxy permits only `api.anthropic.com:443` |
 
-The package itself remains `prepared_not_approved` as the immutable approval subject. Final authorization is recorded in `start-gate.json`, which references SHA-256 values for this file and the candidate attestation. Rewriting the package cannot introduce new content into an already approved run.
+The machine-readable object is `assessment/appsec/v1/formal-start-approval-package.json`. It contains responsibilities, hashes, budgets, and non-secret state only; it contains no API-key value.
 
-## Two remaining human decisions
+## v4 preparation and preflight
 
-1. The Security Engineer accepts that vulnerable code, requirements, fixture, reviewer manifest, bundle, and bound control files will not change from final approval through completion of this assessment. A needed change terminates the run and requires new attestation and approval.
-2. The Security Engineer supplies the final approver and UTC time and explicitly changes the state from `requirements_approved` to `ready_for_claude_review`.
+The approved v2 manual run failed because `Read` tool results were not returned to the model. Claude read no code, created no output, and produced no finding. v2 remains frozen as infrastructure-failure evidence.
 
-These are the two unchecked items in Section 8 of the approval record. Preparing this package does not make either decision for the approver.
+v3 removes the unsupported `--restricted` flag and uses the container boundary for isolation. A separate preflight service mounted only `read-probe.txt`; Claude returned the exact expected value `REVIEWER_READ_CHANNEL_OK_8D2F4A61`. The same run exposed the current Claude Code file-permission syntax, so the managed rule was corrected to `Edit(/review/output/**)` while the actual exposed output tool remains `Write`.
 
-## Anthropic Console prerequisites
+The v4 assessment-window immutability commitment and Security Engineer manual launch were approved by `project_owner` at `2026-09-20T03:02:30.589534Z`. `codex_may_launch_claude` remains `false`.
 
-You must perform these actions in Anthropic Console. They may require purchasing non-refundable prepaid credits. This preparation step performs no paid action.
+## One-command launch after approval
 
-1. Create a dedicated project Workspace under **Settings → Workspaces**, such as `appsec-v1-reviewer`. Anthropic states that only an Organization Admin can create a Workspace.
-2. Open that Workspace's **Limits** tab and set its spend limit. Current project policy requires a recorded positive value no greater than `$1.00`. If Console does not permit that value, stop and amend and reapprove the project budget before launch; do not silently substitute a higher limit.
-3. Confirm that auto-reload is disabled on the organization **Billing** page. The organization's prepaid-credit balance does not replace the project's `$1.00` per-run CLI stop.
-4. Create a dedicated key in the Workspace's **API Keys** tab with a descriptive, non-sensitive label such as `appsec-v1-reviewer-20260919`.
-5. Store the key value only in an ephemeral file outside the repository. Never place it in JSON, Markdown, command arguments, chat, Docker environment arguments, or an image. Approval evidence records only the Workspace name and key label.
-6. Disable or delete the key after the run and reconcile actual usage in Anthropic's Usage/Cost reports by Workspace and API key.
+Store the Anthropic API key as a single-line text file outside the repository, for example `C:\secure\anthropic-api-key.txt`. Then run this command from any directory in Windows Terminal:
 
-Anthropic's official guidance says that a Workspace key is bound to its Workspace; the Workspace Limits page supports spend limits and notifications; the Billing page controls prepaid credits and auto-reload; and Usage/Cost reports can be filtered by Workspace and API key.
+```text
+D:\multitenant-security-agent\.local\reviewer-handoffs\appsec-v1-phase1-ready-v4\START-CLAUDE.cmd "C:\secure\anthropic-api-key.txt"
+```
 
-## Atomic changes after approval
+The command builds the containers, opens interactive Claude Code, and runs `docker compose down -v` after exit. The launcher checks human approval before the in-container credential wrapper reads the Compose secret. Neither project Python code nor Codex reads the key value.
 
-The package's `activation_changes` records 14 fixed JSON Pointer transitions. They must be applied together with `start-gate.json`, the two approval-record checkboxes, and final approval metadata. They must not leave a partially enabled state. The changes cover:
+Claude can only review `/review/input` statically. The run does not start the application, provide application tokens, issue HTTP requests, or perform dynamic tests. Results persist in the separate `/review/output` host directory, including bilingual findings, remediation advice, limitations, and the JSON log.
 
-- auth/budget status, formal execution, and model invocation;
-- authorization for the controlled execution controller;
-- runtime `internal_proxy_only` mode and read-only secret-file injection;
-- activation of the egress proxy for the formal runner;
-- reviewer-manifest status `ready_for_claude_review`; and
-- start-gate approver, UTC time, immutability commitment, non-secret Workspace/key identifiers, spend-limit period, and both SHA-256 values.
+## Runtime limits
 
-Before creating a Docker network or reading a secret file, the controller revalidates these values. Execution fails if any value is absent, the package changed, the spend limit exceeds `$1.00`, auto-reload is not explicitly disabled, or a current value differs from its approved target.
+The container enforces a 900-second timeout, a read-only root filesystem, read-only input, and a process-level 1 MiB limit for each output file. Interactive Claude Code currently has no verified native hard-stop flags for aggregate tokens, turns, or dollar cost, so 12 turns and `$1.00` are approved planning boundaries. The formal run also depends on an Anthropic Workspace spend limit and post-run usage reconciliation. The Security Engineer should exit the session when the planning boundary is reached.
 
 ## Interview explanation
 
-This step demonstrates the human authorization boundary. Codex can prepare the candidate, controls, cost boundary, and credential path as verifiable objects, but it cannot accept the freeze commitment or authorize model execution for the Security Engineer. File hashes bind approval to exact inputs and controls. The secret value does not enter approval evidence. Provider limits, the CLI stop, and the supervisor provide separate layers of cost control.
-
-## Official sources
-
-- [Creating and managing Workspaces](https://support.anthropic.com/en/articles/9796807-creating-and-managing-workspaces)
-- [How do I pay for API usage?](https://support.anthropic.com/en/articles/8977456-how-do-i-pay-for-my-api-usage)
-- [Cost and Usage Reporting in Console](https://support.anthropic.com/en/articles/9534590-cost-and-usage-reporting-in-console)
-- [API Console Roles and Permissions](https://support.anthropic.com/en/articles/10186004-api-console-roles-and-permissions)
+This design separates assessment preparation, run authorization, and security judgment. Codex generates a reviewable environment. The Security Engineer binds and personally launches the exact candidate. Claude performs only static code review and drafts findings and remediation advice. The Security Engineer decides reachability, whether dynamic evidence is needed, finding validity, impact, and severity.

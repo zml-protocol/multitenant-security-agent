@@ -1,70 +1,53 @@
-# Claude Reviewer 最终启动批准包
+# Claude Reviewer 手工启动批准包
 
 [English](formal-start-approval.en.md) | 中文
 
-状态：`prepared_not_approved`
+状态：`approved_for_security_engineer_manual_launch`
 
-本批准包把“运行方案已经批准”和“允许这一次 Claude 正式评估”分开。当前候选、预算、容器和出口控制已经验证，但 Security Engineer 尚未接受评估期间不可变性承诺，也未填写最终批准人和时间。因此所有运行开关保持关闭，没有创建或读取真实 API key，也没有模型调用或费用。
+本批准包绑定已经验证的漏洞候选与已经生成的 isolated reviewer workspace。Codex 已完成环境准备和容器验证。在项目所有者明确授权后，Codex 运行了一次隔离的最小模型 preflight；该服务只能看到固定探针文件，未挂载或读取 reviewer bundle，也未暴露 API key 值。正式评估尚未开始。
 
-## 当前绑定对象
+## 已绑定对象
 
-机器可读批准包位于 `assessment/appsec/v1/formal-start-approval-package.json`：
-
-| 对象 | 已绑定值 |
+| 对象 | 值 |
 | --- | --- |
-| 候选证明 SHA-256 | `8a2d419e75754557c8ef61e03dd52b8acd8882d92d9bd53bde764b73e86272bb` |
-| 批准包 SHA-256 | `fe0b63ffdd00aa5c3b7d44f95615e2aef7cc7570092fe7eefe4add17c8f0059b` |
+| 候选证明 SHA-256 | `c2cd87005bf1333be573df341e86837eca0f9c755fb6938fd0b6a2b1b01e76e7` |
+| 启动批准包 SHA-256 | `258148e4c18dd68b8f241d07291469c0b3a81529362ea444089aedef55798193` |
+| Handoff manifest SHA-256 | `9dc4e0e2dc2f9b6cf9b93ba8994762df5e260062ba44c9dfd05820a828c7d5ad` |
 | 漏洞代码 commit | `14a7b48ae30b833962752e4d65b7e03ade5664a1` |
-| fixture | `fixture-256eb13b57860e22` |
-| scenario | `scenario-7f3a` |
-| bundle | `bundle-6a1a247aca19153c0d22` |
+| Fixture / scenario / bundle | `fixture-256eb13b57860e22` / `scenario-7f3a` / `bundle-6a1a247aca19153c0d22` |
+| Workspace | `.local/reviewer-handoffs/appsec-v1-phase1-ready-v4/` |
+| 独立结果目录 | `.local/reviewer-results/appsec-v1-phase1-ready-v4/` |
 | 模型 | `claude-sonnet-5` |
-| 单次运行上限 | `$1.00`、12 turns、900 秒、1 MiB 捕获输出 |
-| 工具 | `Read`、`Glob`、`Grep` |
-| 出口 | 仅 `api.anthropic.com:443` |
+| Claude 工具 | `Read`、`Glob`、`Grep`、只允许 `/review/output` 的 `Write` |
+| 禁止工具 | `Bash`、`Edit`、`WebFetch`、`WebSearch`、MCP 与浏览器 |
+| 网络出口 | reviewer 无直接出口；proxy 只允许 `api.anthropic.com:443` |
 
-批准包自身保持 `prepared_not_approved`，作为不可变的批准对象。最终批准记录写入 `start-gate.json`，并引用这个文件和候选证明的 SHA-256；不能通过改写批准包把新内容带入已批准运行。
+机器可读对象是 `assessment/appsec/v1/formal-start-approval-package.json`。其中只包含职责、hash、预算和非秘密状态，不包含 API key 值。
 
-## 仍需人工完成的两项决定
+## v4 准备与 preflight
 
-1. Security Engineer 接受：从最终批准开始到本次评估结束，不修改漏洞代码、requirements、fixture、reviewer manifest、bundle 或已绑定控制文件。需要变更时终止本次运行，重新生成证明并重新批准。
-2. Security Engineer 填写最终 approver 与 UTC 时间，并明确把状态从 `requirements_approved` 改为 `ready_for_claude_review`。
+已批准的 v2 手工运行因 `Read` 工具结果未传回模型而失败。Claude 未读取代码、未生成输出，也未形成 finding。v2 保持冻结，作为 reviewer 基础设施失败证据。
 
-这正是审批记录第 8 节尚未勾选的两项。准备批准包不代表替你作出决定。
+v3 移除了未在当前官方 CLI 参考中公开支持的 `--restricted` 参数，改由容器边界负责隔离。独立 preflight service 只挂载 `read-probe.txt`；Claude 精确返回预期值 `REVIEWER_READ_CHANNEL_OK_8D2F4A61`。同一次运行还暴露了当前 Claude Code 的文件权限规则语法，因此 managed rule 已修正为 `Edit(/review/output/**)`，实际暴露给模型的输出工具仍为 `Write`。
 
-## Anthropic Console 前置操作
+v4 的评估窗口不可变性承诺和 Security Engineer 人工启动已由 `project_owner` 于 `2026-09-20T03:02:30.589534Z` 正式批准。`codex_may_launch_claude` 保持 `false`。
 
-这些操作需要你本人在 Anthropic Console 完成，并可能涉及购买不可退款的预付 credits。当前步骤没有执行任何付费操作。
+## 批准后的单条启动命令
 
-1. 在 **Settings → Workspaces** 创建本项目专用 Workspace，例如 `appsec-v1-reviewer`。Anthropic 说明只有 Organization Admin 可以创建 Workspace。
-2. 进入该 Workspace 的 **Limits**，设置 Workspace spend limit。当前项目政策要求记录的值为正数且不高于 `$1.00`。如果 Console 不允许该数值，停止启动并先修改、重新批准本项目预算；不要用更高限制代替。
-3. 在组织 **Billing** 页面确认 auto-reload 关闭。预付 credits 余额属于组织级控制，不能替代本项目的 `$1.00` 单次 CLI 停止线。
-4. 在 Workspace 的 **API Keys** 标签页创建专用 key，使用可识别但不敏感的标签，例如 `appsec-v1-reviewer-20260919`。
-5. 只把 key 值保存到仓库外的临时文件。不要把值填入 JSON、Markdown、命令参数、聊天、Docker environment 参数或镜像。批准记录只写 Workspace 名称和 key 标签。
-6. 运行完成后禁用或删除该 key，并在 Anthropic Usage/Cost 报告中按 Workspace 和 API key 核对实际用量。
+把 Anthropic API key 作为单行文本保存到仓库外，例如 `C:\secure\anthropic-api-key.txt`。随后在 Windows Terminal 中，从任意目录运行：
 
-Anthropic 官方说明：Workspace key 绑定到创建它的 Workspace；Workspace 的 Limits 页面可配置消费限制和通知；Billing 页面管理预付 credits 与 auto-reload；Usage/Cost 页面可以按 Workspace 和 API key 查看用量。
+```text
+D:\multitenant-security-agent\.local\reviewer-handoffs\appsec-v1-phase1-ready-v4\START-CLAUDE.cmd "C:\secure\anthropic-api-key.txt"
+```
 
-## 批准后一次性修改
+这条命令构建容器、以交互模式启动 Claude Code，并在退出后执行 `docker compose down -v`。脚本先验证人工批准，再由容器内 credential wrapper 读取 Compose secret；项目 Python 代码与 Codex 都不读取 key 值。
 
-批准包中的 `activation_changes` 记录了 14 个固定 JSON Pointer 变更。它们必须与 `start-gate.json`、审批记录的两个复选框和最终批准元数据一起修改，不能分批留下半开启状态。变更涵盖：
+Claude 只能静态阅读 `/review/input`。不会启动应用、提供应用 token、发出 HTTP 请求或执行动态测试。结果保存在独立的 `/review/output` 宿主目录，包括中英文 findings、remediation advice、limitations 以及 JSON 日志。
 
-- auth/budget：状态改为 `formally_authorized`，允许正式执行和模型调用；
-- execution：允许受控执行器运行；
-- runtime：启用 `internal_proxy_only` 与只读 secret-file 注入；
-- egress：把代理标记为正式 runner 的活动出口；
-- reviewer manifest：改为 `ready_for_claude_review`；
-- start gate：记录 approver、UTC 时间、不可变性承诺、Workspace/key 非敏感标识、消费限制周期以及两个 SHA-256。
+## 运行限制
 
-控制器会在创建 Docker 网络或读取 secret 文件之前重新校验这些值。任一值缺失、批准包被改写、消费上限超过 `$1.00`、auto-reload 未明确关闭，或当前值不等于批准目标，执行都会失败。
+容器强制 900 秒超时、只读根文件系统、只读输入和每个输出文件 1 MiB 的进程级文件大小限制。交互式 Claude Code 当前没有可验证的原生 token、turn 或美元硬停止参数，因此 12 turns 与 `$1.00` 是已批准的规划边界；正式运行还依赖 Anthropic Workspace spend limit，并在结束后核对用量。达到规划边界时，Security Engineer 应退出会话。
 
 ## 面试说明
 
-这一步展示的是 human-in-the-loop 的授权边界：Codex 可以把候选、控制、费用和密钥路径准备成可验证对象，但不能替 Security Engineer 接受冻结承诺或批准模型执行。批准使用文件哈希绑定具体输入和控制面；密钥值不进入审批证据；provider 限额、CLI 停止线和 supervisor 形成不同层次的费用控制。
-
-## 官方依据
-
-- [Creating and managing Workspaces](https://support.anthropic.com/en/articles/9796807-creating-and-managing-workspaces)
-- [How do I pay for API usage?](https://support.anthropic.com/en/articles/8977456-how-do-i-pay-for-my-api-usage)
-- [Cost and Usage Reporting in Console](https://support.anthropic.com/en/articles/9534590-cost-and-usage-reporting-in-console)
-- [API Console Roles and Permissions](https://support.anthropic.com/en/articles/10186004-api-console-roles-and-permissions)
+这一设计把评估准备、运行授权和安全结论分开：Codex 生成可复核环境；Security Engineer 绑定并亲自启动具体候选；Claude 只做静态代码审查并输出 finding 与修复建议草稿；Security Engineer 最终确认路径是否可达、是否需要动态证据、finding 是否成立及其影响和严重性。

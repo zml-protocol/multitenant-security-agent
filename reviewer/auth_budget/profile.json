@@ -3,6 +3,11 @@
   "status": "approved_not_formally_authorized",
   "formal_execution_authorized": false,
   "model_invocation_enabled": false,
+  "execution_boundary": {
+    "codex_may_invoke_model": false,
+    "human_manual_launch_only": true,
+    "project_may_handle_credential_value": false
+  },
   "credential": {
     "type": "dedicated_anthropic_workspace_api_key",
     "runtime_environment_variable": "ANTHROPIC_API_KEY",
@@ -40,7 +45,7 @@
     "approved_by": "project_owner",
     "approved_at_utc": "2026-09-19T22:22:24Z",
     "approval_record": "assessment/appsec/v1/approval-record.md",
-    "approved_profile_sha256": "a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4"
+    "approved_profile_sha256": "b8cbce947582c280578585dff4e240a0b6e22a0d466024ddb90165910d8548f1"
   },
   "limitations": {
     "claude_code_native_hard_limit_for_aggregate_tokens_and_api_calls_verified": false,

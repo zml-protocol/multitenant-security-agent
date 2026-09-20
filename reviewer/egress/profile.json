@@ -16,5 +16,7 @@
   "credential_injection": "disabled",
   "model_invocation": "disabled",
   "active_in_reviewer_runner": false,
-  "formal_execution_authorized": false
+  "formal_execution_authorized": false,
+  "codex_may_start_proxy": false,
+  "human_manual_compose_launch_only": true
 }

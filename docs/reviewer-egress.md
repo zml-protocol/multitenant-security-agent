@@ -60,9 +60,9 @@ Smoke test 使用已构建的 reviewer 镜像作为探针，并验证：
 
 ## 尚未完成的门禁
 
-- 旧的离线 runner Docker plan 仍为 `--network none`；新的受控执行器只会在最终启动批准后启用临时 internal + proxy 拓扑。
-- 已批准项目专用 workspace API key 方案，但尚未创建或注入真实 key。
+- 旧的离线 runner Docker plan 仍为 `--network none`；isolated handoff 的 Compose 文件定义临时 internal + proxy 拓扑，只有 Security Engineer 手工启动时才会创建。
+- 已批准项目专用 workspace API key 方案；项目和 Codex 都不创建、读取或注入其值，由 Security Engineer 在手工启动时提供仓库外 secret 文件。
 - 尚未验证真实 Claude 会话读取 managed settings 或只使用代理。
-- 模型与预算已批准，CLI 费用/turn 限制和运行监督器已实现；API 调用数与累计 token 仍需运行后核对。
+- 模型与预算已批准；交互 CLI 不提供费用/turn 硬停止，使用 900 秒 timeout 与 Workspace spend limit，API 调用数、token 和实际费用仍需运行后核对。
 - OAuth 流程所需的其他 Anthropic 主机不在 allowlist；任何新增主机都需要单独审核和测试。
 - 正式运行前必须把 reviewer 与代理镜像改为不可变 registry digest，并把准确网络、凭据和预算绑定到人工批准记录。

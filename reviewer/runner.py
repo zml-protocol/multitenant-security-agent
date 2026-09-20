@@ -103,7 +103,7 @@ def validate_bundle(bundle):
             raise ValueError(f"Bundle integrity check failed: {relative}")
     access_path = bundle / "assessment" / "reviewer-input-manifest.json"
     access = read_json(access_path)
-    if access.get("version") != "2.0" or access.get("access_model") != "generated_bundle_only":
+    if access.get("version") not in {"2.0", "2.1"} or access.get("access_model") != "generated_bundle_only":
         raise ValueError("Bundle does not contain the approved reviewer access model")
     return bundle, manifest, access
 

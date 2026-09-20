@@ -1,12 +1,13 @@
 {
-  "version": "2.0",
-  "status": "requirements_approved",
+  "version": "2.1",
+  "status": "ready_for_claude_review",
   "reviewer": "claude",
   "access_model": "generated_bundle_only",
   "approved_access_change": {
     "approved_by": "project_owner",
-    "approved_at_utc": "2026-09-19T19:41:06Z"
+    "approved_at_utc": "2026-09-20T00:56:29Z"
   },
+  "execution_mode": "interactive_static_code_review_only",
   "isolation_requirements": {
     "bundle_is_only_accessible_workspace": true,
     "source_repository_and_parent_are_inaccessible": true,
@@ -57,11 +58,11 @@
   "reviewer_may_not": [
     "change security requirements",
     "read raw bearer tokens",
-    "select an arbitrary network target",
-    "execute non-GET business requests",
+    "execute Bash, application code, HTTP requests, or dynamic tests",
+    "use Web, MCP, browser, or arbitrary network targets",
     "approve its own finding or severity",
     "modify application code",
     "claim remediation success without regression evidence"
   ],
-  "tool_access_status": "isolation_and_phase_gates_implemented_not_authorized"
+  "tool_access_status": "interactive_static_review_manual_launch_approved"
 }

@@ -42,7 +42,7 @@ def planning_cost(profile: Mapping[str, Any]) -> Decimal:
 def approval_subject_sha256(profile: Mapping[str, Any]) -> str:
     subject = {
         key: profile[key]
-        for key in ("credential", "model", "budget", "limitations")
+        for key in ("credential", "model", "budget", "limitations", "execution_boundary")
     }
     serialized = json.dumps(subject, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(serialized).hexdigest()
@@ -53,14 +53,19 @@ def validate_profile(profile: Mapping[str, Any]) -> None:
     if status not in {
         "proposed_tested_not_approved",
         "approved_not_formally_authorized",
-        "formally_authorized",
     }:
         raise ValueError("Credential and budget profile status is invalid")
-    authorized = status == "formally_authorized"
-    if profile.get("formal_execution_authorized") is not authorized:
-        raise ValueError("Credential profile status and formal authorization must agree")
-    if profile.get("model_invocation_enabled") is not authorized:
-        raise ValueError("Credential profile status and model invocation must agree")
+    if profile.get("formal_execution_authorized") is not False:
+        raise ValueError("Codex must never be authorized to execute the model")
+    if profile.get("model_invocation_enabled") is not False:
+        raise ValueError("Project-controlled model invocation must remain disabled")
+    boundary = profile.get("execution_boundary", {})
+    if boundary != {
+        "codex_may_invoke_model": False,
+        "human_manual_launch_only": True,
+        "project_may_handle_credential_value": False,
+    }:
+        raise ValueError("Manual launch responsibility boundary changed")
     credential = profile["credential"]
     if credential.get("type") != "dedicated_anthropic_workspace_api_key":
         raise ValueError("A dedicated Anthropic workspace API key is required")

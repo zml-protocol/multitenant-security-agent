@@ -1,0 +1,149 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "bundle-6a1a247aca19153c0d22",
+  "scenario_id": "scenario-7f3a",
+  "requirement_version": "appsec-v1.0",
+  "review_phase": "decision_path_and_independent_matrix",
+  "status": "draft_for_security_engineer_review",
+  "final_decision_authority": "security_engineer",
+  "note": "All statuses, severities and confidence values below are Claude's preliminary drafts. Nothing here is a confirmed vulnerability or final severity. No dynamic request was executed to reproduce any case; expected results are derived purely from static tracing of app/main.py and app/policy.py.",
+
+  "decision_path": {
+    "authentication": [
+      {"step": 1, "file": "app/main.py", "lines": "81-84", "description": "Read 'authorization' header; require exactly 2 whitespace-separated parts with case-insensitive scheme 'bearer'; else deny(401, missing_or_malformed_credential)."},
+      {"step": 2, "file": "app/main.py", "lines": "85", "description": "SHA-256 hash the bearer token and look up app/seed.py:44 unique 'token_hash' column via parameterized query."},
+      {"step": 3, "file": "app/main.py", "lines": "86-87", "description": "No matching row -> deny(401, invalid_credential)."},
+      {"step": 4, "file": "app/main.py", "lines": "88-89", "description": "Matching row becomes request.state.identity and the 'actor' used by every downstream authorization decision; no header/query/body value other than Authorization participates."}
+    ],
+    "authorization_me": [
+      {"file": "app/main.py", "lines": "97-100", "description": "Depends(authenticate) only; returns public(actor) i.e. the caller's own row. No object/tenant check needed because target==actor by construction."}
+    ],
+    "authorization_list": [
+      {"file": "app/main.py", "lines": "102-104", "description": "Depends(authenticate), then policy.authorize_list(actor)."},
+      {"file": "app/policy.py", "lines": "4-7", "description": "Role-only gate: role!='admin' -> (False,'admin_required'); else (True,'tenant_administrator'). No tenant check performed here."},
+      {"file": "app/main.py", "lines": "105-107", "description": "deny(403,reason) if not permitted, else allow(reason)."},
+      {"file": "app/main.py", "lines": "108", "description": "Tenant scoping for the returned list is enforced ONLY by the SQL predicate 'WHERE tenant_id = ?' bound to actor['tenant_id'], outside of policy.py."}
+    ],
+    "authorization_detail": [
+      {"file": "app/main.py", "lines": "111-112", "description": "Depends(authenticate); target row fetched by 'user_id' alone with NO tenant predicate -- existence is resolved before any authorization check."},
+      {"file": "app/main.py", "lines": "113-114", "description": "No row for that user_id anywhere in the database -> deny(404, unknown_user)."},
+      {"file": "app/main.py", "lines": "116-117", "description": "request.state.target_user_id set for audit only; policy.authorize_detail(actor, target) invoked."},
+      {"file": "app/policy.py", "lines": "11-12", "description": "actor.tenant_id != target.tenant_id -> (False,'tenant_boundary'). Applies uniformly, including to admin actors -- prevents cross-tenant admin escalation."},
+      {"file": "app/policy.py", "lines": "13-14", "description": "Else actor.user_id==target.user_id OR actor.role=='admin' -> (True,'self_or_tenant_administrator')."},
+      {"file": "app/policy.py", "lines": "15", "description": "Else (same tenant, not self, not admin) -> (False,'owner_required')."},
+      {"file": "app/main.py", "lines": "118-121", "description": "deny(403,reason) if not permitted, else allow(reason); return public(target)."}
+    ],
+    "supporting_controls": [
+      {"file": "app/main.py", "lines": "94-95", "description": "public() projects exactly FIELDS=(user_id,tenant_id,role,name,email,phone), matching security-requirements.json approved_public_fields; token_hash is never included."},
+      {"file": "app/main.py", "lines": "76-79", "description": "deny() always raises HTTPException with a generic reason string ('Unauthorized'/'Not found'/'Forbidden'); protected fields are never placed in the body."},
+      {"file": "app/main.py", "lines": "43-74", "description": "Audit middleware logs request_id, run_id, route, method, status, response size, elapsed_ms, source_ip, identity alias, tenant_id, target_user_id, decision, reason -- comment at line 64 states raw URLs/headers/tokens/bodies are never logged; confirmed by code, no such fields are referenced."},
+      {"file": "app/main.py", "lines": "20-24", "description": "correlation_id(): client-supplied X-Request-ID/X-Run-ID are honored only if they parse as a UUID, else a fresh uuid4 is generated server-side; these values are never used in any authorization decision."},
+      {"file": "app/main.py", "lines": "41", "description": "docs_url/redoc_url/openapi_url disabled, reducing schema-based information disclosure."}
+    ]
+  },
+
+  "test_matrix": [
+    {"case_id":"TC-01","requirement_ids":["AUTHN-01"],"category":"negative","actor_alias":"none","path":"/api/me","precondition":"no Authorization header","expected_status":401,"expected_reason":"missing_or_malformed_credential","execution_status":"not_executed"},
+    {"case_id":"TC-02","requirement_ids":["AUTHN-01"],"category":"negative","actor_alias":"none","path":"/api/me","precondition":"Authorization: 'Token <valid-a_user1-token>'","expected_status":401,"expected_reason":"missing_or_malformed_credential","execution_status":"not_executed"},
+    {"case_id":"TC-03","requirement_ids":["AUTHN-01"],"category":"negative","actor_alias":"none","path":"/api/me","precondition":"Authorization: 'Bearer' (no token part)","expected_status":401,"expected_reason":"missing_or_malformed_credential","execution_status":"not_executed"},
+    {"case_id":"TC-04","requirement_ids":["AUTHN-01"],"category":"negative","actor_alias":"none","path":"/api/me","precondition":"Authorization: 'Bearer <random-unknown-token>'","expected_status":401,"expected_reason":"invalid_credential","execution_status":"not_executed"},
+    {"case_id":"TC-05","requirement_ids":["AUTHN-01"],"category":"positive","actor_alias":"a_user1","path":"/api/me","precondition":"Authorization: 'bearer <valid-token>' (lowercase scheme)","expected_status":200,"expected_reason":"identity_baseline","execution_status":"not_executed","note":"confirms case-insensitive scheme handling, main.py:83"},
+    {"case_id":"TC-06","requirement_ids":["AUTHN-02"],"category":"negative","actor_alias":"a_user1","path":"/api/users","precondition":"valid a_user1 token PLUS spoofed headers/query such as X-Role: admin, X-Tenant-Id: tenant_b, ?role=admin","expected_status":403,"expected_reason":"admin_required","execution_status":"not_executed","note":"server must ignore all client-claimed identity; no code path in main.py reads such headers/params"},
+    {"case_id":"TC-07","requirement_ids":["AUTHZ-ME-01"],"category":"positive","actor_alias":"b_user2","path":"/api/me","expected_status":200,"expected_reason":"identity_baseline","expected_body_fields":"only b_user2's own approved_public_fields","execution_status":"not_executed"},
+    {"case_id":"TC-08","requirement_ids":["AUTHZ-ME-01","ERROR-01"],"category":"negative","actor_alias":"none","path":"/api/me","precondition":"invalid token","expected_status":401,"expected_body":"generic only, no profile fields","execution_status":"not_executed"},
+    {"case_id":"TC-09","requirement_ids":["AUTHZ-OBJ-01"],"category":"positive","actor_alias":"a_user1","target_alias":"a_user1","path":"/api/users/{user_id}","expected_status":200,"expected_reason":"self_or_tenant_administrator","execution_status":"not_executed"},
+    {"case_id":"TC-10","requirement_ids":["AUTHZ-OBJ-01"],"category":"negative","actor_alias":"a_user1","target_alias":"a_user2","path":"/api/users/{user_id}","expected_status":403,"expected_reason":"owner_required","execution_status":"not_executed"},
+    {"case_id":"TC-11","requirement_ids":["AUTHZ-OBJ-01","AUTHZ-OBJ-02"],"category":"negative","actor_alias":"a_user1","target_alias":"b_user1","path":"/api/users/{user_id}","expected_status":403,"expected_reason":"tenant_boundary","execution_status":"not_executed"},
+    {"case_id":"TC-12","requirement_ids":["AUTHZ-OBJ-02"],"category":"positive","actor_alias":"a_admin","target_alias":"a_user1","path":"/api/users/{user_id}","expected_status":200,"expected_reason":"self_or_tenant_administrator","execution_status":"not_executed"},
+    {"case_id":"TC-13","requirement_ids":["AUTHZ-OBJ-02"],"category":"negative","priority":"critical","actor_alias":"a_admin","target_alias":"b_admin","path":"/api/users/{user_id}","expected_status":403,"expected_reason":"tenant_boundary","execution_status":"not_executed","note":"admin-to-admin cross-tenant escalation must be denied; policy.py:11-12 must trigger before the role check at 13-14"},
+    {"case_id":"TC-14","requirement_ids":["AUTHZ-OBJ-01"],"category":"negative","actor_alias":"a_user1","target_alias":"nonexistent-random-uuid","path":"/api/users/{user_id}","expected_status":404,"expected_reason":"unknown_user","execution_status":"not_executed"},
+    {"case_id":"TC-15","requirement_ids":["AUTHZ-OBJ-02","ERROR-01"],"category":"negative","actor_alias":"a_user1","path":"/api/users/{user_id}","precondition":"differential comparison of TC-11 (existing cross-tenant target -> 403 tenant_boundary) vs TC-14 (nonexistent target -> 404 unknown_user)","expected_status":"n/a (comparative)","execution_status":"not_executed","purpose":"evidence for Finding F1: status-code oracle reveals target existence across tenants prior to authorization"},
+    {"case_id":"TC-16","requirement_ids":["AUTHZ-LIST-01"],"category":"negative","actor_alias":"a_user1","path":"/api/users","expected_status":403,"expected_reason":"admin_required","execution_status":"not_executed"},
+    {"case_id":"TC-17","requirement_ids":["AUTHZ-LIST-01","AUTHZ-LIST-02"],"category":"positive","actor_alias":"a_admin","path":"/api/users","expected_status":200,"expected_body":"exactly {a_user1,a_user2,a_admin}; must NOT contain b_user1/b_user2/b_admin","execution_status":"not_executed"},
+    {"case_id":"TC-18","requirement_ids":["AUTHZ-LIST-02"],"category":"negative","actor_alias":"b_admin","path":"/api/users","expected_status":200,"expected_body":"exactly {b_user1,b_user2,b_admin}; must NOT contain any tenant_a alias/user_id","execution_status":"not_executed"},
+    {"case_id":"TC-19","requirement_ids":["AUTHZ-LIST-02","AUTHN-02"],"category":"negative","actor_alias":"a_admin","path":"/api/users","precondition":"spoofed ?tenant_id=tenant_b or X-Tenant-Id: tenant_b query/header","expected_status":200,"expected_body":"still only tenant_a users","execution_status":"not_executed","note":"regression guard for Finding F2 (tenant scope lives in raw SQL, not policy.py)"},
+    {"case_id":"TC-20","requirement_ids":["DATA-01"],"category":"negative","actor_alias":"a_user1 or a_admin","path":"any success response","expected_body_keys":"exactly user_id,tenant_id,role,name,email,phone -- no token_hash or other internal field","execution_status":"not_executed"},
+    {"case_id":"TC-21","requirement_ids":["ERROR-01"],"category":"negative","actor_alias":"a_user1","path":"/api/users/{user_id} for b_user1 (TC-11) and for a_user2 (TC-10)","expected_body":"generic 'Forbidden' text only, no name/email/phone of the target","execution_status":"not_executed"},
+    {"case_id":"TC-22","requirement_ids":["AUDIT-01"],"category":"positive","actor_alias":"a_user1","path":"/api/me","precondition":"X-Request-ID: <valid uuid4>","expected":"response header X-Request-ID echoes the same UUID (main.py:46,57)","execution_status":"not_executed"},
+    {"case_id":"TC-23","requirement_ids":["AUDIT-01"],"category":"negative","actor_alias":"a_user1","path":"/api/me","precondition":"X-Request-ID: 'not-a-uuid'","expected":"server discards client value and generates a fresh uuid4 (main.py:20-24)","execution_status":"not_executed"},
+    {"case_id":"TC-24","requirement_ids":["AUDIT-01"],"category":"negative","category_detail":"static-only","expected":"audit log line (main.py:65-74) schema never includes Authorization header value or full name/email/phone","execution_status":"not_executed","note":"confirmed by static code reading only; no live log was produced or inspected"},
+    {"case_id":"TC-25","requirement_ids":["TOOL-01"],"category":"n/a","expected":"cannot be exercised or statically verified","execution_status":"unexecuted_out_of_bundle","note":"no reviewer/execution-tool harness source is present among readable_files; TOOL-01 concerns a component outside app/, outside this static review's evidence base"}
+  ],
+
+  "findings": [
+    {
+      "id": "F1",
+      "title": "Cross-tenant object-existence oracle via differentiated 404/403 on GET /api/users/{user_id}",
+      "category": "authorization_adjacent_information_disclosure",
+      "status": "draft_awaiting_security_engineer_decision",
+      "confidence": "high_for_code_behavior_as_traced_low_for_real_world_impact_pending_SE_review",
+      "requirement_refs": ["AUTHZ-OBJ-02", "ERROR-01(adjacent)"],
+      "trust_boundary_ref": "assessment-brief.en.md #5 item 3: 'finding an object does not mean the actor is authorized to read it'",
+      "evidence": [
+        {"file": "app/main.py", "lines": "112", "detail": "query('SELECT * FROM users WHERE user_id = ?', (user_id,)) has no tenant predicate; runs before any authorization decision."},
+        {"file": "app/main.py", "lines": "113-114", "detail": "if not rows: deny(request,404,'unknown_user') -- executes prior to policy.authorize_detail."},
+        {"file": "app/main.py", "lines": "117-119", "detail": "policy.authorize_detail() runs only after existence is already established; a cross-tenant existing target yields 403 tenant_boundary, distinct from the 404 for a non-existent id."},
+        {"file": "app/policy.py", "lines": "11-12", "detail": "tenant_boundary reason is only reachable once a row was found -- so 403 tenant_boundary is itself proof that the id exists somewhere in the whole database, not just the caller's tenant."}
+      ],
+      "impact_draft": "Any authenticated actor, including the lowest-privileged 'user' role that has no list access, can determine whether a given user_id exists anywhere in the system (any tenant) by observing 404 vs 403, without ever being authorized to view that record. This does not by itself expose protected fields (name/email/phone), so it does not meet the brief's 'confirmed_violation' bar on its own, but it weakens tenant-boundary secrecy and is a building block for targeted probing if user_id values become guessable (see Observation O1).",
+      "root_cause_draft": "Existence resolution (app/main.py:112-114) is performed before, and independently of, the authorization decision (app/main.py:117 / app/policy.py:10-15), and the two negative outcomes are surfaced with distinguishable status codes/reasons.",
+      "remediation_direction_draft": "Resolve the target using a tenant-scoped query for non-admin-cross-tenant checks, or normalize the two deny outcomes (unauthorized cross-tenant reference and truly unknown id) to the same status/response shape, consistent with a deny-by-default 'do not confirm existence to unauthorized callers' pattern. Final approach is Codex's/Security Engineer's call.",
+      "final_validity_and_severity_decision": "pending_security_engineer"
+    },
+    {
+      "id": "F2",
+      "title": "List-endpoint tenant scoping is implemented outside the centralized authorization policy module",
+      "category": "authorization_architecture_defense_in_depth_gap",
+      "status": "draft_awaiting_security_engineer_decision",
+      "confidence": "high_for_code_structure_as_traced",
+      "requirement_refs": ["AUTHZ-LIST-02"],
+      "evidence": [
+        {"file": "app/policy.py", "lines": "4-7", "detail": "authorize_list(actor) only checks actor['role'] == 'admin'; it never receives or checks tenant_id, and returns no scope/filter information."},
+        {"file": "app/main.py", "lines": "108", "detail": "Tenant filtering for the list response is implemented solely as the SQL predicate 'WHERE tenant_id = ?' bound to actor['tenant_id'], inline in the route handler rather than inside app/policy.py."}
+      ],
+      "impact_draft": "Today, AUTHZ-LIST-02 is satisfied because main.py:108 always binds the actor's own tenant_id. However, the authorization module that centralizes every other allow/deny decision (authorize_list, authorize_detail) does not own this scope rule, so it is not covered by any policy-level unit test aimed at policy.py, and a future change to the route (added filter/pagination/export parameter, or a 'cross-tenant admin' feature) could silently drop tenant scoping without touching policy.py at all.",
+      "root_cause_draft": "Separation-of-duties gap: 'is this action allowed' (policy.py) and 'what object scope is allowed' (main.py inline SQL) are split across two layers with no shared enforcement point or test surface.",
+      "remediation_direction_draft": "Move tenant scoping into the policy layer, e.g. have policy expose a scope/filter (such as a required tenant_id predicate or a small scope_list(actor) helper) that main.py must consume, so the rule is unit-testable alongside authorize_detail's tenant_boundary check. Final approach is Codex's/Security Engineer's call.",
+      "final_validity_and_severity_decision": "pending_security_engineer"
+    }
+  ],
+
+  "observations_out_of_primary_scope": [
+    {
+      "id": "O1",
+      "title": "Fixture user_id values are generated from a fixed-seed PRNG, separate from the CSPRNG used for bearer tokens",
+      "evidence": [
+        {"file": "app/seed.py", "lines": "12-13", "detail": "create_fixture(seed: int = 42): rng = random.Random(seed) -- deterministic, non-cryptographic PRNG with a fixed default seed."},
+        {"file": "app/seed.py", "lines": "20", "detail": "user_id built from rng.getrandbits(128) formatted as a UUID; reproducible for anyone who knows the seed."},
+        {"file": "app/seed.py", "lines": "36", "detail": "By contrast, bearer tokens use secrets.token_urlsafe(32), a CSPRNG -- correctly treated as the actual secret."}
+      ],
+      "reason_recorded_as_observation_not_finding": "assessment-brief.en.md section 6 explicitly places 'user ID enumeration' out of scope, and this is fixture/test-data generation code, not the reviewed application's authorization decision path; user_id is never trusted as a credential anywhere in app/policy.py or app/main.py.",
+      "relevance": "If combined with F1, predictable user_id generation would make the existence oracle more practically exploitable in a non-test deployment; recommend flagging to the fixture/tooling owner rather than treating as an app-code defect.",
+      "final_disposition": "pending_security_engineer (informational only)"
+    },
+    {
+      "id": "O2",
+      "title": "Token-hash lookup uses non-constant-time string equality at the database layer",
+      "evidence": [{"file": "app/main.py", "lines": "85", "detail": "hashlib.sha256(...).hexdigest() compared via SQL 'WHERE token_hash = ?'; SQLite string equality is not guaranteed constant-time."}],
+      "assessment": "Practical timing exploitation over a network is regarded as very low feasibility (I/O jitter dominates; a digest, not the raw secret, is being compared). Recorded for completeness/defense-in-depth only.",
+      "final_disposition": "pending_security_engineer (informational only)"
+    }
+  ],
+
+  "no_violation_observed": [
+    {"requirement_id": "AUTHN-01", "basis": "app/main.py:81-89; single unique token_hash column (app/seed.py:44) maps to exactly one actor; generic 401 on missing/malformed/unknown credential."},
+    {"requirement_id": "AUTHN-02", "basis": "No route in app/main.py reads any client header/query/body value to derive tenant_id/role/user_id; actor is always the DB row bound to the validated token."},
+    {"requirement_id": "AUTHZ-ME-01", "basis": "app/main.py:97-100 returns public(actor) only, i.e. exactly the caller's own row."},
+    {"requirement_id": "AUTHZ-OBJ-01", "basis": "app/policy.py:13-15: non-admin actor is allowed only when actor.user_id==target.user_id."},
+    {"requirement_id": "AUTHZ-OBJ-02", "basis": "app/policy.py:11-12: tenant_boundary check applies unconditionally, including to admin actors, before the self/admin allow branch."},
+    {"requirement_id": "AUTHZ-LIST-01", "basis": "app/policy.py:4-6: only role=='admin' is permitted to call GET /api/users."},
+    {"requirement_id": "AUTHZ-LIST-02", "basis": "app/main.py:108: query is always scoped to actor['tenant_id'] as currently written (see F2 for a structural caveat, not a present violation)."},
+    {"requirement_id": "DATA-01", "basis": "app/main.py:94-95 public() whitelist matches approved_public_fields exactly; token_hash and other DB columns are never serialized."},
+    {"requirement_id": "ERROR-01", "basis": "app/main.py:76-79 deny() always returns a fixed generic string per status; no code path places name/email/phone or credentials into an error body."},
+    {"requirement_id": "AUDIT-01", "basis": "app/main.py:64-74 log line fields are limited to ids/route/method/status/size/timing/alias/tenant_id/target_user_id/decision/reason; no Authorization header, token, or full profile field is referenced anywhere in the logging code."}
+  ],
+
+  "not_applicable_or_unverifiable_by_this_static_review": [
+    {"requirement_id": "TOOL-01", "reason": "Concerns the external reviewer/execution-tool harness (target/method/route/identity allowlisting, rate limiting), whose source is not part of bundle-manifest.json readable_files. Cannot be confirmed or refuted by static reading of app/main.py, app/policy.py, app/seed.py alone."}
+  ]
+}

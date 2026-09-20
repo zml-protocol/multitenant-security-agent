@@ -10,7 +10,15 @@
   ],
   "permissions": {
     "disableBypassPermissionsMode": "disable",
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit"
+    ],
     "deny": [
+      "Bash(*)",
+      "Edit(/review/input/**)",
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./**/.env)",

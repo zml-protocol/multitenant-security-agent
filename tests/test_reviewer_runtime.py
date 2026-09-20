@@ -43,6 +43,11 @@ def test_runtime_profile_matches_pinned_image_definition():
     assert settings["syncClaudeAiPlugins"] is False
     assert settings["availableModels"] == ["claude-sonnet-5"]
     assert settings["permissions"]["disableBypassPermissionsMode"] == "disable"
+    assert settings["permissions"]["allow"] == [
+        "Read", "Glob", "Grep", "Edit"
+    ]
+    assert "Bash(*)" in settings["permissions"]["deny"]
+    assert "Edit(/review/input/**)" in settings["permissions"]["deny"]
     assert settings["env"]["DISABLE_AUTOUPDATER"] == "1"
     assert settings["env"]["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] == "1"
     assert settings["env"]["CLAUDE_CODE_SUBPROCESS_ENV_SCRUB"] == "1"
@@ -50,3 +55,4 @@ def test_runtime_profile_matches_pinned_image_definition():
     assert settings["env"]["DISABLE_UPDATES"] == "1"
     assert "reviewer-credential-exec" in dockerfile
     assert "reviewer-credential-probe" in dockerfile
+    assert "reviewer-tool" not in dockerfile

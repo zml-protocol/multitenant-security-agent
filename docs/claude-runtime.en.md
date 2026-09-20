@@ -61,7 +61,7 @@ The foundation smoke executes only `claude --version` and local boundary probes.
 
 ## Network egress boundary
 
-The legacy runner's `--network none` mode is suitable for offline validation but cannot make a real Claude API request. [Restricted egress](reviewer-egress.en.md) has passed both independent and combined smoke tests. After final approval, the new [controlled executor](reviewer-execution.en.md) creates the internal-plus-proxy topology. Docker networking blocks direct reviewer connections while the separate proxy enforces the host allowlist.
+The legacy runner's `--network none` mode is suitable for offline validation but cannot make a real Claude API request. [Restricted egress](reviewer-egress.en.md) has passed both independent and combined smoke tests. The new [isolated handoff](reviewer-execution.en.md) generates the internal-plus-proxy Compose topology, which the Security Engineer creates manually after approval. Docker networking blocks direct reviewer connections while the separate proxy enforces the host allowlist.
 
 The minimum host set depends on the authentication method:
 
@@ -92,12 +92,12 @@ The run may record the credential source type and a non-secret identifier, never
 | Claude Code installation and version pin | Offline image foundation implemented | Record an immutable registry digest before formal execution |
 | Linux runtime foundation | Verified | Binary, non-root identity, Docker filesystem boundaries, and a clean `claude doctor` result passed |
 | Restricted network egress | Combined smoke passed | Enable only the verified internal-plus-proxy topology after formal start approval |
-| Dedicated credential injection and subprocess scrubbing | The dedicated workspace API-key design is approved, and the secret-file wrapper passed the combined synthetic-sentinel check | Create the real dedicated key and repeat leakage validation during the final canary |
+| Dedicated credential injection and subprocess scrubbing | The dedicated workspace API-key design is approved, and the secret-file wrapper passed the combined synthetic-sentinel check | The Security Engineer supplies an external key file at manual launch; the project does not read its value |
 | Nonessential connections, plugins, and connectors disabled | Managed settings frozen | Verify that Claude loads them and observe actual connections before enabling egress |
-| Model and cost budget | Fixed model and per-run budget approved; CLI cost/turn limits and fail-closed supervisor implemented | Reconcile real usage after formal start approval |
-| Formal Claude execution | Not authorized | Complete Section 8 of the approval record and authorize separately |
+| Model and cost budget | Fixed model and per-run budget approved; interactive CLI has no cost/turn hard stop | Use the 900-second timeout and Workspace spend limit, then reconcile usage after the manual run |
+| Formal Claude execution | v2 is approved for Security Engineer manual launch | The first attempt produced no assessment result; Codex does not launch the model |
 
-The pinned reviewer container, combined restricted egress, synthetic credential injection, and `claude doctor` have passed. No real key or model session has run, and formal Claude reviewer execution remains unauthorized.
+The repaired pinned reviewer container, combined restricted egress, all three secret-file formats, and mount boundaries passed model-free validation. Security Engineer manual-launch approval for v2 is recorded.
 
 ## Official sources
 

@@ -60,9 +60,9 @@ Results are written under the Git-ignored `.local/reviewer-egress/`. The most re
 
 ## Gates not yet complete
 
-- The legacy offline runner Docker plan remains on `--network none`; the new controlled executor enables the ephemeral internal-plus-proxy topology only after final start approval.
-- The dedicated workspace API-key design is approved, but no real key has been created or injected.
+- The legacy offline runner Docker plan remains on `--network none`; the isolated handoff Compose file defines the ephemeral internal-plus-proxy topology, which exists only when the Security Engineer launches it manually.
+- The dedicated workspace API-key design is approved. Neither the project nor Codex creates, reads, or injects its value; the Security Engineer supplies an external secret file at manual launch.
 - No real Claude session has verified that managed settings load or that Claude uses only the proxy.
-- The model and budget are approved, and CLI cost/turn limits plus the supervisor are implemented; API-call and aggregate-token totals still require post-run reconciliation.
+- The model and budget are approved. The interactive CLI has no cost/turn hard stop, so the run uses a 900-second timeout and Workspace spend limit; API calls, tokens, and actual cost still require post-run reconciliation.
 - Additional Anthropic hosts needed for OAuth are outside the allowlist; every added host requires separate review and testing.
 - Before formal execution, reviewer and proxy images must use immutable registry digests, and the exact network, credential, and budget must be bound to a human approval record.

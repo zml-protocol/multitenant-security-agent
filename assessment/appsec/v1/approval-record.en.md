@@ -16,23 +16,25 @@ This is the single formal sign-off location for workflow 1. Read the linked sour
 
 | Field | Value |
 | --- | --- |
-| approval_status | `requirements_approved` |
+| approval_status | `ready_for_claude_review` |
 | approver | `project_owner` |
-| approved_at_utc | `2026-09-19T18:42:29Z` |
+| approved_at_utc | `2026-09-20T03:02:30.589534Z` |
 | requirement_version | `appsec-v1.0` |
 | git_commit | `14a7b48ae30b833962752e4d65b7e03ade5664a1` |
 | fixture_id | `fixture-256eb13b57860e22` |
 | assessment_scenario_id | `scenario-7f3a` |
 | candidate_bundle_id | `bundle-6a1a247aca19153c0d22` |
 | candidate_generated_at_utc | `2026-09-19T20:44:40.966113Z` |
-| candidate_validated_at_utc | `2026-09-19T22:54:07.417730Z` |
-| candidate_status | `validated_waiting_formal_start_approval` |
+| candidate_validated_at_utc | `2026-09-20T02:32:28.488685Z` |
+| candidate_status | `validated_waiting_security_engineer_manual_launch_approval` |
 | candidate_attestation | `formal-candidate-attestation.json` |
-| candidate_attestation_sha256 | `8a2d419e75754557c8ef61e03dd52b8acd8882d92d9bd53bde764b73e86272bb` |
+| candidate_attestation_sha256 | `c2cd87005bf1333be573df341e86837eca0f9c755fb6938fd0b6a2b1b01e76e7` |
 | formal_start_approval_package | `formal-start-approval-package.json` |
-| formal_start_approval_package_sha256 | `fe0b63ffdd00aa5c3b7d44f95615e2aef7cc7570092fe7eefe4add17c8f0059b` |
+| formal_start_approval_package_sha256 | `258148e4c18dd68b8f241d07291469c0b3a81529362ea444089aedef55798193` |
+| formal_start_status | `approved_for_security_engineer_manual_launch` |
+| prepared_handoff_manifest_sha256 | `9dc4e0e2dc2f9b6cf9b93ba8994762df5e260062ba44c9dfd05820a828c7d5ad` |
 | bundle_manifest_sha256 | `69049b3e03d58c6742bcd475bdc090465aef3b510c2f6ae4134efad3507fc7be` |
-| approved_auth_budget_subject_sha256 | `a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4` |
+| approved_auth_budget_subject_sha256 | `b8cbce947582c280578585dff4e240a0b6e22a0d466024ddb90165910d8548f1` |
 
 ### Frozen Git References
 
@@ -107,23 +109,23 @@ Change each decision from `pending` to `approved` or `change_requested`. For `ch
 - [x] Claude cannot read raw tokens, the SQLite database, `.env`, historical local reports, or operator scenario answers.
 - [x] Existing test code and vulnerability truth labels are withheld in the first pass so Claude cannot treat an existing answer as independent review work.
 - [x] The fixed authorization matrix and redacted deterministic results are released only after phase 1 outputs are sealed and the Security Engineer explicitly authorizes phase 2; phase 1 outputs cannot then be rewritten.
-- [x] Claude may trace code paths, propose and execute bounded negative tests, collect evidence, and draft findings.
+- [x] In this run, Claude performs static code review only: it traces code paths, proposes but does not execute negative tests, and drafts findings and remediation advice.
 - [x] Claude cannot modify security requirements, application code, final finding status, or severity.
 - [x] Codex implements and remediates but cannot use the application authorization function as an independent oracle or approve its own fix.
 - [x] The Security Engineer makes the final decision on finding validity, impact, severity, and remediation acceptance.
 
 ## 6. Execution and Evidence Boundaries
 
-- [x] The target is fixed to `http://127.0.0.1:8000`; environment proxies and cross-target redirects are disabled.
-- [x] The base matrix runs at no more than two requests per second, concurrency two, and a ten-second timeout.
-- [x] The tool layer injects credentials by alias and never exposes them to Claude context.
-- [x] Raw responses are not written to reports; reports retain only redacted summaries and evidence IDs.
-- [x] A 429, timeout, 5xx, redirect, fixture mismatch, or missing evidence is `inconclusive`.
-- [x] HTTP 200 alone is not vulnerability evidence; protected data in an error response can still confirm a violation.
+- [x] Claude may use only `Read`, `Glob`, `Grep`, and `Write` limited to `/review/output`; Bash, Edit, Web, MCP, and browsers are prohibited.
+- [x] `/review/input` is read-only and separate `/review/output` is writable; the source repository and its parents are not mounted.
+- [x] This run does not start the application, provide application tokens, send HTTP requests, or perform other dynamic tests.
+- [x] Claude must label proposed tests `proposed_not_executed`; static inference cannot be presented as runtime evidence.
+- [x] Static evidence must cite exact files, functions, lines, and the authentication/authorization decision path.
+- [x] Claude API traffic can reach only `api.anthropic.com:443` through the separate proxy; the reviewer has no direct egress.
 
 ## 7. Finding, Remediation, and Regression Rules
 
-- [x] A confirmed finding cites a real run ID, case ID, request ID, evidence ID, and requirement ID.
+- [x] A Claude finding draft cites the requirement ID and exact code location; the Security Engineer decides path reachability and whether runtime evidence is needed before final confirmation.
 - [x] Claude submits only a draft finding and evidence-based impact analysis; it cannot decide final severity or invent an exact CVSS score.
 - [x] The Security Engineer selects `confirmed`, `rejected`, or `needs_more_evidence` for each finding.
 - [x] Only a `confirmed` finding proceeds to Codex remediation.
@@ -134,17 +136,17 @@ After Sections 2–7 are complete, change `approval_status` to `requirements_app
 
 ## 8. Formal Assessment Start Gate
 
-The final start approval package is prepared; see its [guide](../../../docs/formal-start-approval.en.md) and `formal-start-approval-package.json`. The package remains `prepared_not_approved`, and the Security Engineer must explicitly decide the two remaining items below.
+The repaired v2 manual-launch package and isolated reviewer workspace are rebound and formally approved for human launch; see the [guide](../../../docs/formal-start-approval.en.md) and `formal-start-approval-package.json`. The old workspace failure is not an assessment finding.
 
 - [x] The requirement version no longer contains `-draft`, and the JSON matches this record.
 - [x] Assessment code is frozen and the full Git commit SHA is recorded.
 - [x] The assessment fixture is frozen and its fixture ID is recorded.
 - [x] Obvious `*_bypass` answer labels have been removed from the vulnerability scenario and a neutral scenario ID is recorded.
-- [ ] Code, requirements, fixture, and reviewer manifest will not change during assessment.
-- [ ] Approver and `approved_at_utc` are complete.
+- [x] Code, requirements, fixture, and reviewer manifest will not change during assessment.
+- [x] Approver and `approved_at_utc` are complete.
 - [x] Claude is again confirmed to have no raw credentials or ground-truth label.
 
-When every item is complete, change `approval_status` to `ready_for_claude_review`. Only this state authorizes formal Claude decision-path review and independent test-matrix generation.
+Every condition is complete and `approval_status` is `ready_for_claude_review`. This authorizes only the Security Engineer to launch the v4 static reviewer workspace manually; it does not authorize Codex to invoke the model.
 
 ## 9. Change Record
 
@@ -168,5 +170,18 @@ When every item is complete, change `approval_status` to `ready_for_claude_revie
 | `2026-09-19T22:37:07Z` | `codex` | Explicitly disabled MCP, slash commands, and Chrome in the fixed command, then rebound the final command hash; formal execution remains unauthorized | No (execution-surface reduction and candidate rebinding) |
 | `2026-09-19T22:38:01Z` | `codex` | Added per-file SHA-256 values for the controller, runtime wrapper/settings, and egress proxy to the attestation, binding the exact control-plane implementation in the uncommitted workspace | No (candidate-integrity strengthening) |
 | `2026-09-19T22:55:58Z` | `codex` | Prepared the final start approval package, binding the candidate attestation, fixed budget, and 14 atomic switch changes; added approval-state consistency validation, cross-platform LF hash stability, and official Workspace/key instructions while leaving every switch closed | No (approval subject preparation only; no model authorization or execution) |
+| `2026-09-20T00:18:18Z` | `codex` | Replaced the automatic execution path with the confirmed manual-launch architecture: Codex only prepares the isolated workspace; the Security Engineer separately approves, supplies an external key file, and runs Compose; Claude can only read the bundle and call the bounded gateway. Rebuilt the containers and completed a real model-free gateway check while leaving the manual gate closed | No (implementation corrected to match the approved responsibility boundary) |
+| `2026-09-20T01:05:56Z` | `codex` | Narrowed the formal Claude run to interactive static code review under the Security Engineer's final scope: removed the gateway, application startup, HTTP, and Bash capabilities; mounted the frozen bundle read-only and allowed writes only to the separate results directory; rebuilt and verified the approval gate, mount boundary, and proxy health, then rebound the attestation, handoff, and approval package. No real credential was read and no model was invoked; the manual launch gate remains closed | No (implementation and rebinding of the approved architecture) |
+| `2026-09-20T01:15:24.846905Z` | `project_owner` | Accepted the assessment-window immutability commitment and formally approved Security Engineer manual launch of the bound static-only reviewer workspace; the authorized attestation and handoff hashes are recorded in the start gate, while Codex remains unable to launch Claude | No (formal human-launch approval) |
+| `2026-09-20T02:11:27Z` | `codex` | Recorded that the first manual launch failed because Read, Glob, and Grep were not pre-approved under `dontAsk`; Claude read no code, created no output, and produced no assessment finding. Preserved the old handoff and revoked its current launch state | Yes (control-plane change requires new approval) |
+| `2026-09-20T02:11:27Z` | `codex` | Explicitly pre-approved Read, Glob, Grep, and restricted Write in managed settings and the CLI; fixed no-newline/LF/CRLF key-file compatibility; created and verified the v2 workspace and regenerated the attestation and approval package | Yes (waiting for Security Engineer v2 approval) |
+| `2026-09-20T02:15:02.184847Z` | `project_owner` | Accepted the v2 assessment-window immutability commitment and formally approved Security Engineer manual launch of the repaired static-only reviewer; the authorized attestation and handoff hashes are recorded in the start gate, while Codex remains unable to launch Claude | No (v2 formal human-launch approval) |
+| `2026-09-20T02:32:28Z` | `codex` | Recorded that v2 failed because Read tool results were not returned to the model: Claude read no code, created no output, and produced no finding. Removed the unsupported `--restricted` flag, added an isolated read-only probe preflight, and corrected the Claude Code 2.1.278 file permission rule to `Edit(/review/output/**)`. The minimal model preflight returned the fixed probe value successfully; v3 is rebound while the formal human-launch gate remains closed | Yes (waiting for Security Engineer v3 approval) |
+
+| `2026-09-20T02:35:32.009233Z` | `project_owner` | Accepted the v3 assessment-window immutability commitment and formally approved Security Engineer manual launch of the static-only reviewer that passed the Read preflight; the authorized attestation and handoff hashes are recorded in the start gate, while Codex remains unable to launch the formal Claude assessment | No (v3 formal human-launch approval) |
+
+| `2026-09-20T02:59:43Z` | `codex` | Confirmed that v3 failed because the variadic `--disallowedTools` option consumed the startup prompt and parsed words such as Read as deny rules. Interactive Read succeeded after adding the `--` option boundary. Also confirmed that Claude Code 2.1.278 uses Edit to create output; the isolated Read+Edit preflight passed while managed deny and the read-only mount continue to protect input. Generated and rebound v4 with the formal launch gate closed | Yes (waiting for Security Engineer v4 approval) |
+
+| `2026-09-20T03:02:30.589534Z` | `project_owner` | Accepted the v4 assessment-window immutability commitment and formally approved Security Engineer manual launch of the static-only reviewer that passed interactive Read and isolated Read+Edit preflights; the authorized attestation and handoff hashes are recorded in the start gate, while Codex remains unable to launch the formal Claude assessment | No (v4 formal human-launch approval) |
 
 After formal approval, any change affecting actors, assets, trust boundaries, scope, expected behavior, tool access, or the finding standard requires a new entry and reapproval. A spelling-only correction that does not change meaning may be recorded as not requiring reapproval.

@@ -1,4 +1,4 @@
-"""CLI entry point for the gated reviewer execution controller."""
+"""CLI entry point for reviewer handoff preparation; it never launches Claude."""
 from reviewer.execution.controller import main
 
 

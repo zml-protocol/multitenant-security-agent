@@ -1,18 +1,38 @@
 {
   "schema_version": "1.0",
-  "status": "implemented_not_formally_authorized",
+  "status": "interactive_static_review_handoff_preparer",
   "formal_execution_authorized": false,
+  "codex_may_launch_claude": false,
+  "human_manual_launch_required": true,
+  "credential_value_handled_by_project": false,
   "credential_file_in_container": "/run/secrets/anthropic_api_key",
   "credential_wrapper": "/usr/local/bin/reviewer-credential-exec",
   "proxy_url": "http://egress-proxy:3128",
   "network_mode": "internal_proxy_only",
   "source_repository_mounted": false,
-  "session_persistence": false,
-  "permission_prompts": "none",
+  "session_persistence": "ephemeral_container_only",
+  "permission_mode": "dontAsk",
   "allowed_tools": [
     "Read",
     "Glob",
-    "Grep"
+    "Grep",
+    "Edit"
+  ],
+  "disallowed_tools": [
+    "Bash",
+    "WebFetch",
+    "WebSearch",
+    "mcp__*"
+  ],
+  "required_outputs": [
+    "static-review-log.json",
+    "findings.json",
+    "findings.md",
+    "findings.en.md",
+    "remediation-advice.md",
+    "remediation-advice.en.md",
+    "limitations.md",
+    "limitations.en.md"
   ],
   "maximum_captured_output_bytes": 1048576,
   "phases": {

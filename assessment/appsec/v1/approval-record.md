@@ -16,23 +16,25 @@
 
 | 字段 | 值 |
 | --- | --- |
-| approval_status | `requirements_approved` |
+| approval_status | `ready_for_claude_review` |
 | approver | `project_owner` |
-| approved_at_utc | `2026-09-19T18:42:29Z` |
+| approved_at_utc | `2026-09-20T03:02:30.589534Z` |
 | requirement_version | `appsec-v1.0` |
 | git_commit | `14a7b48ae30b833962752e4d65b7e03ade5664a1` |
 | fixture_id | `fixture-256eb13b57860e22` |
 | assessment_scenario_id | `scenario-7f3a` |
 | candidate_bundle_id | `bundle-6a1a247aca19153c0d22` |
 | candidate_generated_at_utc | `2026-09-19T20:44:40.966113Z` |
-| candidate_validated_at_utc | `2026-09-19T22:54:07.417730Z` |
-| candidate_status | `validated_waiting_formal_start_approval` |
+| candidate_validated_at_utc | `2026-09-20T02:32:28.488685Z` |
+| candidate_status | `validated_waiting_security_engineer_manual_launch_approval` |
 | candidate_attestation | `formal-candidate-attestation.json` |
-| candidate_attestation_sha256 | `8a2d419e75754557c8ef61e03dd52b8acd8882d92d9bd53bde764b73e86272bb` |
+| candidate_attestation_sha256 | `c2cd87005bf1333be573df341e86837eca0f9c755fb6938fd0b6a2b1b01e76e7` |
 | formal_start_approval_package | `formal-start-approval-package.json` |
-| formal_start_approval_package_sha256 | `fe0b63ffdd00aa5c3b7d44f95615e2aef7cc7570092fe7eefe4add17c8f0059b` |
+| formal_start_approval_package_sha256 | `258148e4c18dd68b8f241d07291469c0b3a81529362ea444089aedef55798193` |
+| formal_start_status | `approved_for_security_engineer_manual_launch` |
+| prepared_handoff_manifest_sha256 | `9dc4e0e2dc2f9b6cf9b93ba8994762df5e260062ba44c9dfd05820a828c7d5ad` |
 | bundle_manifest_sha256 | `69049b3e03d58c6742bcd475bdc090465aef3b510c2f6ae4134efad3507fc7be` |
-| approved_auth_budget_subject_sha256 | `a764deb46e1b106be04a34548f6b179a22e0c2dfcefa34f2650606b28f5df3b4` |
+| approved_auth_budget_subject_sha256 | `b8cbce947582c280578585dff4e240a0b6e22a0d466024ddb90165910d8548f1` |
 
 ### 冻结 Git 引用
 
@@ -107,23 +109,23 @@ git ls-remote origin refs/heads/assessment/v1-vulnerable refs/tags/appsec-v1-vul
 - [x] Claude 不能读取原始 token、SQLite 数据库、`.env`、历史本地报告或操作者场景答案。
 - [x] 第一轮不向 Claude 提供现有测试代码和漏洞 truth label，避免把现成答案当作独立评审结果。
 - [x] 只有第一阶段输出已封存且 Security Engineer 明确授权第二阶段后，才释放固定权限矩阵和脱敏确定性结果；之后不得回写第一阶段输出。
-- [x] Claude 可以追踪代码路径、提出和执行受限 negative tests、收集证据并起草 finding。
+- [x] 本轮 Claude 只做 static code review：追踪代码路径、提出但不执行 negative tests，并起草 finding 与 remediation advice。
 - [x] Claude 不能修改安全需求、应用代码、最终 finding 状态或严重性。
 - [x] Codex 负责实现和修复，但不能把应用授权函数作为独立 oracle，也不能批准自己的修复。
 - [x] Security Engineer 最终判断 finding 的真实性、影响、严重性和 remediation 是否接受。
 
 ## 6. 执行与证据边界
 
-- [x] 目标固定为 `http://127.0.0.1:8000`，不使用环境代理，不跟随跨目标重定向。
-- [x] 基础矩阵最多每秒两次请求、并发不超过二、单请求超时十秒。
-- [x] 凭据由工具层按 alias 注入，不进入 Claude 上下文。
-- [x] 原始响应不写入报告；报告只保存脱敏摘要和 evidence ID。
-- [x] 429、超时、5xx、重定向、fixture 不匹配和证据缺失都判为 `inconclusive`。
-- [x] HTTP 200 本身不是漏洞证据；错误状态中的受保护数据仍可构成确认违规。
+- [x] Claude 只能使用 `Read`、`Glob`、`Grep` 和仅限 `/review/output` 的 `Write`；Bash、Edit、Web、MCP 与浏览器均禁止。
+- [x] `/review/input` 只读，独立 `/review/output` 可写；源仓库和父目录不挂载。
+- [x] 本轮不启动应用、不提供应用 token、不执行 HTTP 请求或其他动态测试。
+- [x] Claude 提出的测试必须标记为 `proposed_not_executed`，static inference 不能冒充 runtime evidence。
+- [x] Static evidence 必须引用准确文件、函数、行号和 authentication/authorization decision path。
+- [x] Claude API 流量只能经独立代理访问 `api.anthropic.com:443`，reviewer 没有直接出口。
 
 ## 7. Finding、修复与回归规则
 
-- [x] Confirmed finding 必须引用实际 run ID、case ID、request ID、evidence ID 和 requirement ID。
+- [x] Claude finding 草稿必须引用 requirement ID 和准确代码位置；最终 confirmed finding 由 Security Engineer 判断路径可达性并决定是否需要补充 runtime evidence。
 - [x] Claude 只能提交 finding 草稿和有依据的影响分析，不能最终确认严重性或生成未经计算的精确 CVSS。
 - [x] Security Engineer 对每个 finding 选择 `confirmed`、`rejected` 或 `needs_more_evidence`。
 - [x] 只有 `confirmed` finding 才进入 Codex remediation。
@@ -134,17 +136,17 @@ git ls-remote origin refs/heads/assessment/v1-vulnerable refs/tags/appsec-v1-vul
 
 ## 8. 正式评估启动门槛
 
-最终启动批准包已经准备完成，见 [说明](../../../docs/formal-start-approval.md)和 `formal-start-approval-package.json`。批准包仍为 `prepared_not_approved`，以下两项仍须由 Security Engineer 明确确认。
+修复后的 v2 手工启动批准包和 isolated reviewer workspace 已经重新绑定并获得正式人工启动批准，见 [说明](../../../docs/formal-start-approval.md)和 `formal-start-approval-package.json`。旧 workspace 的失败不构成 assessment finding。
 
 - [x] 当前 requirement version 已去掉 `-draft`，JSON 与本记录一致。
 - [x] 评估代码已冻结，并填写了完整 Git commit SHA。
 - [x] 评估 fixture 已冻结，并填写了 fixture ID。
 - [x] 漏洞场景已去除明显的 `*_bypass` 答案标签，并填写了中性 scenario ID。
-- [ ] 评估期间不修改代码、requirements、fixture 或 reviewer manifest。
-- [ ] approver 和 `approved_at_utc` 已填写。
+- [x] 评估期间不修改代码、requirements、fixture 或 reviewer manifest。
+- [x] approver 和 `approved_at_utc` 已填写。
 - [x] 已再次确认 Claude 不会获得 raw credentials 或 ground-truth label。
 
-全部完成后，将 `approval_status` 改为 `ready_for_claude_review`。这一状态才授权进入 Claude 的正式 decision-path review 和独立测试矩阵阶段。
+全部条件已经完成，`approval_status` 为 `ready_for_claude_review`。这只授权 Security Engineer 手工启动 v4 静态 reviewer workspace，不授权 Codex 调用模型。
 
 ## 9. 变更记录
 
@@ -168,5 +170,18 @@ git ls-remote origin refs/heads/assessment/v1-vulnerable refs/tags/appsec-v1-vul
 | `2026-09-19T22:37:07Z` | `codex` | 在固定命令中显式禁止 MCP、slash commands 和 Chrome，并重新绑定最终 command hash；正式执行仍未授权 | 否（执行面收紧与候选重新绑定） |
 | `2026-09-19T22:38:01Z` | `codex` | 将 controller、runtime wrapper/settings 和 egress proxy 的逐文件 SHA-256 加入 attestation，绑定未提交工作区中的准确控制面实现 | 否（候选完整性强化） |
 | `2026-09-19T22:55:58Z` | `codex` | 准备最终启动批准包，绑定候选证明、固定预算和 14 个原子开关变更；补充批准状态一致性校验、跨平台 LF 哈希稳定性和官方 Workspace/key 操作说明，所有开关仍关闭 | 否（只准备批准对象，未授权或执行模型） |
+| `2026-09-20T00:18:18Z` | `codex` | 按人工启动架构替换自动执行路径：Codex 只生成隔离 workspace；Security Engineer 单独批准、提供仓库外 key 文件并运行 Compose；Claude 只能读取 bundle 和调用受限 gateway。重建容器并完成真实无模型 gateway 验证，手工启动门仍关闭 | 否（修正实现以符合已确认职责边界） |
+| `2026-09-20T01:05:56Z` | `codex` | 按 Security Engineer 的最终范围将正式 Claude 运行收紧为交互式静态代码审查：移除 gateway、应用启动、HTTP 和 Bash 能力；只读挂载冻结 bundle，仅允许向独立结果目录写入；重建并验证审批门、挂载边界和代理健康，重新绑定 attestation、handoff 与批准包。未读取真实凭据或调用模型，手工启动门仍关闭 | 否（已批准架构的实现与重新绑定） |
+| `2026-09-20T01:15:24.846905Z` | `project_owner` | 接受评估窗口不可变性承诺并正式批准 Security Engineer 手工启动已绑定的 static-only reviewer workspace；授权 attestation 与 handoff 哈希已写入 start gate，Codex 仍无权启动 Claude | 否（正式人工启动批准） |
+| `2026-09-20T02:11:27Z` | `codex` | 记录首次手工启动因 `dontAsk` 下 Read、Glob、Grep 未被 allow 规则预批准而失败；Claude 未读取代码、未生成输出，未形成 assessment finding。保留旧 handoff，撤销其当前启动状态 | 是（控制面改变，需要新批准） |
+| `2026-09-20T02:11:27Z` | `codex` | 在 managed settings 与 CLI 中显式预批准 Read、Glob、Grep、受限 Write；修复无换行/LF/CRLF key 文件兼容；创建并验证 v2 workspace，重新生成 attestation 与批准包 | 是（等待 Security Engineer 批准 v2） |
+| `2026-09-20T02:15:02.184847Z` | `project_owner` | 接受 v2 评估窗口不可变性承诺并正式批准 Security Engineer 手工启动修复后的 static-only reviewer；授权 attestation 与 handoff 哈希已写入 start gate，Codex 仍无权启动 Claude | 否（v2 正式人工启动批准） |
+| `2026-09-20T02:32:28Z` | `codex` | 记录 v2 因 Read 工具结果未传回模型而失败：Claude 未读取代码、未生成输出、未形成 finding；移除未公开支持的 `--restricted` 参数，建立独立的只读探针 preflight，并修正 Claude Code 2.1.278 要求的 `Edit(/review/output/**)` 文件权限规则。最小模型 preflight 成功返回固定校验串，v3 已重新绑定但正式人工启动门保持关闭 | 是（等待 Security Engineer 批准 v3） |
+
+| `2026-09-20T02:35:32.009233Z` | `project_owner` | 接受 v3 评估窗口不可变性承诺，并正式批准 Security Engineer 手工启动已通过 Read preflight 的 static-only reviewer；授权 attestation 与 handoff 哈希已写入 start gate，Codex 仍无权启动正式 Claude 评估 | 否（v3 正式人工启动批准） |
+
+| `2026-09-20T02:59:43Z` | `codex` | 确认 v3 失败原因为 CLI 可变长 `--disallowedTools` 参数吞掉启动 prompt，并把 prompt 中的 Read 等词解析为 deny rules；使用 `--` 分隔后，交互式 Read 探针成功。进一步确认 Claude Code 2.1.278 使用 Edit 创建输出；Read+Edit 隔离 preflight 成功，输入仍由 managed deny 与只读挂载保护。已生成并重新绑定 v4，正式启动门保持关闭 | 是（等待 Security Engineer 批准 v4） |
+
+| `2026-09-20T03:02:30.589534Z` | `project_owner` | 接受 v4 评估窗口不可变性承诺，并正式批准 Security Engineer 手工启动已通过交互式 Read 与隔离 Read+Edit preflight 的 static-only reviewer；授权 attestation 与 handoff 哈希已写入 start gate，Codex 仍无权启动正式 Claude 评估 | 否（v4 正式人工启动批准） |
 
 正式批准后，任何影响 actor、asset、trust boundary、scope、expected behavior、工具权限或 finding 标准的改动，都必须新增记录并重新审批。仅修正文案拼写且不改变含义时，可以记录为无需重新审批。
