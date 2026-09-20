@@ -1,0 +1,11 @@
+The container launcher has enforced the Security Engineer's manual-launch approval. This is a static-only remediation verification, not a new vulnerability hunt and not a dynamic test. The current working directory is `/review/input`.
+
+First use Read on `bundle-manifest.json` and confirm that actual content was returned. Then read every relative path in `readable_files`. Do not use Glob as a substitute for reading the manifest allowlist. Treat the confirmed finding, Security Engineer decision, before evidence, remediation claim, fixed code, tests, and regression evidence as separate evidence sources; do not assume the remediation claim is correct.
+
+Independently trace the fixed authentication and authorization decision path. Verify whether the implementation makes an existing cross-tenant object and a nonexistent object externally indistinguishable to an unauthorized caller, while preserving same-tenant authorized access, same-tenant owner denial, tenant-admin access, protected-field minimization, and distinct server-side audit reasons. Review the regression test and scanner oracle for independence and root-cause coverage. Identify any bypass, regression, unsupported claim, or missing evidence.
+
+Return exactly one draft verification status: `remediation_verified`, `remediation_rejected`, or `needs_more_evidence`. This is Claude's independent verification recommendation; the Security Engineer remains the final acceptance authority. Do not assign final severity and do not modify code.
+
+Use only Read, Glob, Grep, and Edit. Edit may create files only under `/review/output`; `/review/input` is read-only. Do not use Bash, Web, MCP, a browser, application credentials, HTTP, or dynamic tests. Do not access any host or parent path.
+
+Use Edit to create all of these files under `/review/output`: `verification-log.json`, `remediation-verification.json`, `remediation-verification.md`, `remediation-verification.en.md`, `limitations.md`, and `limitations.en.md`. The JSON conclusion must cite file and line evidence, evaluate each acceptance criterion, distinguish static evidence from supplied runtime evidence, and state limitations. The Markdown reports must be equivalent Chinese and English versions. Remain in the interactive session after all files are written.

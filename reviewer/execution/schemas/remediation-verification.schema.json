@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "finding_id",
+    "acceptance_criteria",
+    "code_evidence",
+    "regression_evidence_assessment",
+    "limitations"
+  ],
+  "properties": {
+    "status": {
+      "enum": ["remediation_verified", "remediation_rejected", "needs_more_evidence"]
+    },
+    "finding_id": {"const": "F1"},
+    "acceptance_criteria": {"type": "array", "items": {"type": "object"}},
+    "code_evidence": {"type": "array", "items": {"type": "object"}},
+    "regression_evidence_assessment": {"type": "object"},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  }
+}

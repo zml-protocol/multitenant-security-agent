@@ -12,6 +12,7 @@ from reviewer.execution.controller import (
     claude_arguments,
     prepare_handoff,
 )
+from scripts.reviewer_remediation_handoff import OUTPUTS as REMEDIATION_OUTPUTS, adapt as adapt_remediation
 
 
 PHASE1 = "decision_path_and_independent_matrix"
@@ -137,3 +138,29 @@ def test_output_schemas_remain_static_review_reference_contracts():
         schema = json.loads(Path(profile["phases"][phase]["output_schema"]).read_text(encoding="utf-8"))
         assert set(schema["required"]) == required
         assert schema["additionalProperties"] is False
+
+
+def test_remediation_adapter_keeps_static_boundary_and_uses_dedicated_outputs(lab, tmp_path: Path):
+    fixture_directory, _, _ = lab
+    scenario_id = next(iter(catalog().values()))["scenario_id"]
+    bundle, _ = build_bundle(scenario_id, fixture_directory / "fixture.json", tmp_path / "bundles")
+    workspace = prepare_handoff(
+        bundle, tmp_path / "handoffs", PHASE1, "remediation-review", tmp_path / "results"
+    )
+
+    adapt_remediation(workspace)
+
+    manifest = json.loads((workspace / "handoff-manifest.json").read_text(encoding="utf-8"))
+    approval = json.loads((workspace / "approval/manual-launch-approval.json").read_text(encoding="utf-8"))
+    launch = (workspace / "launch/launch.sh").read_text(encoding="utf-8")
+    assert manifest["phase"] == "remediation_verification"
+    assert manifest["review_mode"] == "interactive_static_remediation_verification_only"
+    assert manifest["required_outputs"] == REMEDIATION_OUTPUTS
+    assert manifest["expected_outputs"] == REMEDIATION_OUTPUTS
+    assert manifest["codex_may_launch_claude"] is False
+    assert manifest["static_review_boundary"]["dynamic_testing_allowed"] is False
+    assert manifest["remediation_verification"]["final_acceptance_authority"] == "security_engineer"
+    assert approval["manual_launch_approved"] is False
+    assert "remediation-verification.json" in launch
+    assert "Do not use Bash, Web, MCP" in launch
+    assert "--allowedTools Read,Glob,Grep,Edit" in launch
