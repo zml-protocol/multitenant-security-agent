@@ -76,7 +76,7 @@ def test_spoofing_malformed_auth_and_read_only(lab, mode):
         assert response.json()["user_id"] == users["a_user1"]["user_id"]
         assert response.json()["role"] == "user"
         cross = client.get(f"/api/users/{users['b_user1']['user_id']}", headers=headers)
-        assert cross.status_code == (200 if mode == "cross_tenant_bypass" else 403)
+        assert cross.status_code == (200 if mode == "cross_tenant_bypass" else 404)
         same = client.get(f"/api/users/{users['a_user2']['user_id']}", headers=headers)
         assert same.status_code == (200 if mode == "same_tenant_bypass" else 403)
         listing = client.get("/api/users", headers=headers)
@@ -96,6 +96,23 @@ def test_spoofing_malformed_auth_and_read_only(lab, mode):
         for route in ("/docs", "/openapi.json", "/api/mode"):
             assert client.get(route, headers=headers).status_code == 404
     assert (path / "app.sqlite3").read_bytes() == before
+
+
+def test_cross_tenant_and_unknown_objects_are_indistinguishable(lab, caplog):
+    path, fixture, credentials = lab
+    users = {user["alias"]: user for user in fixture["users"]}
+    headers = {"Authorization": f"Bearer {credentials['tokens']['a_user1']}"}
+    with caplog.at_level(logging.INFO, logger="lab.access"):
+        with TestClient(create_app(path / "app.sqlite3")) as client:
+            cross_tenant = client.get(f"/api/users/{users['b_user1']['user_id']}", headers=headers)
+            unknown = client.get("/api/users/00000000-0000-0000-0000-000000000000", headers=headers)
+
+    assert cross_tenant.status_code == unknown.status_code == 404
+    assert cross_tenant.json() == unknown.json() == {"detail": "Not found"}
+    logs = {json.loads(record.message)["request_id"]: json.loads(record.message)
+            for record in caplog.records if record.name == "lab.access"}
+    assert logs[cross_tenant.headers["x-request-id"]]["reason"] == "tenant_boundary"
+    assert logs[unknown.headers["x-request-id"]]["reason"] == "unknown_user"
 
 
 def test_fail_closed_config_and_default(lab, monkeypatch):

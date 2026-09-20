@@ -116,7 +116,8 @@ def create_app(db_path=None, policy=None):
         request.state.target_user_id = target["user_id"]
         permitted, reason = policy.authorize_detail(actor, target)
         if not permitted:
-            deny(request, 403, reason)
+            # Do not reveal whether an object exists outside the actor's tenant.
+            deny(request, 404 if reason == "tenant_boundary" else 403, reason)
         allow(request, reason)
         return public(target)
 

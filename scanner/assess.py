@@ -36,9 +36,16 @@ def assess(case, status, body, fixture, transport_error=False):
         if status == 200 and complete:
             return result("no_violation_observed", "expected_data_returned", passed=True)
         return result("inconclusive", "allowed_request_failed_or_incomplete", anomaly=True)
-    expected_status = 401 if case["group"] == "authentication" else 403
+    if case["group"] == "authentication":
+        expected_status = 401
+    elif case["kind"] == "detail" and case["actor"] and case["target"]:
+        identities = {user["alias"]: user for user in users}
+        expected_status = (404 if identities[case["actor"]]["tenant_id"] != identities[case["target"]]["tenant_id"]
+                           else 403)
+    else:
+        expected_status = 403
     # Only the expected generic denial is a pass. Unknown content needs review.
-    generic = {"detail": "Unauthorized" if expected_status == 401 else "Forbidden"}
+    generic = {"detail": "Unauthorized" if expected_status == 401 else "Not found" if expected_status == 404 else "Forbidden"}
     if status == expected_status and body == generic:
         return result("no_violation_observed", "expected_denial_without_data", passed=True)
     return result("inconclusive", "unexpected_response_without_proven_leak")
