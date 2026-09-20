@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "review_run_id": "appsec-v1-phase1-ready-v4",
+  "status": "adjudicated",
+  "decision_authority": "security_engineer_project_owner",
+  "decided_at_utc": "2026-09-20T03:52:53.862Z",
+  "source_results": "raw/findings.json",
+  "findings": [
+    {
+      "id": "F1",
+      "final_status": "needs_more_evidence",
+      "rationale": "The static path contains a cross-tenant existence oracle, but it has not been dynamically demonstrated and does not directly disclose a protected profile.",
+      "severity": "not_assigned",
+      "remediation_decision": "deferred_pending_evidence",
+      "additional_evidence": "Separately approve and execute one known cross-tenant and one nonexistent object request with the same low-privilege actor; retain only minimized status, generic error, correlation, and audit-decision evidence."
+    },
+    {
+      "id": "F2",
+      "final_status": "rejected",
+      "rationale": "The current requirement is satisfied; this is an architecture and maintainability concern rather than a vulnerability in the reviewed version.",
+      "severity": "not_applicable",
+      "remediation_decision": "none_required_for_appsec_v1"
+    }
+  ],
+  "observations": [
+    {
+      "id": "O1",
+      "final_disposition": "informational",
+      "rationale": "Predictable test fixture IDs may amplify F1 but are outside the current enumeration scope and are not authentication credentials.",
+      "remediation_decision": "none"
+    },
+    {
+      "id": "O2",
+      "final_disposition": "informational",
+      "rationale": "The concern is theoretical, remote exploitability is very low, and no runtime evidence demonstrates a violation.",
+      "remediation_decision": "none"
+    }
+  ],
+  "confirmed_findings": 0,
+  "remediation_authorized": false,
+  "dynamic_testing_authorized": false
+}
