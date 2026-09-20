@@ -13,8 +13,10 @@
       "rationale": "Controlled dynamic evidence reproduced distinguishable 403 and 404 responses for an existing cross-tenant object and a nonexistent object using the same low-privilege actor.",
       "expected_behavior": "For an unauthorized caller, an existing cross-tenant object and a nonexistent object must have the same externally observable response.",
       "evidence": "evidence/f1-minimum-dynamic-evidence.json",
-      "severity": "pending_security_engineer",
-      "remediation_decision": "authorized"
+      "severity": "low",
+      "remediation_decision": "accepted",
+      "remediation_commit": "84396352268b34a407c2ac2f27602e09c2d55eaa",
+      "verification_status": "remediation_verified"
     },
     {
       "id": "F2",

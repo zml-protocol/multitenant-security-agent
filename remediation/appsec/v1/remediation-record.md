@@ -5,7 +5,7 @@
 - 分支：`remediation/v1`
 - Finding：`F1`
 - Finding 状态：`confirmed`
-- 严重性：`pending_security_engineer`
+- 严重性：`Low`
 - 冻结漏洞基线：`14a7b48ae30b833962752e4d65b7e03ade5664a1`
 - Fixture：`fixture-256eb13b57860e22`
 - 机器可读回归证据：[regression-evidence.json](regression-evidence.json)
@@ -40,4 +40,4 @@
 - Confirmed violations：0
 - Functional anomalies：0
 
-`appsec-v1-fixed` 标签尚未创建。该标签只能在 Security Engineer 验收本修复后创建。
+Claude 已给出 `remediation_verified` 建议，Security Engineer 已将本修复标记为 `remediation_accepted`。最终验收记录见 [remediation-acceptance.md](remediation-acceptance.md)。`appsec-v1-fixed` 标签已获准创建在修复代码提交上。

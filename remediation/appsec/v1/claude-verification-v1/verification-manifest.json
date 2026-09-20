@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "status": "remediation_verified_accepted_by_security_engineer",
+  "review_run_id": "appsec-v1-remediation-verification-v1",
+  "bundle_id": "remediation-bundle-9d359afaf9d8f80e1ca6",
+  "finding_id": "F1",
+  "vulnerable_commit": "14a7b48ae30b833962752e4d65b7e03ade5664a1",
+  "fixed_commit": "84396352268b34a407c2ac2f27602e09c2d55eaa",
+  "claude_draft_status": "remediation_verified",
+  "security_engineer_decision": "remediation_accepted",
+  "severity": "low",
+  "accepted_at_utc": "2026-09-20T04:26:22.430Z",
+  "raw_outputs_immutable": true,
+  "files": [
+    {
+      "path": "raw/limitations.en.md",
+      "bytes": 6559,
+      "sha256": "b9d0ae5ca7062857347ff333d975dcb739a6887c46b247cdedd1a57608e2756b"
+    },
+    {
+      "path": "raw/limitations.md",
+      "bytes": 5698,
+      "sha256": "a3ba094a8a7619e844c362d7c648e97b0560e9c83931f31f21e5074752d7586d"
+    },
+    {
+      "path": "raw/remediation-verification.en.md",
+      "bytes": 11770,
+      "sha256": "131095963ee689768dc0ef621d749d5e7b091300d294913102c75a0a6a90d90e"
+    },
+    {
+      "path": "raw/remediation-verification.json",
+      "bytes": 15017,
+      "sha256": "3adcbc58981cd66e0ce212a9e5a723489578e777909cbbd47253ef27d73a0478"
+    },
+    {
+      "path": "raw/remediation-verification.md",
+      "bytes": 10882,
+      "sha256": "1892990c8d21faef70d16ada52e026ed0e8e5378fed463551f494e296bcf92f3"
+    },
+    {
+      "path": "raw/verification-log.json",
+      "bytes": 3834,
+      "sha256": "e0dd78c51e9bd2d9da2dfca97520cd79d582dc6eac3d52498c9cb805929d815b"
+    }
+  ]
+}

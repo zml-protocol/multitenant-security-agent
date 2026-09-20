@@ -5,7 +5,7 @@ English | [中文](remediation-record.md)
 - Branch: `remediation/v1`
 - Finding: `F1`
 - Finding status: `confirmed`
-- Severity: `pending_security_engineer`
+- Severity: `Low`
 - Frozen vulnerable baseline: `14a7b48ae30b833962752e4d65b7e03ade5664a1`
 - Fixture: `fixture-256eb13b57860e22`
 - Machine-readable regression evidence: [regression-evidence.json](regression-evidence.json)
@@ -40,4 +40,4 @@ Using the same fixture as the frozen assessment:
 - Confirmed violations: 0
 - Functional anomalies: 0
 
-The `appsec-v1-fixed` tag has not been created. It may be created only after the Security Engineer accepts this remediation.
+Claude issued a `remediation_verified` recommendation, and the Security Engineer marked this fix `remediation_accepted`. See [remediation-acceptance.en.md](remediation-acceptance.en.md) for the final record. Creation of `appsec-v1-fixed` on the fixed-code commit is approved.

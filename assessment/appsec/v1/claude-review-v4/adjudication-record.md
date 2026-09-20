@@ -19,8 +19,10 @@
 - Observed behavior：跨租户已存在对象返回 `403 Forbidden`，不存在对象返回 `404 Not found`。两者均未泄露 protected profile，但外部表现可区分。
 - **最终状态：`confirmed`**
 - 裁决理由：静态路径假设已经由同一冻结 source commit 和 fixture 上的最小动态测试复现，证明未经授权的 actor 可以区分跨租户对象是否存在。
-- 严重性：`pending_security_engineer`
-- Remediation decision：`authorized`
+- 严重性：`Low`
+- Remediation decision：`accepted`
+- Claude verification：`remediation_verified`
+- 修复提交：`84396352268b34a407c2ac2f27602e09c2d55eaa`
 
 ### 修复验收标准
 
@@ -59,4 +61,4 @@
 
 ## 后续状态
 
-F1 已确认并授权进入 `remediation/v1`，但严重性仍由 Security Engineer 决定。F2、O1 和 O2 不触发代码修改。冻结的 `assessment/v1-vulnerable` 分支与 `appsec-v1-vulnerable` 标签不得改变。
+F1 已确认、修复并由 Security Engineer 接受，最终严重性为 `Low`。F2、O1 和 O2 不触发代码修改。冻结的 `assessment/v1-vulnerable` 分支与 `appsec-v1-vulnerable` 标签不得改变。

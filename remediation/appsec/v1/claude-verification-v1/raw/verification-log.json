@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "remediation-bundle-9d359afaf9d8f80e1ca6",
+  "finding_id": "F1",
+  "verification_session_date_utc": "2026-09-20",
+  "execution_mode": "interactive_static_remediation_verification_only",
+  "authorized_by": "security_engineer_manual_launch_approval",
+  "tools_used": ["Read", "Edit"],
+  "tools_not_used": ["Bash", "Web", "MCP", "Glob_as_manifest_substitute", "dynamic_http_requests"],
+  "steps": [
+    {
+      "seq": 1,
+      "action": "Read bundle-manifest.json",
+      "result": "content_confirmed_non_empty",
+      "note": "readable_files allowlist (18 entries) and file_sha256 map extracted; manifest is the sole allowlist source of truth."
+    },
+    {
+      "seq": 2,
+      "action": "Read every path listed in readable_files, in full, without using Glob as a substitute",
+      "files_read": [
+        "bundle-manifest.json",
+        "README.md",
+        "README.en.md",
+        "app/main.py",
+        "app/policy.py",
+        "app/seed.py",
+        "assessment/adjudication-record.json",
+        "assessment/adjudication-record.md",
+        "assessment/adjudication-record.en.md",
+        "assessment/reviewer-input-manifest.json",
+        "assessment/security-requirements.json",
+        "changes/remediation.diff",
+        "evidence/before.json",
+        "evidence/after.json",
+        "remediation/remediation-record.md",
+        "remediation/remediation-record.en.md",
+        "scanner/assess.py",
+        "scanner/matrix.py",
+        "tests/test_application.py",
+        "inputs/permissions.json"
+      ],
+      "result": "all_18_readable_files_content_confirmed"
+    },
+    {
+      "seq": 3,
+      "action": "Cross-reference confirmed finding (adjudication-record.json F1) against before/after dynamic evidence and remediation diff",
+      "result": "finding_and_acceptance_criteria_extracted"
+    },
+    {
+      "seq": 4,
+      "action": "Independent static trace of app/main.py detail route and app/policy.py authorize_detail decision path",
+      "result": "traced_all_branches: unknown_user(404), tenant_boundary(404 post-fix), owner_required(403), admin_required(403), self_or_tenant_administrator(200)"
+    },
+    {
+      "seq": 5,
+      "action": "Compared scanner/assess.py and scanner/matrix.py oracle logic against implementation for independence and root-cause coverage",
+      "result": "oracle_is_data_derived_not_implementation_mirrored; matrix.py builds no nonexistent-object case, so F1 property coverage depends on a single dedicated unit test"
+    },
+    {
+      "seq": 6,
+      "action": "Identified files referenced by tests/test_application.py or remediation-record.md that are outside readable_files allowlist",
+      "result": "evaluation/operator.py, scanner/run.py, conftest.py (test fixture 'lab'), and remediation/regression-evidence.json are referenced but not present in readable_files; treated as declared-excluded or missing linked evidence, not fetched, not assumed"
+    },
+    {
+      "seq": 7,
+      "action": "No dynamic execution performed by Claude in this session; evidence/before.json and evidence/after.json are treated as supplied prior runtime evidence, distinct from Claude's own static analysis",
+      "result": "evidence_provenance_labeled_in_conclusion"
+    },
+    {
+      "seq": 8,
+      "action": "Wrote required output artifacts under /review/output only",
+      "result": "verification-log.json, remediation-verification.json, remediation-verification.md, remediation-verification.en.md, limitations.md, limitations.en.md"
+    }
+  ],
+  "constraints_observed": {
+    "read_only_input_root": true,
+    "output_writes_restricted_to": "/review/output",
+    "no_bash_no_network_no_dynamic_test": true,
+    "no_severity_assignment": true,
+    "no_code_modification": true,
+    "final_acceptance_authority": "security_engineer"
+  }
+}

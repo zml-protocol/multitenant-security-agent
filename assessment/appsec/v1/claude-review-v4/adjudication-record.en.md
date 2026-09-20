@@ -19,8 +19,10 @@ This record preserves the Security Engineer's item-by-item decisions on the Clau
 - Observed behavior: the existing cross-tenant object returned `403 Forbidden`, while the nonexistent object returned `404 Not found`. Neither response disclosed a protected profile, but their external behavior was distinguishable.
 - **Final status: `confirmed`**
 - Rationale: the static-path hypothesis was reproduced by the minimum dynamic test against the same frozen source commit and fixture, proving that an unauthorized actor can distinguish whether a cross-tenant object exists.
-- Severity: `pending_security_engineer`
-- Remediation decision: `authorized`
+- Severity: `Low`
+- Remediation decision: `accepted`
+- Claude verification: `remediation_verified`
+- Remediation commit: `84396352268b34a407c2ac2f27602e09c2d55eaa`
 
 ### Remediation acceptance criteria
 
@@ -59,4 +61,4 @@ When the same authenticated low-privilege actor requests an existing cross-tenan
 
 ## Subsequent state
 
-F1 is confirmed and authorized to enter `remediation/v1`; severity remains a Security Engineer decision. F2, O1, and O2 do not trigger code changes. The frozen `assessment/v1-vulnerable` branch and `appsec-v1-vulnerable` tag must remain unchanged.
+F1 is confirmed, remediated, and accepted by the Security Engineer with final severity `Low`. F2, O1, and O2 do not trigger code changes. The frozen `assessment/v1-vulnerable` branch and `appsec-v1-vulnerable` tag must remain unchanged.

@@ -1,0 +1,165 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "remediation-bundle-9d359afaf9d8f80e1ca6",
+  "finding_id": "F1",
+  "vulnerable_commit": "14a7b48ae30b833962752e4d65b7e03ade5664a1",
+  "source_commit": "84396352268b34a407c2ac2f27602e09c2d55eaa",
+  "verifier": "claude",
+  "verification_mode": "static_only_manual_launch_approved",
+  "final_acceptance_authority": "security_engineer",
+  "manifest_confirmation": {
+    "bundle_manifest_read": true,
+    "content_confirmed": true,
+    "readable_files_count": 18,
+    "all_readable_files_read": true,
+    "glob_used_as_allowlist_substitute": false
+  },
+  "finding_under_verification": {
+    "id": "F1",
+    "final_status_from_adjudication": "confirmed",
+    "expected_behavior": "For an unauthorized caller, an existing cross-tenant object and a nonexistent object must have the same externally observable response (status + generic body), with no protected profile disclosed either way. Server-side audit reasons may remain distinct.",
+    "acceptance_criteria_source": "assessment/adjudication-record.json:14-24 and assessment/adjudication-record.md:25-27"
+  },
+  "evidence_provenance": {
+    "note": "Claude performed no execution in this session (Bash/HTTP/dynamic testing prohibited). Two evidence classes are distinguished below.",
+    "static_evidence": [
+      "app/main.py (read directly, lines 110-122)",
+      "app/policy.py (read directly, lines 1-15)",
+      "app/seed.py (read directly)",
+      "changes/remediation.diff (read directly)",
+      "scanner/assess.py, scanner/matrix.py (read directly)",
+      "tests/test_application.py (read directly, source only, not executed)",
+      "inputs/permissions.json (read directly)"
+    ],
+    "supplied_runtime_evidence_not_generated_by_claude": [
+      "evidence/before.json (prior authorized dynamic evidence, pre-fix, source_commit 14a7b48...)",
+      "evidence/after.json (prior authorized dynamic/regression evidence, post-fix, branch remediation/v1)"
+    ]
+  },
+  "decision_path_trace": {
+    "route": "GET /api/users/{user_id}",
+    "file": "app/main.py",
+    "lines": "110-122",
+    "steps": [
+      {
+        "step": "global lookup by user_id, no tenant filter",
+        "line": "app/main.py:112",
+        "on_empty": "deny(request, 404, 'unknown_user')  -- app/main.py:113-114"
+      },
+      {
+        "step": "policy.authorize_detail(actor, target)",
+        "file": "app/policy.py:10-15",
+        "branches": [
+          {"condition": "actor.tenant_id != target.tenant_id", "reason": "tenant_boundary", "permitted": false, "line": "app/policy.py:11-12"},
+          {"condition": "actor.user_id == target.user_id OR actor.role == 'admin' (same tenant)", "reason": "self_or_tenant_administrator", "permitted": true, "line": "app/policy.py:13-14"},
+          {"condition": "else (same tenant, not self, not admin)", "reason": "owner_required", "permitted": false, "line": "app/policy.py:15"}
+        ]
+      },
+      {
+        "step": "status mapping on denial",
+        "file": "app/main.py:118-120",
+        "logic": "deny(request, 404 if reason == 'tenant_boundary' else 403, reason)",
+        "effect": "unknown_user -> 404; tenant_boundary -> 404 (post-fix, was 403 pre-fix); owner_required -> 403; admin_required (list route only) -> 403"
+      },
+      {
+        "step": "allow path returns public(target) only",
+        "file": "app/main.py:94-95,121-122",
+        "fields": "user_id, tenant_id, role, name, email, phone (== approved_public_fields in assessment/security-requirements.json:22)"
+      }
+    ]
+  },
+  "acceptance_criteria_evaluation": [
+    {
+      "criterion": "Existing cross-tenant object and nonexistent object are externally indistinguishable to an unauthorized caller",
+      "status": "verified_by_static_trace_and_supplied_runtime_evidence",
+      "static_evidence": "app/main.py:119-120 maps tenant_boundary and unknown_user to the same status (404); deny() at app/main.py:76-79 always emits the fixed generic body 'Not found' for 404 regardless of reason, so both cases produce identical status AND identical body {'detail':'Not found'}.",
+      "runtime_evidence": "evidence/after.json:14-50 shows known_cross_tenant -> 404/{'detail':'Not found'} and nonexistent -> 404/{'detail':'Not found'}; evidence/before.json:14-50 shows the pre-fix divergence (403 vs 404) that originally confirmed F1.",
+      "test_evidence": "tests/test_application.py:101-115 (test_cross_tenant_and_unknown_objects_are_indistinguishable) asserts status and body equality end-to-end via TestClient.",
+      "residual_gap": "Only one actor (a_user1) and one cross-tenant target (b_user1) plus one fixed nonexistent UUID are exercised by the automated regression test; no automated case covers e.g. tenant-admin-as-unauthorized-cross-tenant-actor querying a nonexistent object, or a second nonexistent ID. The uniform code path (tenant_boundary check precedes role check in app/policy.py:11-12) makes this a low-risk gap, not a bypass, but it is not exhaustively automated."
+    },
+    {
+      "criterion": "Same-tenant authorized access preserved (self and tenant-admin-in-tenant)",
+      "status": "verified",
+      "evidence": "app/policy.py:13 unchanged by diff; inputs/permissions.json:4-11 detail_allow matrix; evidence/after.json matrix_summary passed=54/54, confirmed_violation=0 (implies no regression in allow cases); tests/test_application.py:18-27 asserts secure mode confirmed_violation==0."
+    },
+    {
+      "criterion": "Same-tenant owner denial preserved (non-owner, non-admin, same tenant)",
+      "status": "verified",
+      "evidence": "app/policy.py:15 unchanged ('owner_required'); app/main.py:120 else-branch keeps 403 for any reason other than tenant_boundary; tests/test_application.py:80-81 asserts same-tenant denial stays 403 outside bypass mode."
+    },
+    {
+      "criterion": "Tenant-admin access within own tenant preserved; cross-tenant denied even for admins",
+      "status": "verified",
+      "evidence": "app/policy.py:11-14: tenant check occurs before the role check, so an admin actor with a mismatched tenant still receives reason=tenant_boundary (-> 404), never reaching the admin-allow branch; matches assessment/security-requirements.json AUTHZ-OBJ-02 deny clause (line 58)."
+    },
+    {
+      "criterion": "Protected-field minimization unaffected",
+      "status": "verified",
+      "evidence": "app/main.py:16 FIELDS tuple and :94-95 public() are unchanged by changes/remediation.diff (diff touches only lines 116-123 status mapping); FIELDS matches assessment/security-requirements.json:22 approved_public_fields exactly; deny() at app/main.py:76-79 never calls public(), so denial responses (403 or 404) carry no user fields."
+    },
+    {
+      "criterion": "Distinct server-side audit reasons preserved without client disclosure",
+      "status": "verified",
+      "evidence": "app/main.py:73 logs 'reason': request.state.reason unconditionally with structured JSON, independent of client-visible body; deny() at app/main.py:76-79 sets request.state.reason but the raised HTTPException detail is only 'Unauthorized'/'Not found'/'Forbidden', never the reason string; tests/test_application.py:112-115 assert log reason differs (tenant_boundary vs unknown_user) for the two indistinguishable-to-client responses."
+    }
+  ],
+  "bypass_analysis": {
+    "checked_for": [
+      "client-controlled tenant/role/user headers overriding server identity (X-Tenant-ID, X-Role, X-User-ID)",
+      "cross-tenant admin escapes via role-check ordering",
+      "reason string or timing leakage of existence via response body",
+      "protected field leakage in any denial path",
+      "route enumeration beyond the three declared routes"
+    ],
+    "result": "no_bypass_found",
+    "supporting_evidence": [
+      "tests/test_application.py:70-77 sends spoofed X-Tenant-ID/X-Role/X-User-ID headers; response still keyed off authenticate()'s DB-derived actor (app/main.py:81-89), confirming AUTHN-02 is unaffected by this diff",
+      "app/policy.py:11 tenant check precedes role check, eliminating an admin cross-tenant bypass via branch ordering",
+      "changes/remediation.diff:5-13 shows the entire application-code change is a one-line status-mapping change; no new response field, no new route, no changed query"
+    ]
+  },
+  "regression_and_oracle_review": {
+    "regression_test": {
+      "file": "tests/test_application.py",
+      "targeted_case": "lines 101-115, test_cross_tenant_and_unknown_objects_are_indistinguishable",
+      "independence_assessment": "Exercises app/main.py directly through TestClient with the shipped default policy (no policy override), so it validates production behavior rather than a mocked path. It is authored in the same diff/commit as the fix, so it is not independently authored, but its assertions were independently re-derived by static trace above and match.",
+      "root_cause_coverage": "Directly targets the F1 root cause (status+body equality for tenant_boundary vs unknown_user) and also checks server-side log divergence, which is the exact acceptance criterion in assessment/adjudication-record.md:25-27.",
+      "gap": "Single actor/target/nonexistent-ID combination only; see residual_gap above."
+    },
+    "scanner_oracle": {
+      "files": ["scanner/assess.py", "scanner/matrix.py"],
+      "independence_assessment": "scanner/assess.py:41-44 computes expected_status for detail cases from fixture tenant-identity comparison (identities[actor]['tenant_id'] != identities[target]['tenant_id']), not by importing or mirroring app/policy.py's reason strings. This is a requirement-derived (black-box) oracle rather than an implementation mirror, which supports independence.",
+      "same_commit_caveat": "This oracle file was modified in the same changes/remediation.diff as the application fix (diff lines 15-37), so it was updated in lockstep with the fix rather than being a pre-existing, untouched third-party oracle.",
+      "root_cause_coverage_gap": "scanner/matrix.py:22-50 (build_cases) only builds detail cases between the six configured fixture aliases; it never constructs a nonexistent-user-id case. Therefore the permission matrix (54 cases in evidence/after.json) validates tenant/role authorization correctness but does NOT itself re-validate the specific existence-oracle property that defines F1; that property is covered only by the dedicated unit test above.",
+      "cannot_verify": "scanner/run.py (aggregator referenced by tests/test_application.py:13) and evaluation/operator.py (referenced by tests/test_application.py:12, likely the 'operator scenario mappings' category excluded per bundle-manifest.json:57) are not in readable_files and were not read; their wiring of run_matrix() and load_policy() could not be independently traced."
+    }
+  },
+  "unsupported_or_unverifiable_claims": [
+    {
+      "claim": "remediation/remediation-record.md:11 and .en.md:11 link to 'regression-evidence.json' as the machine-readable regression evidence",
+      "issue": "That relative path (remediation/regression-evidence.json) is not listed in bundle-manifest.json readable_files and has no entry in file_sha256; it could not be opened under the allowlist. evidence/after.json appears to contain equivalent content (same fixture_id, same case data, same matrix_summary) but is a different declared path, so the specific linked artifact is unverified as such.",
+      "impact": "low - functionally covered by evidence/after.json, but the documentation cross-reference itself is unverifiable"
+    },
+    {
+      "claim": "remediation/remediation-record.md/.en.md state 'appsec-v1-fixed tag has not been created'",
+      "issue": "No git tag/ref information is present in any readable file; this claim is outside static-file evidence and cannot be independently confirmed or refuted from the bundle.",
+      "impact": "informational only, does not affect the F1 code-path finding"
+    }
+  ],
+  "out_of_scope_carried_from_adjudication": [
+    {"id": "F2", "disposition": "rejected", "reason": "requirement satisfied in this version; architecture concern only", "action_this_review": "none, confirmed unchanged by diff"},
+    {"id": "O1", "disposition": "informational", "reason": "predictable fixture IDs, not authentication credentials", "action_this_review": "none"},
+    {"id": "O2", "disposition": "informational", "reason": "theoretical non-constant-time digest comparison, no dynamic evidence, no requirement violation", "action_this_review": "none; timing side channels not assessed in this static review"}
+  ],
+  "limitations_summary": [
+    "Static-only review; Claude did not execute code, run pytest, or send HTTP requests in this session.",
+    "evaluation/operator.py, scanner/run.py, and conftest.py are referenced by tests/test_application.py but are not in readable_files and were not read; harness wiring beyond the two oracle files (assess.py, matrix.py) is unverified.",
+    "File integrity (file_sha256 in bundle-manifest.json) could not be cryptographically recomputed without Bash; hashes were not independently verified, only read as declared metadata.",
+    "The F1 existence-indistinguishability property is automated-tested by exactly one unit test scenario; broader automated coverage (multiple actors/targets, admin-as-cross-tenant-actor, multiple nonexistent IDs) is absent from the provided files.",
+    "The regression-evidence.json artifact referenced by the remediation record text is outside the allowlist; evidence/after.json is treated as the equivalent, but the exact linked file was not verifiable.",
+    "Runtime evidence (evidence/before.json, evidence/after.json) is supplied by prior authorized dynamic testing, not generated by Claude in this session; Claude's contribution is independent static re-derivation of the same conclusion from source, which is corroborating but not a fresh execution."
+  ],
+  "draft_verification_status": "remediation_verified",
+  "status_rationale": "The single application-code change (app/main.py:118-120) directly and minimally closes the confirmed F1 gap: cross-tenant-existing and nonexistent detail requests now share status 404 and body {'detail':'Not found'}, verified by independent static trace of app/main.py and app/policy.py, corroborated by supplied before/after dynamic evidence and a dedicated regression test. All five preservation properties (same-tenant allow, same-tenant owner deny, tenant-admin scope, field minimization, distinct server-side audit reasons) are unaffected by the diff and independently confirmed unchanged. No bypass was found. Identified gaps (harness files outside allowlist, single-scenario automated existence-oracle coverage, an unverifiable documentation cross-reference) are limitations to disclose to the Security Engineer, not defects that negate the fix itself.",
+  "final_acceptance_note": "This is Claude's independent verification recommendation only. The Security Engineer retains final acceptance authority, including severity assignment and any tag/release decision."
+}
