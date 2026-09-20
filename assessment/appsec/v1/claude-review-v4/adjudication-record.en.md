@@ -2,9 +2,10 @@
 
 English | [中文](adjudication-record.md)
 
-- Status: `adjudicated`
+- Status: `adjudicated_remediation_authorized`
 - Decision authority: Security Engineer / project owner
 - Decision time: `2026-09-20T03:52:53.862Z`
+- F1 redecision time: `2026-09-20T04:02:28.759Z`
 - Reviewer output: [original Claude v4 results](raw/findings.en.md)
 - Machine-readable record: [adjudication-record.json](adjudication-record.json)
 
@@ -13,17 +14,17 @@ This record preserves the Security Engineer's item-by-item decisions on the Clau
 ## F1: Cross-tenant object existence can be distinguished through 404/403 responses
 
 - Requirement mapping: `AUTHZ-OBJ-02`, adjacent `ERROR-01`; user ID enumeration is currently out of scope.
-- Evidence summary: `app/main.py:112-119` performs a global object lookup first; an unknown ID returns 404, while an existing cross-tenant ID returns 403. `app/policy.py:11-12` still denies the cross-tenant read. No dynamic request was executed.
-- Expected behavior: a cross-tenant target must be denied, and errors must not expose a protected profile or credential.
-- Observed behavior: the static path contains a cross-tenant existence oracle, but it shows no return of protected fields such as name, email, or phone and has no runtime reproduction evidence.
-- **Final status: `needs_more_evidence`**
-- Rationale: the code path supports the existence-difference hypothesis, but it has not been dynamically demonstrated, and current evidence does not directly prove protected-profile disclosure.
-- Severity: `not_assigned`
-- Remediation decision: `deferred_pending_evidence`
+- Evidence summary: `app/main.py:112-119` performs a global object lookup first. A controlled dynamic test using the same low-privilege actor reproduced 403 for an existing cross-tenant object and 404 for an unknown object. See [F1 minimum dynamic evidence](evidence/f1-minimum-dynamic-evidence.en.md).
+- Expected behavior: for an unauthorized caller, an existing cross-tenant object and a nonexistent object must have the same externally observable response. Status codes, generic error bodies, and other response properties must not confirm object existence.
+- Observed behavior: the existing cross-tenant object returned `403 Forbidden`, while the nonexistent object returned `404 Not found`. Neither response disclosed a protected profile, but their external behavior was distinguishable.
+- **Final status: `confirmed`**
+- Rationale: the static-path hypothesis was reproduced by the minimum dynamic test against the same frozen source commit and fixture, proving that an unauthorized actor can distinguish whether a cross-tenant object exists.
+- Severity: `pending_security_engineer`
+- Remediation decision: `authorized`
 
-### Minimum additional evidence plan
+### Remediation acceptance criteria
 
-In a later, separately approved controlled dynamic test, use the same authenticated low-privilege actor to send one `GET /api/users/{user_id}` request for a known cross-tenant user ID and one for a nonexistent user ID. Retain only status codes, generic error bodies, request IDs, and audit decision/reason fields; do not retain protected profiles or tokens. After confirming whether the 403/404 distinction is reliably reproducible, decide whether the current scope should change and whether the behavior constitutes a finding.
+When the same authenticated low-privilege actor requests an existing cross-tenant object and a nonexistent object, both responses must have the same HTTP status and generic error body, and neither response may contain a protected profile. Server-side audit logs may retain distinct internal denial reasons without exposing them to the client.
 
 ## F2: List tenant filtering is implemented in route SQL rather than the policy module
 
@@ -58,4 +59,4 @@ In a later, separately approved controlled dynamic test, use the same authentica
 
 ## Subsequent state
 
-There is currently no confirmed finding entering remediation. F1 may collect additional evidence only after the Security Engineer separately approves the minimum dynamic test. F2, O1, and O2 do not trigger a `remediation/v1` change.
+F1 is confirmed and authorized to enter `remediation/v1`; severity remains a Security Engineer decision. F2, O1, and O2 do not trigger code changes. The frozen `assessment/v1-vulnerable` branch and `appsec-v1-vulnerable` tag must remain unchanged.

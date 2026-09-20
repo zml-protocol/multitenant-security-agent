@@ -2,9 +2,10 @@
 
 [English](adjudication-record.en.md) | 中文
 
-- 状态：`adjudicated`
+- 状态：`adjudicated_remediation_authorized`
 - 裁决人：Security Engineer / project owner
 - 裁决时间：`2026-09-20T03:52:53.862Z`
+- F1 重新裁决时间：`2026-09-20T04:02:28.759Z`
 - Reviewer 输出：[Claude v4 原始结果](raw/findings.md)
 - 机器可读记录：[adjudication-record.json](adjudication-record.json)
 
@@ -13,17 +14,17 @@
 ## F1：通过 404/403 差异判断跨租户对象是否存在
 
 - Requirement mapping：`AUTHZ-OBJ-02`、相邻的 `ERROR-01`；user ID enumeration 当前属于 out of scope。
-- Evidence summary：`app/main.py:112-119` 先全局查询对象；未知 ID 返回 404，已存在但跨租户的 ID 返回 403。`app/policy.py:11-12` 仍会拒绝跨租户读取。本次没有执行动态请求。
-- Expected behavior：跨租户目标必须被拒绝，错误不得泄露 protected profile 或凭据。
-- Observed behavior：静态路径存在 cross-tenant existence oracle，但未显示姓名、邮箱、电话等 protected profile 被返回，也没有运行时复现证据。
-- **最终状态：`needs_more_evidence`**
-- 裁决理由：代码路径支持存在性差异假设，但尚未动态证明；当前证据也没有直接证明 protected profile 泄露。
-- 严重性：`not_assigned`
-- Remediation decision：`deferred_pending_evidence`
+- Evidence summary：`app/main.py:112-119` 先全局查询对象；受控动态测试使用同一个低权限 actor，稳定复现了跨租户已存在对象返回 403、未知对象返回 404。详细证据见 [F1 最小动态证据](evidence/f1-minimum-dynamic-evidence.md)。
+- Expected behavior：对未经授权的调用者，跨租户已存在对象与不存在对象必须具有相同的外部响应；不得通过状态码、通用错误体或其他响应属性确认对象是否存在。
+- Observed behavior：跨租户已存在对象返回 `403 Forbidden`，不存在对象返回 `404 Not found`。两者均未泄露 protected profile，但外部表现可区分。
+- **最终状态：`confirmed`**
+- 裁决理由：静态路径假设已经由同一冻结 source commit 和 fixture 上的最小动态测试复现，证明未经授权的 actor 可以区分跨租户对象是否存在。
+- 严重性：`pending_security_engineer`
+- Remediation decision：`authorized`
 
-### 最小补充证据计划
+### 修复验收标准
 
-在后续获得单独批准的受控动态测试中，使用同一个低权限已认证 actor，对一个已知跨租户 user ID 和一个不存在的 user ID 各发送一次 `GET /api/users/{user_id}`。只记录状态码、通用错误体、request ID 和审计 decision/reason，不保存 protected profile 或 token。确认 403/404 差异是否可稳定复现后，再判断现有 scope 是否需要修改以及是否构成 finding。
+使用同一个低权限已认证 actor 请求跨租户已存在对象和不存在对象时，两次响应必须具有相同的 HTTP 状态码和通用错误体；两次请求都不得返回 protected profile。服务端审计日志仍可在不向客户端披露的情况下保留内部拒绝原因。
 
 ## F2：列表租户过滤位于 route SQL，而非 policy 模块
 
@@ -58,4 +59,4 @@
 
 ## 后续状态
 
-当前没有进入 remediation 的 confirmed finding。F1 只能在 Security Engineer 另行批准最小动态测试后收集补充证据；F2、O1 和 O2 不触发 `remediation/v1` 修改。
+F1 已确认并授权进入 `remediation/v1`，但严重性仍由 Security Engineer 决定。F2、O1 和 O2 不触发代码修改。冻结的 `assessment/v1-vulnerable` 分支与 `appsec-v1-vulnerable` 标签不得改变。

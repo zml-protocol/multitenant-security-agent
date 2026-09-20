@@ -4,15 +4,17 @@
   "status": "adjudicated",
   "decision_authority": "security_engineer_project_owner",
   "decided_at_utc": "2026-09-20T03:52:53.862Z",
+  "redecided_at_utc": "2026-09-20T04:02:28.759Z",
   "source_results": "raw/findings.json",
   "findings": [
     {
       "id": "F1",
-      "final_status": "needs_more_evidence",
-      "rationale": "The static path contains a cross-tenant existence oracle, but it has not been dynamically demonstrated and does not directly disclose a protected profile.",
-      "severity": "not_assigned",
-      "remediation_decision": "deferred_pending_evidence",
-      "additional_evidence": "Separately approve and execute one known cross-tenant and one nonexistent object request with the same low-privilege actor; retain only minimized status, generic error, correlation, and audit-decision evidence."
+      "final_status": "confirmed",
+      "rationale": "Controlled dynamic evidence reproduced distinguishable 403 and 404 responses for an existing cross-tenant object and a nonexistent object using the same low-privilege actor.",
+      "expected_behavior": "For an unauthorized caller, an existing cross-tenant object and a nonexistent object must have the same externally observable response.",
+      "evidence": "evidence/f1-minimum-dynamic-evidence.json",
+      "severity": "pending_security_engineer",
+      "remediation_decision": "authorized"
     },
     {
       "id": "F2",
@@ -36,7 +38,8 @@
       "remediation_decision": "none"
     }
   ],
-  "confirmed_findings": 0,
-  "remediation_authorized": false,
-  "dynamic_testing_authorized": false
+  "confirmed_findings": 1,
+  "remediation_authorized": true,
+  "dynamic_testing_authorized": true,
+  "dynamic_testing_status": "minimum_evidence_completed"
 }

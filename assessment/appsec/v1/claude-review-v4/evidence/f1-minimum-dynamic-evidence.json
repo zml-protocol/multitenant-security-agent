@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0",
+  "purpose": "F1_minimum_dynamic_evidence",
+  "recorded_at_utc": "2026-09-20T03:58:36.558Z",
+  "scope": "local_in_process_testclient_only",
+  "application_mode": "secure_default_policy",
+  "source_commit": "14a7b48ae30b833962752e4d65b7e03ade5664a1",
+  "actor_alias": "a_user1",
+  "actor_tenant": "tenant_a",
+  "fixture_id": "fixture-256eb13b57860e22",
+  "requests_executed": 2,
+  "protected_profile_retained": false,
+  "credentials_retained": false,
+  "cases": [
+    {
+      "case": "known_cross_tenant",
+      "target_class": "known_cross_tenant",
+      "status_code": 403,
+      "generic_error_body": {
+        "detail": "Forbidden"
+      },
+      "request_id": "b3619c34-6526-45c6-95b5-88dc2b4c77da",
+      "audit": {
+        "route": "/api/users/{user_id}",
+        "method": "GET",
+        "status": 403,
+        "identity": "a_user1",
+        "tenant_id": "tenant_a",
+        "decision": "deny",
+        "reason": "tenant_boundary"
+      }
+    },
+    {
+      "case": "nonexistent",
+      "target_class": "nonexistent",
+      "status_code": 404,
+      "generic_error_body": {
+        "detail": "Not found"
+      },
+      "request_id": "a9dfa90d-9cbe-4f4f-b796-6cca3fb9b9e8",
+      "audit": {
+        "route": "/api/users/{user_id}",
+        "method": "GET",
+        "status": 404,
+        "identity": "a_user1",
+        "tenant_id": "tenant_a",
+        "decision": "deny",
+        "reason": "unknown_user"
+      }
+    }
+  ],
+  "comparison": {
+    "status_codes_differ": true,
+    "error_bodies_differ": true,
+    "existence_oracle_reproduced": true,
+    "cross_tenant_protected_profile_disclosed": false
+  },
+  "decision_authority": "security_engineer",
+  "adjudication_effect": "F1_confirmed_remediation_authorized"
+}
