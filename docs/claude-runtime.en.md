@@ -1,6 +1,6 @@
 # Claude Reviewer Runtime Readiness Audit
 
-English | [中文](claude-runtime.md)
+English | [中文](claude-runtime.zh.md)
 
 Status: `runtime_foundation_implemented_not_authorized`
 
@@ -61,7 +61,7 @@ The foundation smoke executes only `claude --version` and local boundary probes.
 
 ## Network egress boundary
 
-The legacy runner's `--network none` mode is suitable for offline validation but cannot make a real Claude API request. [Restricted egress](reviewer-egress.en.md) has passed both independent and combined smoke tests. The new [isolated handoff](reviewer-execution.en.md) generates the internal-plus-proxy Compose topology, which the Security Engineer creates manually after approval. Docker networking blocks direct reviewer connections while the separate proxy enforces the host allowlist.
+The legacy runner's `--network none` mode is suitable for offline validation but cannot make a real Claude API request. [Restricted egress](reviewer-egress.md) has passed both independent and combined smoke tests. The new [isolated handoff](reviewer-execution.md) generates the internal-plus-proxy Compose topology, which the Security Engineer creates manually after approval. Docker networking blocks direct reviewer connections while the separate proxy enforces the host allowlist.
 
 The minimum host set depends on the authentication method:
 

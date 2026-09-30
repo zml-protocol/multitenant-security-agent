@@ -1,195 +1,193 @@
-# 多租户云应用安全测试与响应 Agent：需求与行为规格说明书
+# Multi-Tenant Cloud Application Security Testing and Response Agent: Requirements and Behavior Specification
 
-[English](spec.en.md) | 中文
+English | [中文](spec.zh.md)
 
-英文名称：Multi-Tenant Cloud Security Agent — Requirements and Behavior Specification
+Version: v0.1 | Date: 2026-09-19 | Status: requirements baseline; not yet fully implemented or deployed
 
-版本：v0.1 ｜ 日期：2026-09-19 ｜ 状态：需求基线，尚未实现或部署
+This document consolidates confirmed requirements and explicitly marks recommended engineering defaults. It is the project specification, combining product requirements, the Agent behavior contract, and the acceptance plan. It is not evidence that the described work has already been completed.
 
-本文汇总已确认需求，并明确标注工程建议默认值。文档是项目规格（Project Specification），兼含产品需求、Agent 行为契约和验收计划；不是已完成工作的证明。
+## 1. Background, Goals, and Definition of Success
 
-## 1. 背景、目标与成功定义
+This is a personal lab project for an Alibaba Cloud Security Engineer interview. It starts from repetitive authorization validation in practical Web/API penetration testing and demonstrates cloud deployment, testing, reporting, remediation retesting, access monitoring, and incident response.
 
-用于周一晚间阿里云安全工程师面试前的个人实验项目。以实际 Web/API 渗透测试中的重复授权验证为起点，演示云部署、测试、报告、修复复测、访问监测及事件响应。
+Goal priority: A. security test automation > B. Agent engineering and security > C. cloud security incident investigation. Version 1 includes the minimum exercise for C. Running in the cloud does not mean the project has validated cloud-infrastructure vulnerabilities or real large-scale DDoS protection.
 
-目标优先级：A 安全测试自动化 > B Agent 工程与安全 > C 云安全事件调查。第一版包含 C 的最小演练。云上运行不意味着此项目验证了云基础设施漏洞或真实大规模 DDoS 防御能力。
+Core value hypothesis: deterministic tools reduce the work of switching identities, substituting object IDs, and resending requests; the Agent selects supplemental validation when evidence is incomplete or contradictory and organizes the evidence. Evaluation determines whether the Agent adds value; the project does not assume a model is inherently better than a script.
 
-核心价值假设：确定性工具减少替换身份、对象 ID 和重复发送请求的劳动；Agent 在证据不完整或结果矛盾时选择补充验证，并整理证据。是否有增量价值由评估决定，不预设模型一定优于脚本。
+Success criteria: execute the complete known authorization matrix; detect and independently remediate/retest all three seeded vulnerability classes; avoid false security-response conclusions; allow base testing to complete when the model fails; and complete one human-approved rate-limiting and restoration exercise.
 
-成功标准：已知权限矩阵完整执行；三类预置漏洞可发现并独立修复复测；安全响应不误报；模型故障不阻塞基础测试；完成一次有人工确认的限流及恢复演练。
+## 2. Scope and Non-Goals
 
-## 2. 范围与非目标
+### Confirmed scope
 
-### 已确认范围
+- A single Alibaba Cloud ECS instance plus SLS logging; the Agent runs on the operator's computer by default.
+- A multi-tenant user information application; tested business operations are GET reads only.
+- Start from one known-good request, a test identity inventory, resource ownership, and authorization rules.
+- A fixed test matrix, Agent-directed supplemental evidence, and evidence-backed reports.
+- Three isolated vulnerable scenarios, a correct implementation, and remediation regression testing.
+- Cloud log queries, dashboards, alerts, a synthetic incident exercise, and bounded real-traffic validation.
+- Apply a predefined rate limit only after human approval; restoration also requires human approval.
 
-- 阿里云单台 ECS + SLS 日志服务；Agent 默认在使用者电脑运行。
-- 多租户用户信息应用；被测业务操作仅为 GET 读取。
-- 从一条已有正常请求、测试身份清单、资源归属与权限规则开始。
-- 固定测试矩阵 + Agent 自主补证 + 带证据报告。
-- 三种独立漏洞场景、正确实现及修复回归。
-- 云日志查询、仪表盘、告警、合成事件演练及有上限的真实流量验证。
-- 人工确认后执行预设限流；恢复也需人工确认。
+### Excluded
 
-### 不包含
+- File upload, file scanning, antivirus, or business write/delete testing.
+- Arbitrary-target scanning, brute-force user ID enumeration, or automatically generated attack code.
+- Kubernetes, multi-node high availability, a managed database in the initial baseline, paid WAF/Anti-DDoS in the initial baseline, or real bandwidth-exhaustion testing.
+- Automatic application remediation, automatic security-group or arbitrary cloud-configuration changes, or direct model execution of shell commands.
+- A production identity platform, real user data, or production availability commitments.
 
-- 文件上传、文件扫描、杀毒、业务写入或删除测试。
-- 任意目标扫描、用户 ID 暴力枚举、自动生成攻击代码。
-- Kubernetes、多节点高可用、托管数据库、付费 WAF/Anti-DDoS、真实带宽耗尽测试。
-- 自动修复应用、自动修改安全组或任意云配置、模型直接执行 Shell。
-- 生产级身份平台、真实用户数据、生产可用性承诺。
+## 3. Test Data and Authorization Rules
 
-## 3. 测试数据与权限规则
+The initialization script randomly generates user IDs, names, and synthetic personal information. There are exactly two tenants, each with two ordinary users and one tenant administrator, for six users total. Email addresses use `example.com`; real personal information is prohibited.
 
-初始化脚本随机生成用户 ID、姓名和虚构个人信息。固定两个租户，每租户两个普通用户及一个租户管理员，共六人。邮箱使用 example.com；不得使用真实个人信息。
+Testing and remediation retesting preserve one data snapshot, fixture ID, and user mapping. A fixed random seed may generate reproducible non-sensitive data but must never generate real secrets or authentication credentials.
 
-测试与修复复测保留同一份数据快照、fixture_id 与用户映射。固定随机种子可用于生成可复现的非敏感数据，但不得用于生成真实密钥或认证凭据。
-
-| 身份 | 自己的信息 | 同租户其他用户 | 跨租户用户 | 用户列表 |
+| Identity | Own profile | Other user in same tenant | User in another tenant | User list |
 | --- | --- | --- | --- | --- |
-| 普通用户 | 允许 | 拒绝 | 拒绝 | 拒绝 |
-| 租户管理员 | 允许 | 允许 | 拒绝 | 仅本租户 |
+| Ordinary user | Allow | Deny | Deny | Deny |
+| Tenant administrator | Allow | Allow | Deny | Current tenant only |
 
-租户管理员没有平台全局权限。权限预期从独立测试配置读取，不复用应用授权函数作为测试判定器。
+A tenant administrator has no global platform authority. Test expectations are read from an independent test configuration and do not reuse the application authorization function as the test oracle.
 
-## 4. 应用接口与漏洞模式
+## 4. Application Endpoints and Vulnerability Modes
 
-| 接口 | 行为 |
+| Endpoint | Behavior |
 | --- | --- |
-| GET /api/me | 当前认证用户的信息与身份基线 |
-| GET /api/users/{user_id} | 按权限规则返回目标用户信息 |
-| GET /api/users | 仅管理员可调用，返回本租户用户 |
+| `GET /api/me` | Current authenticated user's profile and identity baseline |
+| `GET /api/users/{user_id}` | Return the target user according to the authorization rules |
+| `GET /api/users` | Tenant administrators only; return users in the current tenant |
 
-用户信息字段建议：user_id、tenant_id、role、name、email、phone。错误响应不返回受保护个人信息。身份与租户从服务端验证后的凭据映射获得，不信任客户端自报租户头。
+Recommended user fields: `user_id`, `tenant_id`, `role`, `name`, `email`, and `phone`. Error responses must not return protected personal data. Identity and tenant are obtained from server-validated credential mappings, never from client-declared tenant headers.
 
-认证实现默认建议：实验使用独立生成的高熵不透明 bearer token，服务端映射用户；凭据仅由执行工具读取。若后续改用 JWT，另行规定签名、有效期及 issuer/audience 校验。本项目不将认证绕过作为预置漏洞。
+Recommended authentication default: the lab uses independently generated, high-entropy opaque bearer tokens mapped to users on the server; only the execution tool reads the credentials. If JWT is introduced later, signature, expiration, issuer, and audience validation must be specified separately. Authentication bypass is not a seeded vulnerability in this project.
 
-| 模式 | 预置缺陷 | 其他控制 |
+| Mode | Seeded defect | Controls that remain intact |
 | --- | --- | --- |
-| secure | 无预置授权缺陷 | 完整执行权限模型 |
-| same_tenant_bypass | 同租户普通用户可读取他人信息 | 跨租户仍拒绝 |
-| cross_tenant_bypass | 详情接口允许已认证主体读取跨租户用户 | 同租户普通用户访问他人仍拒绝，便于独立归因 |
-| list_role_bypass | 普通用户可读取本租户列表 | 列表仍按租户过滤 |
+| secure | No seeded authorization defect | Enforce the complete authorization model |
+| same_tenant_bypass | An ordinary user can read another user in the same tenant | Cross-tenant access remains denied |
+| cross_tenant_bypass | The detail endpoint allows any authenticated actor to read a user in another tenant | An ordinary user still cannot read another same-tenant user, enabling independent attribution |
+| list_role_bypass | An ordinary user can read the current tenant's user list | The list remains tenant-filtered |
 
-模式由操作者通过受控部署配置切换，不提供公开切换接口；Agent 不负责切换。漏洞模式只用于隔离实验。另提供状态码 200 但无受保护数据、超时、429 等评估夹具；不因此增加新的业务端点。
+The operator selects a mode through controlled deployment configuration. There is no public mode-switch endpoint, and the Agent does not switch modes. Vulnerable modes are limited to an isolated lab. Additional evaluation fixtures cover an HTTP 200 response with no protected data, timeouts, and 429 responses without adding new business endpoints.
 
-## 5. 固定测试执行器
+## 5. Fixed Test Executor
 
-FR-01 接收目标基地址、正常请求模板、身份别名、测试用户清单及版本化权限规则。执行前校验目标与接口属于允许范围。
+FR-01: Accept a target base URL, known-good request template, identity aliases, test-user inventory, and versioned authorization rules. Before execution, verify that the target and endpoint are allowlisted.
 
-FR-02 六个身份分别访问六个用户详情，构成 36 个详情用例；六个 /me 基线用例；六个列表用例，合计 48 个基础用例。额外加入三个接口的缺失/无效凭据检查，单独计数。
+FR-02: Each of six identities accesses all six user details, producing 36 detail cases; add six `/me` baseline cases and six list cases for 48 base cases total. Missing and invalid credential checks for all three endpoints are counted separately.
 
-FR-03 每次调用记录 run_id、case_id、身份别名、预期、脱敏请求、状态码、响应摘要、证据引用和耗时；使用关联 ID 对接服务端日志。
+FR-03: Record the run ID, case ID, identity alias, expectation, redacted request, status, response summary, evidence reference, and duration for every call. Use correlation IDs to connect client evidence to server logs.
 
-FR-04 禁止访问却返回目标受保护数据，判为确认违规。200 本身不是漏洞证据；拒绝状态码中仍含敏感数据也必须检查。列表须检查角色及每条结果的归属。
+FR-04: If a forbidden request returns the target's protected data, classify it as a confirmed violation. HTTP 200 alone is not vulnerability evidence. A denial status containing protected data must also be detected. List responses require both role validation and ownership validation for every returned item.
 
-FR-05 预期允许但遭拒绝，标记功能/认证异常，不判为成功通过。超时、429、5xx 或证据缺失标记无法判断，不能证明授权正确。日志中无记录也不能直接证明请求未执行。
+FR-05: If an expected allowed request is denied, mark a functional/authentication anomaly and do not count it as a pass. A timeout, 429, 5xx, or missing evidence is inconclusive and cannot prove authorization is correct. A missing log entry also cannot prove the request did not execute.
 
-FR-06 基础执行不依赖模型。模型不可用时仍产生确定性测试结果与模板报告，清楚注明 Agent 分析未完成。
+FR-06: Base execution does not depend on a model. If the model is unavailable, deterministic results and a template report are still produced, explicitly stating that Agent analysis did not complete.
 
-## 6. Agent 行为契约
+## 6. Agent Behavior Contract
 
-### 输入与职责
+### Inputs and responsibilities
 
-输入为权限规则、用户非敏感映射、已脱敏测试证据和工具定义。模型看不到原始 token、云密钥、其他运行的证据或漏洞模式答案。评估器单独保留真实标签。
+Inputs are authorization rules, a non-sensitive user mapping, redacted test evidence, and tool definitions. The model cannot see raw tokens, cloud credentials, evidence from another run, or the vulnerability-mode ground-truth answer. The evaluator retains ground-truth labels separately.
 
-Agent 可以针对不完整或矛盾的证据：复查身份基线、比较允许访问的参考响应、在已授权接口与已知用户范围内补发请求、按关联 ID 查询日志。已有确定性结论无需强制再次调用模型。
+For incomplete or contradictory evidence, the Agent may recheck the identity baseline, compare an allowed reference response, send supplemental requests within approved endpoints and known users, and query logs by correlation ID. A deterministic conclusion does not require another model call.
 
-### 工具与执行边界
+### Tools and execution boundaries
 
-| 工具建议名 | 功能 | 限制 |
+| Suggested tool | Purpose | Constraint |
 | --- | --- | --- |
-| inspect_evidence | 读取既有证据 | 限当前运行，脱敏 |
-| verify_identity | 查询 /me | 只接受已配置身份别名 |
-| send_read_request | GET 指定接口 | 固定目标、路径模板与已知 ID，无任意 URL |
-| query_access_logs | 补充服务端证据 | 受限查询模板、时间窗及返回量 |
-| submit_assessment | 提交结构化结论 | 必须引用有效证据 ID |
+| `inspect_evidence` | Read existing evidence | Current run only; redacted |
+| `verify_identity` | Query `/me` | Configured identity aliases only |
+| `send_read_request` | GET an approved endpoint | Fixed target, path templates, and known IDs; no arbitrary URL |
+| `query_access_logs` | Obtain server-side evidence | Bounded query templates, time window, and result count |
+| `submit_assessment` | Submit a structured conclusion | Must cite valid evidence IDs |
 
-工程建议默认值：每个异常最多五次补证工具调用；每次运行总补证工具调用最多三十次；请求超时十秒；请求速率最多每秒两次、并发二；模型输入输出和总 token 设可配置预算。达到任一上限停止补证并保留未解决原因。具体值在本地验证后可调整并记录。
+Recommended engineering defaults: no more than five supplemental tool calls per anomaly; no more than thirty supplemental calls per run; ten-second request timeout; at most two requests per second and concurrency two; configurable budgets for model input, output, and total tokens. Reaching any limit stops supplemental evidence gathering and records the unresolved reason. Values may be adjusted after local validation, with the change recorded.
 
-凭据由工具层注入。关闭自动跨目标重定向；拒绝模型提供的新目标、协议、方法或未知用户。使用本地目标时同样只允许显式配置的本地端点。
+The tool layer injects credentials. Automatic cross-target redirects are disabled. Targets, protocols, methods, or unknown users proposed by the model are rejected. Local targets are also limited to explicitly configured local endpoints.
 
-响应及日志均视为不可信数据。嵌入其中的提示词不得更改规则、获取秘密或触发响应操作。工具层独立执行限制，不能仅依赖提示词。
+Responses and logs are untrusted data. Instructions embedded in them cannot change rules, access secrets, or trigger response actions. The tool layer enforces restrictions independently of prompts.
 
-结论类别：confirmed_violation、no_violation_observed、inconclusive；另记录功能/认证异常。报告中的 no_violation_observed 仅指当前已执行范围，不等于应用整体安全。
+Conclusion categories are `confirmed_violation`, `no_violation_observed`, and `inconclusive`; functional/authentication anomalies are recorded separately. `no_violation_observed` applies only to the executed scope and is not a claim that the application is secure overall.
 
-记录选取动作、简短理由、工具参数摘要、观察和证据；无需存储模型内部思维链。
+Record the selected action, a short rationale, summarized tool parameters, observations, and evidence. Do not store the model's private chain of thought.
 
-## 7. 报告规格
+## 7. Report Specification
 
-输出建议为 Markdown 人类可读报告和 JSON 结构化结果。内容包括：范围与环境、版本/fixture_id、执行覆盖、遗漏与限制、异常分类、发现详情、预期和实际、脱敏复现步骤、证据 ID、影响与修复建议、修复后对照、模型版本与工具调用成本。
+Recommended outputs are a human-readable Markdown report and structured JSON. Include scope and environment, version/fixture ID, execution coverage, omissions and limitations, anomaly classes, finding details, expected and actual behavior, redacted reproduction, evidence IDs, impact, remediation recommendation, before/after comparison, model version, and tool-call cost.
 
-确认漏洞必须有实际证据引用；严重程度如为人工/模型初评必须标注依据，不生成未经计算的精确 CVSS。不得虚构未执行请求、日志或修复结果。展示字段遮罩，保留足以核对的用户/租户测试 ID。秘密不进入报告。
+A confirmed vulnerability must cite actual evidence. If severity is a preliminary human/model assessment, state its basis and do not invent an exact uncalculated CVSS score. Never fabricate requests, logs, or remediation results. Mask displayed fields while retaining enough user/tenant test IDs for verification. Secrets must never enter reports.
 
-## 8. 日志、监测与事件演练
+## 8. Logging, Monitoring, and Incident Exercise
 
-NGINX 及应用输出结构化日志至 SLS。建议字段：时间、request_id、run_id、路由模板、方法、状态、耗时、响应字节数、来源 IP、已认证身份别名/租户、目标用户 ID、授权决定及原因。不得记录 Authorization、token、完整用户响应或真实个人信息。未经认证的身份应标记 unknown，不采信请求中声称的身份。
+NGINX and the application emit structured logs to SLS. Recommended fields: timestamp, request ID, run ID, route template, method, status, duration, response bytes, source IP, authenticated identity alias/tenant, target user ID, authorization decision, and reason. Never log Authorization, tokens, complete profile responses, or real personal information. Mark unauthenticated identity as `unknown` and do not trust identity claimed by a request.
 
-仪表盘覆盖请求速率、状态码、p95 延迟、授权拒绝、429 及 5xx。优先 HTTP 访问日志与服务指标，不宣称已经实现全量抓包或网络层 DDoS 检测。
+Dashboards cover request rate, status codes, p95 latency, authorization denials, 429, and 5xx. Prioritize HTTP access logs and service metrics; do not claim full packet capture or network-layer DDoS detection.
 
-真实访问日志与合成攻击日志使用独立 Logstore 或等效隔离，标记 synthetic=true。合成告警只进入演练事件，不能直接驱动真实防护动作。
+Separate real access logs from synthetic attack logs by Logstore or an equivalent boundary, and mark synthetic events with `synthetic=true`. Synthetic alerts enter exercise incidents only and cannot directly trigger a real defensive action.
 
-工程默认建议：真实请求演练总量不超过 300、峰值不超过每秒五次、并发不超过二；在专用演练路径范围内将预设限流设得足够低以观察 429。正常低速探针同时运行，以检查误伤；最终速率与阈值由健康基线校准。遇持续 5xx 或明显健康下降立即停止。
+Recommended engineering defaults: no more than 300 total requests in a real-request exercise, peak no greater than five per second, concurrency no greater than two. Set a predefined rate limit low enough to observe 429 on a dedicated exercise scope. Run a normal low-rate probe simultaneously to detect collateral impact; calibrate final rates and thresholds against a healthy baseline. Stop immediately on sustained 5xx or clear health degradation.
 
-演练步骤：正常基线 → 合成异常日志触发演练告警 → Agent 查询证据并提出假设/建议 → 操作者对具体策略确认 → 受限执行器启用预设限流 → 小流量验证 429、正常探针与延迟 → 人工确认恢复 → 验证并输出事件时间线。
+Exercise sequence: healthy baseline → synthetic anomalous logs trigger an exercise alert → Agent queries evidence and proposes hypotheses/recommendations → operator approves a specific policy → restricted executor enables the predefined rate limit → low-volume validation checks 429, the healthy probe, and latency → human approves restoration → validate and produce an incident timeline.
 
-响应执行器与测试工具分离。审批绑定事件 ID、策略 ID、目标、有效期和具体动作；记录审批与执行结果。未批准/过期审批不得执行；拒绝执行后保持配置不变。恢复使用已记录的上一配置。模型不能直接修改安全组、执行 Shell 或任意写入 NGINX 配置。
+The response executor is separate from the test tool. Approval binds the incident ID, policy ID, target, expiry, and exact action; approval and execution results are audited. Unapproved, denied, or expired requests cannot change configuration. Restoration uses the recorded prior configuration. A model cannot directly change security groups, execute shell commands, or write arbitrary NGINX configuration.
 
-不能把“出现 429”单独当作缓解成功，须同时检查正常探针及错误/延迟指标。报告明确区分合成告警、真实验证和推测结论，不声称完成真实分布式攻击、流量清洗或容量测试。
+A 429 alone does not prove mitigation succeeded. Healthy probes, errors, and latency must also be checked. Reports distinguish synthetic alerts, real validation, and inferred conclusions and never claim a real distributed attack, traffic scrubbing, or capacity test was completed.
 
-## 9. 架构与工程建议
+## 9. Architecture and Engineering Recommendations
 
-部署：单台 ECS 运行 NGINX、多租户 API 和本机数据存储；SLS 收集日志；本地运行 Agent、报告生成及受控测试客户端；模型通过 API 调用。所有租户共享应用实例，以应用授权实现隔离。
+Deployment: one ECS runs NGINX, the multi-tenant API, and local storage; SLS collects logs; the Agent, reporting, and controlled test client run locally; the model is called through an API. All tenants share an application instance and rely on application authorization for isolation.
 
-建议实现：Python + FastAPI + SQLite、NGINX、Docker Compose；Agent 使用模型原生工具调用与显式执行循环。框架与版本在实现时核对，不作为已选定或已安装事实。
+Recommended implementation: Python, FastAPI, SQLite, NGINX, and Docker Compose. The Agent uses native model tool calling and an explicit execution loop. Framework and versions are verified during implementation and are not claimed as selected or installed merely because they appear here.
 
-SSH 与实验访问入口限制为操作者来源；数据库不开放公网；漏洞模式仅用于指定测试窗口。模型凭据与云凭据分别管理，SLS 查询使用最小只读权限，测试 Agent 不持有云管理权限。TLS 或受保护隧道在真实凭据传输前配置完成。
+Restrict SSH and lab entry points to operator sources. Do not expose the database publicly. Vulnerable modes are enabled only in designated test windows. Manage model and cloud credentials separately. SLS queries use minimum read-only access, and the test Agent has no cloud administration authority. Configure TLS or a protected tunnel before sending real credentials.
 
-工程默认：日志保留七天；原始证据仅保留脱敏版本。设置预算提醒、日志与工具调用上限。云费用仍以购买页和实际使用为准，提醒不构成硬停费。
+Engineering defaults: seven-day log retention; retain only redacted raw evidence. Configure budget reminders plus log and tool-call limits. Cloud charges remain subject to the purchase page and actual usage; a reminder is not a hard spending stop.
 
-## 10. 验收场景
+## 10. Acceptance Scenarios
 
-| ID | 给定 / 当 | 必须得到的结果 |
+| ID | Given / When | Required result |
 | --- | --- | --- |
-| AC-01 | secure 模式执行基础矩阵 | 48 用例全部有结果，符合权限规则；异常不能算通过 |
-| AC-02 | 分别启用三种漏洞模式 | 各自预期违规被发现，附可复现证据，不混淆漏洞来源 |
-| AC-03 | 相同数据与测试修复复测 | 违规消失，原本合法访问仍成功 |
-| AC-04 | 200 空响应、错误中泄露、429/超时夹具 | 空响应不凭状态码判漏洞；泄露被识别；不可判断结果保留 |
-| AC-05 | 普通用户调用列表、管理员调用列表 | 检查功能权限及租户过滤；跨租户返回即违规 |
-| AC-06 | 凭据缺失/无效 | 正确拒绝且不返回受保护数据 |
-| AC-07 | 模型不可用或达到预算 | 基础测试与报告仍完成，标明补证未完成 |
-| AC-08 | 返回内容含恶意指令、工具参数越界 | 不泄露凭据；执行层拒绝越界，记录拒绝事件 |
-| AC-09 | Agent 提交无效证据引用 | 校验失败，不能作为确认发现发布 |
-| AC-10 | 关联一次真实测试与日志 | 可按关联 ID 找到日志，日志与报告不含秘密 |
-| AC-11 | 合成异常事件 | 触发有明确演练标记的告警，与真实流量分开统计 |
-| AC-12 | 限流请求未审批/被拒绝/已过期 | 不修改配置 |
-| AC-13 | 具体限流动作获审批后执行及恢复 | 有审计记录，429 与正常探针可见，恢复后行为符合原配置 |
+| AC-01 | Run the base matrix in secure mode | All 48 cases have results and match the authorization rules; anomalies cannot count as passes |
+| AC-02 | Enable each of the three vulnerable modes separately | Detect each expected violation with reproducible evidence and do not confuse its source |
+| AC-03 | Retest remediation with the same data and tests | Violations disappear while previously valid access still works |
+| AC-04 | 200-empty, disclosure-in-error, 429, and timeout fixtures | Do not infer a vulnerability from an empty 200; detect the disclosure; preserve inconclusive results |
+| AC-05 | Ordinary user and administrator call the list | Check function authorization and tenant filtering; any cross-tenant item is a violation |
+| AC-06 | Missing or invalid credentials | Deny correctly without returning protected data |
+| AC-07 | Model unavailable or budget exhausted | Base tests and report still complete and identify incomplete supplemental analysis |
+| AC-08 | Malicious instructions in content or out-of-bounds tool parameters | Do not expose credentials; execution layer rejects the request and records the rejection |
+| AC-09 | Agent submits an invalid evidence reference | Validation fails and the claim cannot be published as a confirmed finding |
+| AC-10 | Correlate one real test with logs | Find the log by correlation ID; logs and reports contain no secrets |
+| AC-11 | Synthetic anomalous event | Trigger a clearly labeled exercise alert counted separately from real traffic |
+| AC-12 | Rate-limit request is unapproved, denied, or expired | Configuration remains unchanged |
+| AC-13 | Approved rate-limit action and restoration | Audit records exist; 429 and healthy probes are visible; restored behavior matches the prior configuration |
 
-覆盖率按已执行矩阵项/计划矩阵项计算；未执行与无法判断分别统计。评估比较脚本基线与 Agent 补证后的误报、漏报、未决数量、调用量、耗时和人工步骤。仅在有限夹具上报告数字，不能推广为对所有应用的检测率。至少三次重复运行观察模型波动；无增益也如实记录。
+Coverage is executed planned matrix items divided by planned matrix items; unexecuted and inconclusive results are counted separately. Evaluation compares the script baseline with Agent-assisted results across false positives, false negatives, unresolved cases, calls, duration, and manual steps. Report numbers only for the finite fixtures and do not generalize a detection rate to all applications. Run at least three repetitions to observe model variance and report honestly if there is no improvement.
 
-## 11. 交付、实施与时间边界
+## 11. Deliverables, Implementation, and Time Boundary
 
-交付物：本规格、应用与固定测试代码、Agent 与工具、测试夹具、部署说明、SLS 查询/告警配置、示例报告与修复对比、事件演练记录、三分钟演示说明。当前仅本规格已创建。
+Deliverables: this specification; application and fixed-test code; Agent and tools; evaluation fixtures; deployment instructions; SLS queries and alert configuration; sample report and remediation comparison; incident exercise record; and a three-minute demo narrative. At the original v0.1 baseline, only this specification existed.
 
-顺序：本地安全版与权限矩阵 → 独立漏洞模式及修复验证 → Agent 补证 → 云部署与日志 → 人工确认响应演练 → 端到端验收与讲述。
+Implementation order: local secure version and authorization matrix → isolated vulnerability modes and remediation validation → Agent supplemental evidence → cloud deployment and logging → human-approved response exercise → end-to-end acceptance and narrative.
 
-此前估算为 12–18 小时有效工作时间，不是保证；新账号开通、地域库存与排错可能增加耗时。优先保证 A/B 核心功能和最小 C 演练，减少界面装饰；保留面试讲述时间。
+The earlier estimate was 12–18 hours of effective work, not a guarantee. New-account activation, region capacity, and troubleshooting may add time. Prioritize the core A/B capabilities and minimum C exercise, limit interface decoration, and preserve time to prepare the interview narrative.
 
-云预算沿用计划：约 20–35 美元/72 小时税前规划值（另有估算表上沿约 36 美元），不是已确认报价或硬性消费上限。具体地域、ECS SKU、模型与账户可用性在创建资源前核对。演示结束检查并释放不再需要的实例、磁盘、公网及日志资源。
+The planning cloud budget remains approximately USD 20–35 for 72 hours before tax, with an upper planning estimate around USD 36. This is neither a confirmed quote nor a hard spending cap. Verify the exact region, ECS SKU, model, and account availability before resource creation. After the demo, check and release unused instances, disks, public IPs, and logging resources.
 
-## 12. 文件、版本与秘密管理
+## 12. Files, Versioning, and Secret Management
 
-当前本规格由对话提供下载并持久保存；本地工作副本位于项目目录。尚未创建 GitHub 仓库、用户电脑目录或阿里云资源。
+The original specification was downloaded from the conversation and persisted in the local project directory. At the original baseline, no GitHub repository, user-computer project implementation, or Alibaba Cloud resource had yet been created.
 
-后续建议以使用者电脑上的 multitenant-security-agent 目录与私有 Git 仓库管理代码和规格版本；阿里云仅保存部署副本与运行日志。建立远程 Git 后，仓库成为代码版本依据，不把工作区临时副本当作唯一备份。
+The recommended source of truth is the `multitenant-security-agent` directory on the operator's computer plus a private Git repository. Alibaba Cloud holds only deployment copies and runtime logs. Once a remote repository exists, it becomes the code version reference; do not treat a temporary worktree copy as the sole backup.
 
-建议目录：spec.md；app/；agent/；tests/；fixtures/；infra/；docs/；reports/。本节为规划，并非声称这些目录均已创建。
+Recommended directories: `spec.md`, `app/`, `agent/`, `tests/`, `fixtures/`, `infra/`, `docs/`, and `reports/`. This is a plan, not a claim that every directory already exists.
 
-不提交 .env、API key、云 AccessKey、测试 bearer token 或未脱敏日志。可提交 .env.example、虚构测试数据、脱敏示例报告。数据 seed 与凭据生成分离。
+Do not commit `.env`, API keys, cloud AccessKeys, test bearer tokens, or unredacted logs. It is acceptable to commit `.env.example`, synthetic test data, and redacted sample reports. Keep data seeding separate from credential generation.
 
-## 13. 决策记录与待实施核对项
+## 13. Decision Record and Implementation Checks
 
-已确认：方案②；用户信息业务；只读；两租户六用户；已有请求为起点；固定矩阵+Agent 补证；人工确认限流与恢复。
+Confirmed decisions: option 2; user information business domain; read-only operations; two tenants and six users; start from an existing known-good request; fixed matrix plus Agent supplemental evidence; human approval for rate limiting and restoration.
 
-实现默认建议：具体技术栈、认证方式、工具限额、日志字段、报告格式和评估夹具。可按验证结果调整，但须记录变更，不扩大核心范围。
+Recommended implementation defaults: the specific technology stack, authentication mechanism, tool limits, log fields, report format, and evaluation fixtures. These may change based on validation if the change is recorded and does not expand the core scope.
 
-待实施核对：本地 Python/Docker 环境；阿里云注册与付款；地域、SKU 和完整报价；模型工具调用可用性；网络访问方式；告警阈值及实际探针配置。无需为这些事项重新选择业务方向。
+Implementation checks still required at the original baseline: local Python/Docker environment; Alibaba Cloud registration and payment; region, SKU, and full pricing; model tool-call availability; network access method; alert thresholds; and actual probe configuration. These do not require reopening the selected business direction.

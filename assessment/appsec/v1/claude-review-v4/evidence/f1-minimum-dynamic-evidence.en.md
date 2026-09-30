@@ -1,6 +1,6 @@
 # F1 Minimum Dynamic Evidence
 
-English | [中文](f1-minimum-dynamic-evidence.md)
+English | [中文](f1-minimum-dynamic-evidence.zh.md)
 
 - Purpose: supplement F1 with runtime evidence
 - Scope: local in-process FastAPI `TestClient`

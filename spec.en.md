@@ -1,6 +1,6 @@
 # Multi-Tenant Cloud Application Security Testing and Response Agent: Requirements and Behavior Specification
 
-English | [中文](spec.md)
+English | [中文](spec.zh.md)
 
 Version: v0.1 | Date: 2026-09-19 | Status: requirements baseline; not yet fully implemented or deployed
 

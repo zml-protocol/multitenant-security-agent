@@ -1,6 +1,6 @@
 # AppSec v1 Finding Adjudication Record
 
-English | [中文](adjudication-record.md)
+English | [中文](adjudication-record.zh.md)
 
 - Status: `adjudicated_remediation_authorized`
 - Decision authority: Security Engineer / project owner
@@ -14,7 +14,7 @@ This record preserves the Security Engineer's item-by-item decisions on the Clau
 ## F1: Cross-tenant object existence can be distinguished through 404/403 responses
 
 - Requirement mapping: `AUTHZ-OBJ-02`, adjacent `ERROR-01`; user ID enumeration is currently out of scope.
-- Evidence summary: `app/main.py:112-119` performs a global object lookup first. A controlled dynamic test using the same low-privilege actor reproduced 403 for an existing cross-tenant object and 404 for an unknown object. See [F1 minimum dynamic evidence](evidence/f1-minimum-dynamic-evidence.en.md).
+- Evidence summary: `app/main.py:112-119` performs a global object lookup first. A controlled dynamic test using the same low-privilege actor reproduced 403 for an existing cross-tenant object and 404 for an unknown object. See [F1 minimum dynamic evidence](evidence/f1-minimum-dynamic-evidence.md).
 - Expected behavior: for an unauthorized caller, an existing cross-tenant object and a nonexistent object must have the same externally observable response. Status codes, generic error bodies, and other response properties must not confirm object existence.
 - Observed behavior: the existing cross-tenant object returned `403 Forbidden`, while the nonexistent object returned `404 Not found`. Neither response disclosed a protected profile, but their external behavior was distinguishable.
 - **Final status: `confirmed`**

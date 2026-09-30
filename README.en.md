@@ -1,12 +1,14 @@
 # Multi-Tenant Security Agent Lab
 
-English | [中文](README.md)
+English | [中文](README.zh.md)
 
-This is a dual-workflow security lab for a security engineering interview. See the [project vision and roadmap](docs/project-vision.en.md), the [requirements baseline](spec.en.md), the [current phase implementation notes](docs/phase1.en.md), the [reviewer isolation design](docs/reviewer-bundle.en.md), the [staged reviewer runner](docs/reviewer-runner.en.md), the [Claude runtime readiness audit](docs/claude-runtime.en.md), the [restricted egress design](docs/reviewer-egress.en.md), the [credential and budget gate](docs/reviewer-auth-budget.en.md), the [controlled execution design](docs/reviewer-execution.en.md), and the [final start approval package](docs/formal-start-approval.en.md).
+This is a dual-workflow security lab for a security engineering interview. See the [project vision and roadmap](docs/project-vision.md), the [requirements baseline](spec.md), the [current phase implementation notes](docs/phase1.md), the [reviewer isolation design](docs/reviewer-bundle.md), the [staged reviewer runner](docs/reviewer-runner.md), the [Claude runtime readiness audit](docs/claude-runtime.md), the [restricted egress design](docs/reviewer-egress.md), the [credential and budget gate](docs/reviewer-auth-budget.md), the [controlled execution design](docs/reviewer-execution.md), and the [final start approval package](docs/formal-start-approval.md).
 
 The final goal includes a human-in-the-loop, white-box AppSec AI Agent Flow and an Alibaba Cloud DDoS / Network Security Incident Response Flow. Phase 1 is complete: FastAPI + SQLite, two tenants and six test users, three GET endpoints, four modes, an independent authorization matrix, redacted JSON/Markdown reports, structured application logs, and remediation regression testing. No model, Alibaba Cloud resource, SLS integration, or response executor is connected yet.
 
 The human-authored assessment inputs for workflow 1 are under [`assessment/appsec/v1/`](assessment/appsec/v1/). Before a formal Claude review begins, the Security Engineer must review the brief, security requirements, and reviewer input manifest, then record approval against a frozen Git commit.
+
+Repository documentation defaults to English in unsuffixed `.md` files; Chinese translations use `.zh.md`. Existing `.en.md` links remain supported. Generated reports and archived reviewer outputs retain their original filenames; use their `.en.md` files for English.
 
 ## Windows PowerShell Quick Start
 

@@ -1,6 +1,6 @@
 # Phase 1 Implementation, Verification, and Interview Narrative
 
-English | [中文](phase1.md)
+English | [中文](phase1.zh.md)
 
 This document describes the completed local phase. `spec.en.md` preserves the original requirements baseline. No cloud resources were created, no paid model was called, and nothing was pushed to a remote repository.
 

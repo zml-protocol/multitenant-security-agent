@@ -1,6 +1,6 @@
 # Reviewer Credential and Budget Gate
 
-English | [中文](reviewer-auth-budget.md)
+English | [中文](reviewer-auth-budget.zh.md)
 
 Status: `approved_not_formally_authorized`
 

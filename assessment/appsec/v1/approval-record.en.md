@@ -1,12 +1,12 @@
 # AppSec Assessment v1 Approval Record
 
-English | [中文](approval-record.md)
+English | [中文](approval-record.zh.md)
 
 This is the single formal sign-off location for workflow 1. Read the linked sources first and edit any inaccurate requirement in its source file; do not record exceptions only here. Claude may begin a formal assessment only after every decision is approved, the code and fixture are frozen, and all version fields are complete.
 
 ## Linked Sources
 
-- [Assessment Brief](assessment-brief.en.md): business context, actors, assets, trust boundaries, scope, test constraints, and evidence standard.
+- [Assessment Brief](assessment-brief.md): business context, actors, assets, trust boundaries, scope, test constraints, and evidence standard.
 - [Security Requirements](security-requirements.json): machine-readable requirements used by Claude and deterministic tools.
 - [Reviewer Input Manifest](reviewer-input-manifest.json): what Claude may read, what is forbidden, and required outputs.
 - [Authorization Matrix](../../../fixtures/permissions.v1.json): expected object and list access for all six identities.
@@ -136,7 +136,7 @@ After Sections 2–7 are complete, change `approval_status` to `requirements_app
 
 ## 8. Formal Assessment Start Gate
 
-The repaired v2 manual-launch package and isolated reviewer workspace are rebound and formally approved for human launch; see the [guide](../../../docs/formal-start-approval.en.md) and `formal-start-approval-package.json`. The old workspace failure is not an assessment finding.
+The repaired v2 manual-launch package and isolated reviewer workspace are rebound and formally approved for human launch; see the [guide](../../../docs/formal-start-approval.md) and `formal-start-approval-package.json`. The old workspace failure is not an assessment finding.
 
 - [x] The requirement version no longer contains `-draft`, and the JSON matches this record.
 - [x] Assessment code is frozen and the full Git commit SHA is recorded.

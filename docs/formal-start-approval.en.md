@@ -1,6 +1,6 @@
 # Claude Reviewer Manual-Launch Approval Package
 
-English | [中文](formal-start-approval.md)
+English | [中文](formal-start-approval.zh.md)
 
 Status: `approved_for_security_engineer_manual_launch`
 
