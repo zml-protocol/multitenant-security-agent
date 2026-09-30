@@ -1,56 +1,56 @@
-# 第一阶段实现、验证与面试讲述
+# Phase 1 Implementation, Verification, and Interview Narrative
 
-[English](phase1.en.md) | 中文
+English | [中文](phase1.zh.md)
 
-本文件描述已实现的本地阶段；`spec.md` 仍保留最初需求基线。没有创建云资源、调用付费模型或推送远程仓库。
+This document describes the completed local phase. `spec.en.md` preserves the original requirements baseline. No cloud resources were created, no paid model was called, and nothing was pushed to a remote repository.
 
-## 阶段一：建立可复现的应用与身份边界
+## Stage 1: A Reproducible Application and Identity Boundary
 
-采用 FastAPI + SQLite。固定租户 A/B，每租户两个普通用户和一个管理员。用户 ID、姓名、邮箱和电话占位符由数据 seed 生成；fixture_id 是数据摘要。高熵 bearer token 使用 `secrets.token_urlsafe(32)` 独立生成，不能由 seed 推导，数据库保存 SHA-256 摘要，客户端凭据只存于被 Git 忽略的本地文件。
+The application uses FastAPI and SQLite. It has fixed tenants A and B, with two ordinary users and one administrator in each tenant. A data seed generates user IDs and synthetic names, email addresses, and phone placeholders; `fixture_id` is a digest of the data. High-entropy bearer tokens are independently generated with `secrets.token_urlsafe(32)` and cannot be derived from the data seed. The database stores SHA-256 token digests, while client credentials exist only in a local file ignored by Git.
 
-服务端由令牌映射用户、角色和租户，不采信 `X-Tenant-ID`、`X-Role` 或 `X-User-ID`。SQLite 以只读模式连接，使用参数化查询并关闭每次查询的连接。只有 `/api/me`、`/api/users/{user_id}` 和 `/api/users` 三个业务接口。允许的响应只选择公开业务字段，排除令牌摘要；拒绝响应只给通用错误。
+The server maps tokens to users, roles, and tenants. It does not trust `X-Tenant-ID`, `X-Role`, or `X-User-ID`. SQLite is opened read-only, all queries are parameterized, and every query connection is closed. The only business endpoints are `/api/me`, `/api/users/{user_id}`, and `/api/users`. Successful responses select only public business fields and exclude token digests; denied responses contain generic errors only.
 
-验证包括缺失/错误认证、伪造身份头、未知 ID、SQL 注入形式的 ID、写方法拒绝和数据库内容不变。这里主要演示的是授权边界，不宣称实现了生产级认证、令牌生命周期或密钥管理。
+Verification covers missing and invalid authentication, spoofed identity headers, unknown IDs, SQL-injection-shaped IDs, rejection of write methods, and an unchanged database. The lab demonstrates authorization boundaries; it does not claim production authentication, token lifecycle management, or key management.
 
-面试可以这样说：“我将身份认证和资源授权分开。先用服务端凭据映射确定主体，再判断这个主体是否有权读取目标对象；客户端传来的租户字段不能充当授权依据。”
+Interview explanation: “I separate authentication from resource authorization. The server first establishes the subject through its credential mapping, then decides whether that subject may read the target object. A tenant claim supplied by the client cannot act as an authorization fact.”
 
-## 阶段二：独立权限矩阵与漏洞隔离
+## Stage 2: Independent Authorization Matrix and Vulnerability Isolation
 
-`fixtures/permissions.v1.json` 显式列出每个身份允许读取的对象和列表。测试执行器不导入应用授权函数，也不读取漏洞模式。正常请求模板只允许 GET 和固定详情路径，身份、目标必须在清单内且属于合法基线请求；越界配置在发请求前拒绝。
+`fixtures/permissions.v1.json` explicitly lists the objects and lists each identity may read. The test executor neither imports the application authorization function nor reads the vulnerability mode. The normal request template permits only GET and a fixed detail path; the identity and target must be configured and describe an allowed baseline request. Out-of-scope configuration is rejected before a network request is made.
 
-基础矩阵共 48 项：6×6 详情 + 6 个 `/me` + 6 个列表。另有 3×2 缺失/无效凭据检查，单独计数。应用和测试共享已知测试数据，但不共享授权实现。
+The base matrix has 48 cases: 6×6 detail cases, 6 `/me` cases, and 6 list cases. There are also 3×2 missing/invalid credential checks, counted separately. The application and tests share known test data but do not share authorization logic.
 
-| 模式 | 漏洞落点 | 预计违规数的推导 | 必须保持的边界 |
+| Mode | Defective control | Expected violation calculation | Boundary that remains intact |
 | --- | --- | --- | --- |
-| secure | 无 | 0 | 完整权限规则 |
-| same_tenant_bypass | 同租户详情对象授权 | 4 个普通用户 × 2 个同租户其他用户 = 8 | 跨租户拒绝、列表仍要求管理员 |
-| cross_tenant_bypass | 详情租户边界 | 6 个主体 × 3 个其他租户用户 = 18 | 同租户普通用户访问他人仍拒绝，列表不变 |
-| list_role_bypass | 列表角色检查 | 4 个普通用户 × 1 个列表 = 4 | 列表仍只含本租户，详情不变 |
+| secure | None | 0 | Full authorization model |
+| same_tenant_bypass | Same-tenant detail object authorization | 4 ordinary users × 2 other same-tenant users = 8 | Cross-tenant access denied; lists still require an administrator |
+| cross_tenant_bypass | Detail tenant boundary | 6 actors × 3 users in the other tenant = 18 | Ordinary same-tenant access to another user remains denied; lists are unchanged |
+| list_role_bypass | List role check | 4 ordinary users × 1 list = 4 | The list remains tenant-filtered; detail access is unchanged |
 
-测试比较具体违规 case_id 集合，而不只比较数量。每种漏洞再启动安全模式复用同一个数据库、fixture_id 和凭据，验证全部 54 项通过。这是操作者恢复正确配置的回归实验，不是 Agent 自动修复生产代码。
+Tests compare the exact set of violating `case_id` values, not only the total count. After each vulnerable mode, secure mode reuses the same database, `fixture_id`, and credentials, and all 54 checks must pass. This is an operator-controlled restoration and regression exercise, not automatic production remediation by an Agent.
 
-面试可以这样说：“我一次只破坏一个授权条件，所以能独立归因。租户隔离和对象授权是两个条件，不能因为管理员通过角色检查就跳过租户边界。”
+Interview explanation: “I break one authorization condition at a time so that the result has an attributable cause. Tenant isolation and object authorization are separate conditions; passing a role check must never let an administrator skip the tenant boundary.”
 
-## 阶段三：证据判定、真实 HTTP 与日志关联
+## Stage 3: Evidence Assessment, Real HTTP, and Log Correlation
 
-判定器搜索已知快照中的独特姓名、邮箱和电话占位值，检查是否属于当前请求允许访问的对象。即使状态码是 401/403 或 500，只要已证实泄露就记录违规；没有泄露证据的 5xx、429、超时、重定向和不完整响应记为无法判断。此顺序避免错误状态掩盖已经观察到的数据泄露。
+The assessor searches responses for the unique synthetic name, email, and phone values from the known snapshot, then determines whether the matched object is allowed for the current request. If a 401, 403, or 500 response contains proven protected data, it is still a violation. A 5xx response, 429, timeout, redirect, or incomplete response with no leak evidence is inconclusive. This ordering prevents an error status from hiding an observed disclosure.
 
-合法读取必须返回完整预期对象；列表必须准确包含所有允许对象。预期允许却遭拒绝或内容不完整，额外标记功能异常。禁止请求只有返回预期通用拒绝才算通过；HTTP 200 空对象不算漏洞，也不算通过。未知数据和改变了编码/变换方式的泄露不是本阶段已验证的通用检测能力。
+An allowed read must return the complete expected object; a list must contain exactly all allowed objects. If an expected allowed request is denied or incomplete, it is additionally marked as a functional anomaly. A denied request passes only when it returns the expected generic denial. An empty HTTP 200 response is neither a vulnerability nor a pass. Unknown data and disclosures transformed through an unrecognized encoding are not claimed as generally detectable in this phase.
 
-每项记录 run_id、case_id、request_id、evidence_id、身份别名、预期、状态、耗时、固定请求路径、匹配记录及字段名。原始令牌、响应文本、个人资料不进入报告。服务端仅输出白名单日志字段；不记录原始 URL、查询串、认证头或响应体。外部关联 ID 必须是 UUID，否则生成新 ID，防止任意字符串进入日志。
+Each result records a run ID, case ID, request ID, evidence ID, identity alias, expectation, status, duration, fixed request path, matched records, and matched field names. Raw tokens, response text, and profile values do not enter reports. The server logs an allowlisted field set only and excludes raw URLs, query strings, authorization headers, and response bodies. An externally supplied correlation ID must be a UUID; otherwise, the server generates a new one so arbitrary strings cannot enter the audit log.
 
-`scripts.smoke` 使用真实本地 Uvicorn 服务，以最多每秒两次请求执行安全矩阵，逐项核对日志中的 request_id/run_id/状态码，检查凭据与个人资料未泄露，然后停止自己启动的进程。不会接管已经占用 8000 端口的服务。
+`scripts.smoke` runs a real local Uvicorn service and executes the secure matrix at no more than two requests per second. It checks every request ID, run ID, and status against the server log, verifies that credentials and profile values are absent, then stops the process it started. It will not take over a service already using port 8000.
 
-面试可以这样说：“200 只是传输结果，越权需要数据证据；403 也可能泄露。我的报告把确认违规、未观察到违规和无法判断分开，并通过关联 ID 将客户端证据和服务端授权日志串起来。”
+Interview explanation: “A 200 is only a transport result; an authorization issue needs data evidence. A 403 can also leak. My report separates confirmed violations, no violation observed, and inconclusive results, and uses correlation IDs to connect client evidence with server authorization logs.”
 
-## 验证记录与边界
+## Verification Record and Boundaries
 
-- 环境：Windows，Python 3.13.5，依赖精确版本记录于 `requirements.txt`。
-- 自动化测试：39 项通过，覆盖完整矩阵、三种漏洞及安全复测、权限绕过反例、模板越界、异常判定、日志关联、脱敏和 reviewer bundle 隔离。
-- 演示证据：`reports/local/demo/comparison.json` 及各场景报告；同一个 fixture_id，安全模式 0 个违规，三种漏洞分别 8/18/4，三次修复复测都为 0。
-- 真实 HTTP 证据：`reports/local/http-secure/report.json`，54 项通过，48 个矩阵用例 + 6 个认证用例；日志见 `.local/smoke-access.log`。
-- 第三方 Starlette 的 TestClient 对 HTTPX/AnyIO 有两条弃用警告，当前功能测试通过；未通过屏蔽警告掩盖问题。
-- 本次 Codex 进程未找到 Docker CLI，因此本阶段验证采用原生 Python；没有声称已完成容器构建或 Docker 验证。容器/NGINX 部署留到后续阶段。
-- Agent 补证、模型故障/预算处理、提示注入评估、SLS、云部署、人工确认限流与恢复尚未实现。报告明确标识 Agent 分析未实现。
+- Environment: Windows, Python 3.13.5; exact dependency versions are recorded in `requirements.txt`.
+- Automated tests: 39 passing tests covering the complete matrix, all three vulnerable modes and secure retests, authorization bypass counterexamples, template boundary enforcement, abnormal result classification, log correlation, redaction, and reviewer bundle isolation.
+- Demo evidence: `reports/local/demo/comparison.json` and each scenario report. All scenarios use one fixture ID; secure mode has 0 violations, the vulnerable modes have 8/18/4, and all three remediation retests return to 0.
+- Real HTTP evidence: `reports/local/http-secure/report.json` records 54 passing checks: 48 matrix cases plus 6 authentication cases. Logs are in `.local/smoke-access.log`.
+- Starlette TestClient currently emits two third-party deprecation warnings about HTTPX/AnyIO. Functional tests pass; the warnings are not hidden.
+- The Codex process could not find a Docker CLI during this run, so Phase 1 was verified with native Python. Container build or Docker verification is not claimed. Container and NGINX deployment remain for a later phase.
+- Agent evidence collection, model failure/budget handling, prompt-injection evaluation, SLS, cloud deployment, and human-approved rate limiting and restoration have not been implemented. Reports explicitly identify Agent analysis as unimplemented.
 
-三分钟展示建议：先看权限表，再运行 `scripts.demo` 展示 0/8/18/4 与三次归零，最后打开一条违规 JSON 证据，讲清身份、目标、预期、实际命中字段和修复后对照。真实 HTTP 验证约 27 秒，可提前生成报告备用。
+For a three-minute demonstration, first show the authorization table, then run `scripts.demo` to display 0/8/18/4 and the three returns to zero. Finally, open one violating JSON evidence item and explain the actor, target, expectation, matched fields, and post-remediation comparison. The real HTTP check takes about 27 seconds and can be generated before the presentation.

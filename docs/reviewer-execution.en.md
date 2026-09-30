@@ -1,6 +1,6 @@
 # Interactive Static-only Claude Reviewer
 
-English | [中文](reviewer-execution.md)
+English | [中文](reviewer-execution.zh.md)
 
 Status: `interactive_static_review_handoff_preparer`
 

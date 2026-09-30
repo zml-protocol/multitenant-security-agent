@@ -1,16 +1,18 @@
-# 多租户安全测试 Agent 实验项目
+# Multi-Tenant Security Agent Lab
 
-[English](README.en.md) | 中文
+English | [中文](README.zh.md)
 
-用于安全工程师面试的双工作流安全实验项目。长期目标与路线见 [docs/project-vision.md](docs/project-vision.md)，需求基线见 [spec.md](spec.md)，本阶段实现说明见 [docs/phase1.md](docs/phase1.md)，Reviewer 隔离设计见 [docs/reviewer-bundle.md](docs/reviewer-bundle.md)，分阶段 runner 见 [docs/reviewer-runner.md](docs/reviewer-runner.md)，Claude 运行时准备审计见 [docs/claude-runtime.md](docs/claude-runtime.md)，受限出口设计见 [docs/reviewer-egress.md](docs/reviewer-egress.md)，凭据与预算门禁见 [docs/reviewer-auth-budget.md](docs/reviewer-auth-budget.md)，组合执行控制见 [docs/reviewer-execution.md](docs/reviewer-execution.md)，最终启动批准包见 [docs/formal-start-approval.md](docs/formal-start-approval.md)。
+This is a dual-workflow security lab for a security engineering interview. See the [project vision and roadmap](docs/project-vision.md), the [requirements baseline](spec.md), the [current phase implementation notes](docs/phase1.md), the [reviewer isolation design](docs/reviewer-bundle.md), the [staged reviewer runner](docs/reviewer-runner.md), the [Claude runtime readiness audit](docs/claude-runtime.md), the [restricted egress design](docs/reviewer-egress.md), the [credential and budget gate](docs/reviewer-auth-budget.md), the [controlled execution design](docs/reviewer-execution.md), and the [final start approval package](docs/formal-start-approval.md).
 
-最终目标包含 human-in-the-loop 的白盒 AppSec AI Agent Flow，以及 Alibaba Cloud 上的 DDoS / Network Security Incident Response Flow。已实现第一阶段：FastAPI + SQLite、两个租户六个测试用户、三个 GET 接口、四种模式、独立权限矩阵、脱敏 JSON/Markdown 报告、结构化应用日志和修复复测。当前没有接入模型、阿里云、SLS 或响应执行器。
+The final goal includes a human-in-the-loop, white-box AppSec AI Agent Flow and an Alibaba Cloud DDoS / Network Security Incident Response Flow. Phase 1 is complete: FastAPI + SQLite, two tenants and six test users, three GET endpoints, four modes, an independent authorization matrix, redacted JSON/Markdown reports, structured application logs, and remediation regression testing. No model, Alibaba Cloud resource, SLS integration, or response executor is connected yet.
 
-工作流一的人工评估输入草案位于 [`assessment/appsec/v1/`](assessment/appsec/v1/)。开始 Claude 正式评估前，Security Engineer 需要审核 brief、security requirements 和 reviewer input manifest，并在代码冻结后的 Git commit 上记录批准。
+The human-authored assessment inputs for workflow 1 are under [`assessment/appsec/v1/`](assessment/appsec/v1/). Before a formal Claude review begins, the Security Engineer must review the brief, security requirements, and reviewer input manifest, then record approval against a frozen Git commit.
 
-## Windows PowerShell 快速开始
+Documentation defaults to English in unsuffixed `.md` files; Chinese translations use `.zh.md`. Existing `.en.md` links remain supported. Archived reviewer outputs retain their original filenames and hashes; use their `.en.md` reports for English.
 
-在项目根目录运行。无需激活虚拟环境，也无需修改 PowerShell 执行策略。
+## Windows PowerShell Quick Start
+
+Run these commands from the project root. You do not need to activate the virtual environment or change the PowerShell execution policy.
 
 ```powershell
 python -m venv .venv
@@ -20,75 +22,75 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m scripts.demo
 ```
 
-已有 `.venv` 或 `.local` 时，复用它们，跳过对应初始化步骤。初始化器拒绝覆盖现有数据库/令牌，避免修复复测时意外更换数据。默认 seed 为 42；数据可重复，令牌每次独立随机生成。邮箱使用 `example.com`，电话为明确的 `TEST-PHONE-...` 虚构占位符。
+If `.venv` or `.local` already exists, reuse it and skip the corresponding initialization step. The initializer refuses to overwrite an existing database or token file so that a remediation retest cannot accidentally replace the data. The default seed is 42; test data is reproducible, while tokens are generated independently each time. Email addresses use `example.com`, and phone values use explicit `TEST-PHONE-...` synthetic placeholders.
 
-演示输出在 `reports/local/demo/`：四种模式及三次安全复测，各自包含 `report.json`、中文 `report.md` 和英文 `report.en.md`；`comparison.json` 汇总结果。该演示使用进程内 TestClient，不启动网络服务。
+Demo output is written to `reports/local/demo/`: each of the four modes and three secure retests has a `report.json` plus the default English `report.md`, an English compatibility copy `report.en.md`, and Chinese `report.zh.md`; `comparison.json` contains the summary. This demo uses an in-process TestClient and does not start a network service.
 
-## 真实 HTTP 验证
+## Real HTTP Verification
 
-一条命令临时启动安全模式、每秒最多两次请求、校验 54 项检查与日志关联，并自动停止服务（8000 端口须空闲）：
+The following command temporarily starts secure mode, runs at no more than two requests per second, verifies all 54 checks and their log correlation, and stops the service automatically. Port 8000 must be available.
 
 ```powershell
 .\.venv\Scripts\python.exe -m scripts.smoke
 ```
 
-报告：`reports/local/http-secure/`；服务端日志：`.local/smoke-access.log`。
+Reports are written under `reports/local/http-secure/`; the server log is `.local/smoke-access.log`.
 
-若需手动操作，终端一启动应用：
+For manual operation, start the application in terminal 1:
 
 ```powershell
 $env:LAB_MODE = 'secure'
 .\.venv\Scripts\python.exe -m app.serve
 ```
 
-终端二运行固定矩阵：
+Run the fixed matrix in terminal 2:
 
 ```powershell
 .\.venv\Scripts\python.exe -m scanner.run --output reports/local/manual-secure
 ```
 
-入口固定为 `http://127.0.0.1:8000`，CLI 不接受其他目标；只生成已知用户的 GET 请求，不跟随重定向、不使用环境代理。54 次请求约需 27 秒，单请求超时 10 秒。退出码：0 全部通过，1 存在确认违规，2 有无法判断项；违规与无法判断并存时返回 1。
+The target is fixed to `http://127.0.0.1:8000`; the CLI accepts no other target. It generates GET requests only for known users, does not follow redirects, and ignores environment proxies. The 54 requests take approximately 27 seconds, with a ten-second timeout per request. Exit codes are: 0 for all checks passing, 1 for one or more confirmed violations, and 2 for one or more inconclusive results. If violations and inconclusive results coexist, the exit code is 1.
 
-## 漏洞切换与复测
+## Vulnerability Modes and Retesting
 
-在终端一用 Ctrl+C 停止应用，然后选择一种模式并重新启动：
+Stop the application in terminal 1 with Ctrl+C, select one mode, and restart it:
 
 ```powershell
 $env:LAB_MODE = 'same_tenant_bypass'
 .\.venv\Scripts\python.exe -m app.serve
 ```
 
-终端二再次运行执行器，使用单独输出目录：
+Run the executor again in terminal 2 and use a separate output directory:
 
 ```powershell
 .\.venv\Scripts\python.exe -m scanner.run --output reports/local/manual-same-tenant
 ```
 
-| LAB_MODE | 预期确认违规 | 缺失/无效凭据检查 |
+| LAB_MODE | Expected confirmed violations | Missing/invalid credential checks |
 | --- | ---: | --- |
-| secure | 0 | 6 项全部通过 |
-| same_tenant_bypass | 8 | 6 项全部通过 |
-| cross_tenant_bypass | 18 | 6 项全部通过 |
-| list_role_bypass | 4 | 6 项全部通过 |
+| secure | 0 | All 6 pass |
+| same_tenant_bypass | 8 | All 6 pass |
+| cross_tenant_bypass | 18 | All 6 pass |
+| list_role_bypass | 4 | All 6 pass |
 
-恢复时停止应用，将 `LAB_MODE` 设回 `secure` 并重启，再运行同一矩阵。不要重新初始化 `.local`。模式只在启动时读取，无 HTTP 切换接口。默认安全模式；拼错模式直接启动失败。
+For remediation validation, stop the application, set `LAB_MODE` back to `secure`, restart it, and rerun the same matrix. Do not reinitialize `.local`. The mode is read only at startup and there is no HTTP mode-switch endpoint. Secure mode is the default; an unknown mode causes startup to fail.
 
-## 代码导航
+## Code Guide
 
-- `app/seed.py`：数据快照、独立令牌、SQLite 初始化。
-- `app/main.py`：认证、三条业务路由、policy 调用和结构化审计；不包含场景答案。
-- `app/policy.py`：默认安全授权实现。
-- `evaluation/`：操作者专用的中性场景与 truth mapping，不进入 reviewer bundle。
-- `reviewer/bundle.py`：构建单场景、脱敏、带完整性哈希的 reviewer bundle。
-- `reviewer/runner.py`：准备隔离阶段输入、封存第一阶段输出，并强制执行人工批准的第二阶段释放门禁。
-- `reviewer/runtime/`：固定 Claude Code 版本、基础镜像摘要、npm 完整性锁和强制 managed settings 的 Linux reviewer 镜像定义。
-- `reviewer/egress/`：默认拒绝、代理唯一、固定 `api.anthropic.com:443` allowlist 的未启用出口基础。
-- `reviewer/auth_budget/`：已批准但未获准执行的专用 API key 来源、固定模型、预算字段和 synthetic sentinel 泄漏验证。
-- `reviewer/execution/`：生成 interactive static-only Claude 命令、只读输入/独立输出、隔离 Compose handoff 和 Windows Terminal 一键启动入口；项目与 Codex 不启动 Claude。
-- `fixtures/permissions.v1.json`：独立的显式权限预期。
-- `fixtures/request-template.v1.json`：正常请求模板，不含凭据。
-- `scanner/`：固定矩阵、响应证据判定和报告。
-- `tests/`：完整矩阵、模式独立性、修复复测、错误/超时夹具与日志脱敏。
-- `scripts/demo.py`：进程内完整演示；`scripts/smoke.py`：真实 HTTP 验证；`scripts/reviewer_runtime_smoke.py`：无凭据、离线 reviewer 容器隔离验证；`scripts/reviewer_egress_smoke.py`：代理 allowlist 与直连阻断验证；`scripts/reviewer_auth_budget_smoke.py`：无网络、无费用的 synthetic credential 边界验证；`scripts/reviewer_combined_smoke.py`：组合容器边界验证；`scripts/reviewer_execute.py`：只准备或批准手工 handoff，不启动 Claude。
+- `app/seed.py`: data snapshots, independently generated tokens, and SQLite initialization.
+- `app/main.py`: authentication, three business routes, policy calls, and structured auditing, with no scenario answer.
+- `app/policy.py`: the default secure authorization implementation.
+- `evaluation/`: operator-only neutral scenarios and truth mapping, excluded from reviewer bundles.
+- `reviewer/bundle.py`: builds a single-scenario, redacted reviewer bundle with integrity hashes.
+- `reviewer/runner.py`: prepares isolated phase inputs, seals phase 1 output, and enforces the human-approved phase 2 release gate.
+- `reviewer/runtime/`: defines the Linux reviewer image with a pinned Claude Code version, base-image digest, npm integrity lock, and enforced managed settings.
+- `reviewer/egress/`: defines the inactive, default-deny, proxy-only egress foundation with a fixed `api.anthropic.com:443` allowlist.
+- `reviewer/auth_budget/`: defines the approved but execution-disabled dedicated API-key source, fixed model, budget fields, and synthetic-sentinel leakage checks.
+- `reviewer/execution/`: generates the interactive static-only Claude command, read-only input/separate output, isolated Compose handoff, and one-command Windows Terminal entry point; neither the project nor Codex launches Claude.
+- `fixtures/permissions.v1.json`: independent, explicit authorization expectations.
+- `fixtures/request-template.v1.json`: a normal request template with no credentials.
+- `scanner/`: the fixed matrix, response evidence assessment, and reporting.
+- `tests/`: full matrix tests, mode isolation, remediation retests, error/timeout fixtures, log correlation, and redaction.
+- `scripts/demo.py`: in-process complete demo; `scripts/smoke.py`: real HTTP verification; `scripts/reviewer_runtime_smoke.py`: credential-free, offline reviewer-container isolation verification; `scripts/reviewer_egress_smoke.py`: proxy allowlist and direct-egress blocking verification; `scripts/reviewer_auth_budget_smoke.py`: network-free, cost-free synthetic credential boundary verification; `scripts/reviewer_combined_smoke.py`: combined container-boundary verification; `scripts/reviewer_execute.py`: prepares or approves a manual handoff and never launches Claude.
 
-`.local/`、数据库、令牌、运行日志和本地报告已被 Git 忽略。原始响应不落盘；报告只保留用户/租户测试 ID、命中的字段名和证据引用。当前为本地实验认证方案，不是生产身份平台。
+`.local/`, databases, tokens, runtime logs, and local reports are ignored by Git. Raw responses are not persisted; reports retain only user/tenant test IDs, matched field names, and evidence references. The current authentication scheme is for a local lab and is not a production identity platform.

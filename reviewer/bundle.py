@@ -51,7 +51,7 @@ def sanitized_fixture(fixture):
 def instructions_zh():
     return """# Reviewer Bundle 使用说明
 
-[English](README.en.md) | 中文
+[English](README.md) | 中文
 
 状态：`draft_not_for_claude`
 
@@ -68,7 +68,7 @@ manifest 本身不是操作系统沙箱。正式运行必须将本 bundle 复制
 def instructions_en():
     return """# Reviewer Bundle Instructions
 
-English | [中文](README.md)
+English | [中文](README.zh.md)
 
 Status: `draft_not_for_claude`
 
@@ -98,6 +98,7 @@ def build_bundle(scenario_id, fixture_path, output_root=DEFAULT_OUTPUT_ROOT):
         "app/main.py": ROOT / "app" / "main.py",
         "app/seed.py": ROOT / "app" / "seed.py",
         "assessment/assessment-brief.md": ROOT / "assessment" / "appsec" / "v1" / "assessment-brief.md",
+        "assessment/assessment-brief.zh.md": ROOT / "assessment" / "appsec" / "v1" / "assessment-brief.zh.md",
         "assessment/assessment-brief.en.md": ROOT / "assessment" / "appsec" / "v1" / "assessment-brief.en.md",
         "assessment/security-requirements.json": ROOT / "assessment" / "appsec" / "v1" / "security-requirements.json",
         "assessment/reviewer-input-manifest.json": ROOT / "assessment" / "appsec" / "v1" / "reviewer-input-manifest.json",
@@ -108,7 +109,8 @@ def build_bundle(scenario_id, fixture_path, output_root=DEFAULT_OUTPUT_ROOT):
     selected_policy = Path(load_policy(scenario_id).__file__).resolve()
     copy_file(selected_policy, destination / "app" / "policy.py")
     write_text(destination / "inputs" / "fixture.json", json.dumps(sanitized_fixture(fixture), indent=2) + "\n")
-    write_text(destination / "README.md", instructions_zh())
+    write_text(destination / "README.md", instructions_en())
+    write_text(destination / "README.zh.md", instructions_zh())
     write_text(destination / "README.en.md", instructions_en())
 
     content_files = sorted(

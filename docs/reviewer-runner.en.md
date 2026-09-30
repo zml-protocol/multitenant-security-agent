@@ -1,10 +1,10 @@
 # Staged Reviewer Runner
 
-English | [中文](reviewer-runner.md)
+English | [中文](reviewer-runner.zh.md)
 
 Status: `runtime_foundation_implemented_not_authorized_for_claude`
 
-The runner implements the approved bundle-only, two-phase handoff, but it does not itself invoke Claude, inject credentials, select a formal scenario, or authorize an assessment. Its legacy Docker plan remains offline preparation evidence. The new [isolated handoff preparer](reviewer-execution.en.md) only generates the formal command, container topology, and human launch gate; the Security Engineer must launch it separately.
+The runner implements the approved bundle-only, two-phase handoff, but it does not itself invoke Claude, inject credentials, select a formal scenario, or authorize an assessment. Its legacy Docker plan remains offline preparation evidence. The new [isolated handoff preparer](reviewer-execution.md) only generates the formal command, container topology, and human launch gate; the Security Engineer must launch it separately.
 
 ## State Machine
 
@@ -96,4 +96,4 @@ python -m reviewer.runner verify --run .local/reviewer-runs/<review-run-id>
 
 Verification walks the available hash chain for the current state. Any modification to the prepared bundle, sealed output, staged inputs, authorization record, or released phase 2 files causes failure.
 
-The first manual launch failed because tool allow rules were missing and produced no assessment result; the repaired v2 workspace has new formal-start approval. The [Claude runtime readiness audit](claude-runtime.en.md) records overall status. The [isolated handoff](reviewer-execution.en.md) continues to enforce interactive static-only operation, read-only input, separate output, and restricted egress. Codex cannot launch Claude.
+The first manual launch failed because tool allow rules were missing and produced no assessment result; the repaired v2 workspace has new formal-start approval. The [Claude runtime readiness audit](claude-runtime.md) records overall status. The [isolated handoff](reviewer-execution.md) continues to enforce interactive static-only operation, read-only input, separate output, and restricted egress. Codex cannot launch Claude.

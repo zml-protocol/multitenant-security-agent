@@ -1,68 +1,68 @@
-# Reviewer 受限网络出口
+# Restricted Reviewer Network Egress
 
-[English](reviewer-egress.en.md) | 中文
+English | [中文](reviewer-egress.zh.md)
 
-状态：`implemented_tested_not_active_not_authorized`
+Status: `implemented_tested_not_active_not_authorized`
 
-本实现为未来 Claude reviewer 提供代理唯一的网络出口基础。组合 smoke 已把它临时接入 reviewer runtime 并验证边界；正式执行控制器也已实现该拓扑，但所有正式执行开关仍关闭。没有调用模型，也没有授权正式评估。
+This implementation provides a proxy-only network egress foundation for a future Claude reviewer. The combined smoke temporarily connected it to the reviewer runtime and verified the boundary, and the formal controller now implements that topology, while every formal execution switch remains off. No model was invoked and no formal assessment was authorized.
 
-## 网络边界
+## Network boundary
 
 ```mermaid
 flowchart LR
-    R[Reviewer 容器] -->|内部 Docker 网络<br/>CONNECT only| P[出口代理]
-    R -. 直接出口被阻止 .-> X[Internet]
-    P -->|仅 api.anthropic.com:443| A[Anthropic API]
-    P -. 其他目标拒绝 .-> X
+    R[Reviewer container] -->|Internal Docker network<br/>CONNECT only| P[Egress proxy]
+    R -. Direct egress blocked .-> X[Internet]
+    P -->|api.anthropic.com:443 only| A[Anthropic API]
+    P -. Other targets denied .-> X
 ```
 
-Smoke test 创建两个临时网络：
+The smoke test creates two temporary networks:
 
-- reviewer 只加入 `--internal` 网络，该网络没有外部默认路由；
-- 出口代理同时加入内部网络和普通 outbound 网络；
-- 代理不向宿主机发布端口；
-- reviewer 只能通过内部别名 `egress-proxy:3128` 请求 CONNECT；
-- 代理代码只允许精确目标 `api.anthropic.com:443`，该目标不能通过环境变量覆盖。
+- the reviewer joins only an `--internal` network with no external default route;
+- the egress proxy joins both the internal network and a normal outbound network;
+- the proxy publishes no host port;
+- the reviewer can request CONNECT only through the internal `egress-proxy:3128` alias;
+- proxy code permits only the exact `api.anthropic.com:443` target, and environment variables cannot override it.
 
-允许目标先解析为 IPv4，并拒绝私有、loopback、link-local、文档保留地址和其他非公网范围。代理连接固定解析结果，客户端随后以 `api.anthropic.com` 作为 SNI 和证书名称完成 TLS 验证。当前实现只支持公网 IPv4；解析不到合格地址时失败关闭。
+The allowed target is resolved to IPv4 first. Private, loopback, link-local, documentation, and other non-public ranges are rejected. The proxy connects to the selected resolved address, after which the client verifies TLS using `api.anthropic.com` as the SNI and certificate name. The current implementation supports public IPv4 only and fails closed when no eligible address resolves.
 
-## 日志与数据边界
+## Logging and data boundary
 
-代理只记录 JSON 连接决策：时间、`allow`/`deny`、规范化目标和固定原因。它不记录 CONNECT headers、认证信息、请求正文或 TLS 内的模型内容。代理不终止 TLS，因此看不到加密后的 API 请求。
+The proxy logs only JSON connection decisions: time, `allow` or `deny`, normalized target, and a fixed reason. It does not log CONNECT headers, authentication material, request bodies, or model content inside TLS. The proxy does not terminate TLS and therefore cannot see encrypted API requests.
 
-这也意味着代理只能约束主机和端口，不能判断隧道中的请求类型、模型、token 数或费用。模型与预算限制必须由未来的 Claude 命令、凭据策略和调用后证据单独控制。
+This also means the proxy constrains only the host and port. It cannot determine the request type, model, token count, or cost inside the tunnel. A future Claude command, credential policy, and post-run evidence must enforce model and budget limits separately.
 
-## 镜像和进程限制
+## Image and process restrictions
 
-`reviewer/egress/` 使用与 reviewer runtime 相同、按摘要固定的 Node 基础镜像。代理以 UID/GID `10002:10002` 运行，并使用只读根文件系统、删除全部 Linux capabilities、`no-new-privileges`、资源限制和受限 `/tmp` tmpfs。
+`reviewer/egress/` uses the same digest-pinned Node base image as the reviewer runtime. The proxy runs as UID/GID `10002:10002` with a read-only root filesystem, all Linux capabilities dropped, `no-new-privileges`, resource limits, and a restricted `/tmp` tmpfs.
 
-构建上下文由 `.dockerignore` allowlist 限制。代理没有 shell 执行接口、配置写入接口或动态 allowlist API。
+An allowlist-style `.dockerignore` limits the build context. The proxy exposes no shell execution interface, configuration write interface, or dynamic allowlist API.
 
-## 验证
+## Verification
 
-运行：
+Run:
 
 ```text
 python -m scripts.reviewer_egress_smoke
 ```
 
-Smoke test 使用已构建的 reviewer 镜像作为探针，并验证：
+The smoke test uses the built reviewer image as its probe and verifies:
 
-| 检查 | 预期与已验证结果 |
+| Check | Expected and verified result |
 | --- | --- |
-| `api.anthropic.com:443` 经代理 | CONNECT 200，TLS 证书验证成功；未在 TLS 隧道内向 Anthropic 发送 HTTP/API 请求 |
-| `example.com:443` 经代理 | CONNECT 403 |
-| reviewer 直连 `api.anthropic.com:443` | 连接失败 |
-| 日志脱敏 | 人工测试 header 的 sentinel、header 名和内容均未进入代理日志 |
-| 临时资源 | 容器与两个测试网络在成功或失败后清理 |
+| `api.anthropic.com:443` through the proxy | CONNECT 200 and successful TLS certificate verification; no HTTP/API request is sent through the TLS tunnel to Anthropic |
+| `example.com:443` through the proxy | CONNECT 403 |
+| Direct reviewer connection to `api.anthropic.com:443` | Connection fails |
+| Log redaction | The synthetic header sentinel, header names, and contents do not enter proxy logs |
+| Temporary resources | The container and both test networks are removed after success or failure |
 
-结果写入 Git 忽略的 `.local/reviewer-egress/`。最近验证的本地代理镜像 ID 为 `sha256:dc4b0704ba84407d472ae93dd04dc01f80bbf2fb4f16d2adf12c93d1518ae235`；正式使用前仍须记录不可变 registry digest。
+Results are written under the Git-ignored `.local/reviewer-egress/`. The most recent local proxy image ID was `sha256:dc4b0704ba84407d472ae93dd04dc01f80bbf2fb4f16d2adf12c93d1518ae235`; formal use must still record an immutable registry digest.
 
-## 尚未完成的门禁
+## Gates not yet complete
 
-- 旧的离线 runner Docker plan 仍为 `--network none`；isolated handoff 的 Compose 文件定义临时 internal + proxy 拓扑，只有 Security Engineer 手工启动时才会创建。
-- 已批准项目专用 workspace API key 方案；项目和 Codex 都不创建、读取或注入其值，由 Security Engineer 在手工启动时提供仓库外 secret 文件。
-- 尚未验证真实 Claude 会话读取 managed settings 或只使用代理。
-- 模型与预算已批准；交互 CLI 不提供费用/turn 硬停止，使用 900 秒 timeout 与 Workspace spend limit，API 调用数、token 和实际费用仍需运行后核对。
-- OAuth 流程所需的其他 Anthropic 主机不在 allowlist；任何新增主机都需要单独审核和测试。
-- 正式运行前必须把 reviewer 与代理镜像改为不可变 registry digest，并把准确网络、凭据和预算绑定到人工批准记录。
+- The legacy offline runner Docker plan remains on `--network none`; the isolated handoff Compose file defines the ephemeral internal-plus-proxy topology, which exists only when the Security Engineer launches it manually.
+- The dedicated workspace API-key design is approved. Neither the project nor Codex creates, reads, or injects its value; the Security Engineer supplies an external secret file at manual launch.
+- No real Claude session has verified that managed settings load or that Claude uses only the proxy.
+- The model and budget are approved. The interactive CLI has no cost/turn hard stop, so the run uses a 900-second timeout and Workspace spend limit; API calls, tokens, and actual cost still require post-run reconciliation.
+- Additional Anthropic hosts needed for OAuth are outside the allowlist; every added host requires separate review and testing.
+- Before formal execution, reviewer and proxy images must use immutable registry digests, and the exact network, credential, and budget must be bound to a human approval record.

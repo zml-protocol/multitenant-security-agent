@@ -1,6 +1,6 @@
 # Restricted Reviewer Network Egress
 
-English | [中文](reviewer-egress.md)
+English | [中文](reviewer-egress.zh.md)
 
 Status: `implemented_tested_not_active_not_authorized`
 

@@ -1,6 +1,6 @@
 # AppSec Security Assessment Brief v1
 
-English | [中文](assessment-brief.md)
+English | [中文](assessment-brief.zh.md)
 
 Status: `ready_for_claude_review`
 
@@ -138,7 +138,7 @@ After a finding is confirmed, Codex must submit the minimal fix, tests aimed at 
 
 ## 10. Human Approval Gate
 
-Record the formal decision in [approval-record.en.md](approval-record.en.md). This section explains what must be reviewed; it is not a separate sign-off location.
+Record the formal decision in [approval-record.en.md](approval-record.md). This section explains what must be reviewed; it is not a separate sign-off location.
 
 Before a formal Claude assessment starts, the Security Engineer must confirm:
 

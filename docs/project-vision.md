@@ -1,110 +1,110 @@
-# 项目总目标与双工作流路线
+# Project Vision and Dual-Workflow Roadmap
 
-[English](project-vision.en.md) | 中文
+English | [中文](project-vision.zh.md)
 
-本文定义项目的长期目标。`spec.md v0.1` 是第一版需求基线，当前已完成的 `docs/phase1.md` 是本地授权实验的第一阶段实现；它们不是最终架构的全部范围。
+This document defines the long-term goal. `spec.en.md` v0.1 is the initial requirements baseline, and `docs/phase1.en.md` describes the completed first local phase. Neither represents the entire final architecture.
 
-## 核心目标
+## Core Goal
 
-在 Alibaba Cloud 上建设一个可控、可重复、可审计的真实安全实验环境，用同一个多租户应用完成两条端到端工作流：
+Build a controlled, repeatable, and auditable security lab on Alibaba Cloud, using one multi-tenant application to complete two end-to-end workflows:
 
-1. 白盒、human-in-the-loop 的 AppSec AI-assisted Security Assessment。
-2. DDoS / Network Security Incident Response。
+1. A white-box, human-in-the-loop AppSec AI-assisted Security Assessment.
+2. DDoS / Network Security Incident Response.
 
-项目不是为了证明 AI 能独立发现所有漏洞，也不让模型直接控制生产或云安全配置。目标是展示安全工程师如何定义问题、约束工具、核验证据、审批动作并对最终判断负责，同时把 Web/API 安全能力扩展到云、网络、DDoS 检测与响应。
+The project is not intended to prove that AI can independently find every vulnerability, nor does it allow a model to control production or cloud security configuration directly. It demonstrates how a Security Engineer defines the problem, constrains tools, verifies evidence, approves actions, and remains responsible for final decisions, while extending Web/API security experience into cloud security, network security, and DDoS detection and response.
 
-最终演示必须能由项目所有者自己解释：信任边界、控制点、证据链、判断依据、缓解措施、恢复验证和局限，而不是依赖 Agent 临场给出答案。
+The project owner must ultimately be able to explain every trust boundary, control point, evidence chain, decision basis, mitigation, recovery validation, and limitation without relying on an Agent to provide the explanation in real time.
 
-## 工作流一：AppSec AI Agent Flow
+## Workflow 1: AppSec AI Agent Flow
 
-这是一次正式白盒 Product Security Assessment 的模拟，而不是黑盒自动扫描。
+This simulates a formal white-box Product Security Assessment rather than an automated black-box scan.
 
-### 角色与责任
+### Roles and Responsibilities
 
-| 角色 | 责任 | 不应代替的责任 |
+| Role | Responsibilities | Responsibilities it must not replace |
 | --- | --- | --- |
-| Security Engineer（项目所有者） | 定义业务背景、范围、actor、asset、trust boundary、security requirement、expected behavior；审核证据；判断 finding 是否成立、影响与严重性；批准 remediation；验收 regression | 不把最终风险判断交给模型 |
-| Claude（独立 reviewer） | 阅读代码；追踪 authentication/authorization decision path；从独立需求生成测试矩阵；执行或提出 negative test；收集和引用证据；起草 finding | 不修改需求答案、不直接批准修复、不自行决定最终严重性 |
-| Codex（实现者） | 实现应用和测试工具；根据已确认 finding 修复代码；补充回归测试；维护部署与可重复实验 | 不把自己的实现逻辑当作独立测试 oracle，不替 Security Engineer 接受风险 |
+| Security Engineer (project owner) | Defines business context, scope, actors, assets, trust boundaries, security requirements, and expected behavior; reviews evidence; decides whether a finding is valid and determines impact and severity; approves remediation; accepts regression results | Must not delegate final risk decisions to a model |
+| Claude (independent reviewer) | Reads code; traces authentication and authorization decision paths; generates a test matrix from independent requirements; executes or proposes negative tests; collects and cites evidence; drafts findings | Must not change the requirements, directly approve a fix, or independently decide final severity |
+| Codex (implementer) | Implements the application and test tools; fixes confirmed findings; adds regression tests; maintains deployment and repeatable experiments | Must not use its own implementation logic as an independent test oracle or accept risk for the Security Engineer |
 
-Claude 与 Codex 应保持 reviewer / implementer 的职责分离。两者的输出都是可审查材料，不是权威结论。
+Claude and Codex retain separate reviewer and implementer responsibilities. Their outputs are reviewable material, not authoritative conclusions.
 
-### 完整流程
+### Complete Flow
 
-1. Security Engineer 编写 assessment brief：业务、数据分类、actor、asset、入口、信任边界、威胁、明确范围和禁止动作。
-2. 将 security requirement 与 expected behavior 版本化，作为独立测试 oracle。
-3. Claude 阅读代码并输出 authentication / authorization decision path，标明身份来源、租户上下文、策略判断、对象查询及响应位置。
-4. Claude 根据需求而不是应用授权函数生成正向和负向测试矩阵。
-5. 在明确目标、已知身份、只读/受控操作和请求预算内执行测试，记录 run_id、case_id、request_id 和脱敏证据。
-6. 区分 confirmed finding、functional anomaly、inconclusive 和 no violation observed；HTTP 状态码本身不构成越权证据。
-7. Claude 起草 finding：requirement、前置条件、复现、证据、影响、可能根因、建议和局限。
-8. Security Engineer 核验证据，确认或驳回 finding，并决定影响与严重性。
-9. Codex 在确认范围内实现 remediation 和必要的 regression test。
-10. 使用同一 fixture、身份映射、权限版本和用例重测；确认违规消失且合法业务仍然工作。
-11. Security Engineer 完成 assessment report 和风险接受/关闭记录。
+1. The Security Engineer writes an assessment brief covering the business, data classification, actors, assets, entry points, trust boundaries, threats, explicit scope, and prohibited actions.
+2. Security requirements and expected behavior are versioned as an independent test oracle.
+3. Claude reads the code and produces an authentication/authorization decision path identifying identity sources, tenant context, policy decisions, object queries, and response points.
+4. Claude generates positive and negative test cases from the requirements rather than from the application authorization function.
+5. Tests run within a fixed target, known identities, read-only or controlled operations, and a request budget, recording run IDs, case IDs, request IDs, and redacted evidence.
+6. Results distinguish confirmed findings, functional anomalies, inconclusive results, and no violation observed. An HTTP status alone is not authorization evidence.
+7. Claude drafts a finding with the requirement, prerequisites, reproduction, evidence, impact, possible root cause, recommendation, and limitations.
+8. The Security Engineer verifies the evidence, confirms or rejects the finding, and decides its impact and severity.
+9. Codex implements remediation and necessary regression tests within the confirmed scope.
+10. The same fixture, identity map, authorization version, and cases are rerun, verifying that the violation disappears and legitimate behavior still works.
+11. The Security Engineer completes the assessment report and the risk acceptance or closure record.
 
-### 最终交付证据
+### Final Evidence Package
 
-- assessment brief 与数据流/信任边界图。
-- authentication / authorization decision path。
-- 独立、版本化的 security requirement 和测试矩阵。
-- 原始证据的脱敏引用、finding 草稿、人工裁决记录。
-- 修复 diff、回归结果和修复前后对照。
-- Agent 工具边界、调用预算、失败模式和审计记录。
+- Assessment brief and data-flow/trust-boundary diagram.
+- Authentication/authorization decision path.
+- Independent, versioned security requirements and test matrix.
+- Redacted raw-evidence references, draft findings, and human decision records.
+- Remediation diff, regression results, and before/after comparison.
+- Agent tool boundaries, call budgets, failure modes, and audit records.
 
-## 工作流二：DDoS / Network Security Incident Response Flow
+## Workflow 2: DDoS / Network Security Incident Response Flow
 
-同一个应用部署到 Alibaba Cloud，逐步形成 ALB、ECS、RDS、SLS，以及按阶段加入 WAF、Anti-DDoS 和 ActionTrail 的实验环境。所有测试只针对自有、明确授权的资源，并受流量、持续时间、并发和停止条件约束。
+The same application is deployed to Alibaba Cloud and gradually evolves into a lab using ALB, ECS, RDS, and SLS, with WAF, Anti-DDoS, and ActionTrail added by phase when justified. Every test targets owned and explicitly authorized resources and has limits for traffic, duration, concurrency, and stop conditions.
 
-### 场景层次
+### Scenario Levels
 
-| 场景 | 首选实现方式 | 主要观察目标 |
+| Scenario | Preferred implementation | Primary observations |
 | --- | --- | --- |
-| HTTP Flood | 自有环境中的受控低强度 load test，配合正常探针 | L7 请求率、URI/来源特征、ALB/WAF/应用状态、429/5xx、延迟和业务影响 |
-| SYN/UDP Flood | 优先 synthetic telemetry、预制日志或云厂商安全演练能力；真实包测试必须另行评审并严格限界 | L4 协议、连接/包速率、丢包、主机与边界指标、L7 日志缺失的含义 |
-| Compromised ECS outbound attack | synthetic logs 或隔离靶场中的受控 egress 模拟，不攻击互联网第三方 | 异常出站连接、进程/主机线索、VPC/主机日志、凭据与配置变更、遏制和取证保全 |
+| HTTP Flood | Controlled, low-intensity load test against the owned environment, with a simultaneous healthy probe | L7 request rate, URI/source patterns, ALB/WAF/application status, 429/5xx, latency, and business impact |
+| SYN/UDP Flood | Prefer synthetic telemetry, prepared logs, or an approved cloud-provider exercise; any real packet test requires separate review and strict bounds | L4 protocol, connection/packet rate, loss, host and perimeter metrics, and what an absence of L7 logs means |
+| Compromised ECS outbound attack | Synthetic logs or controlled egress simulation in an isolated target; never attack an Internet third party | Abnormal outbound connections, process/host indicators, VPC/host logs, credential and configuration changes, containment, and evidence preservation |
 
-SYN/UDP 和 outbound 场景不能仅靠 HTTP access log 得出结论。设计必须明确哪些是实际流量、哪些是 synthetic telemetry、哪些只是分析假设。
+SYN/UDP and outbound scenarios cannot be concluded from HTTP access logs alone. The design must identify which observations come from real traffic, synthetic telemetry, or an analytical hypothesis.
 
-### 完整流程
+### Complete Flow
 
-1. 建立正常基线：请求率、连接、错误率、p50/p95/p99、资源使用、数据库连接和正常探针。
-2. 通过告警或合成事件发现异常，记录 incident_id、时间线和触发规则。
-3. 收集 ALB、WAF、Anti-DDoS、SLS、ECS、RDS、VPC/网络及 ActionTrail 中当前可用的 telemetry，并标记数据来源与缺口。
-4. 判断异常属于 L4、L7、应用故障、配置变更还是证据不足；不因单个指标直接下结论。
-5. 分析攻击模式：目标、协议/方法、URI、来源分布、速率、连接行为、时间模式和业务影响。
-6. AI Agent 在受限只读工具内关联证据、提出假设和候选 mitigation，引用实际 evidence_id，并报告不确定性。
-7. Security Engineer 审核影响、误伤风险、回滚条件和具体动作，进行人工审批。
-8. 受限执行器只执行预定义、与 incident_id 和有效期绑定的动作；模型不能直接运行任意 Shell 或修改云配置。
-9. 同时验证攻击侧指标、正常探针、错误率、延迟、容量和业务功能；仅观察到 429 不等于恢复成功。
-10. 人工批准恢复/回滚，确认配置回到预期状态。
-11. 输出 post-incident report：检测、证据、判断、决策、缓解、恢复、时间线、缺口和后续改进。
+1. Establish a healthy baseline: request rate, connections, errors, p50/p95/p99, resource use, database connections, and healthy probes.
+2. Detect an anomaly through an alert or synthetic event, recording the incident ID, timeline, and triggering rule.
+3. Collect currently available telemetry from ALB, WAF, Anti-DDoS, SLS, ECS, RDS, VPC/network sources, and ActionTrail, recording each source and gap.
+4. Decide whether the anomaly is L4, L7, an application failure, a configuration change, or inconclusive. No single metric is sufficient by itself.
+5. Analyze the pattern: target, protocol/method, URI, source distribution, rate, connection behavior, timing, and business impact.
+6. Within bounded read-only tools, an AI Agent correlates evidence, proposes hypotheses and candidate mitigations, cites real evidence IDs, and states uncertainty.
+7. The Security Engineer reviews impact, collateral risk, rollback conditions, and the exact action, then provides human approval.
+8. A restricted executor performs only predefined actions bound to the incident ID and expiry. A model cannot execute arbitrary shell commands or directly edit cloud configuration.
+9. Validate attack-side metrics, healthy probes, errors, latency, capacity, and business behavior together. Seeing a 429 alone does not prove recovery.
+10. Human approval is required for restoration or rollback, followed by confirmation that configuration returned to the expected state.
+11. Produce a post-incident report covering detection, evidence, analysis, decisions, mitigation, recovery, timeline, gaps, and follow-up work.
 
-### 安全与真实性原则
+### Safety and Authenticity Principles
 
-- 不对第三方目标发包，不进行未授权扫描，不做真实带宽耗尽或互联网出站攻击。
-- 每次真实 load test 都有目标 allowlist、最大请求数、RPS、并发、持续时间、停止条件和正常探针。
-- synthetic 数据必须标记 `synthetic=true`，与真实访问日志分开统计。
-- 先完成无付费资源的本地/离线验证，再在创建资源前核对 Alibaba Cloud 当前价格、地域、配额和日志成本。
-- 云动作使用最小权限、短期凭据和审计；测试 Agent 与响应执行器分离。
-- 明确能力边界：应用层日志不能证明已经检测网络层 DDoS，单节点实验不能证明生产级容量或防护效果。
+- Never send attack traffic to third parties, perform unauthorized scanning, exhaust real Internet bandwidth, or simulate an Internet outbound attack against another party.
+- Every real load test has a target allowlist, maximum request count, RPS, concurrency, duration, stop conditions, and healthy probe.
+- Synthetic data is marked `synthetic=true` and counted separately from real access logs.
+- Complete local and offline validation before creating paid resources; verify current Alibaba Cloud pricing, region, quota, and logging cost before creation.
+- Cloud actions use least privilege, short-lived credentials, and auditing. The test Agent and response executor remain separate.
+- State capability boundaries explicitly: application logs cannot prove network-layer DDoS detection, and a single-node lab cannot prove production capacity or protection effectiveness.
 
-## 分阶段实施路线
+## Phased Implementation Roadmap
 
-| 阶段 | 目标 | 完成判据 |
+| Phase | Goal | Completion criterion |
 | --- | --- | --- |
-| 1 | 本地多租户应用、固定权限矩阵和三种独立漏洞模式 | 已完成；安全模式 54 项通过，漏洞模式分别稳定发现 8/18/4 项并完成同 fixture 复测 |
-| 2 | 正式 AppSec assessment artifact 与独立 reviewer 流程 | assessment brief、decision path、Claude 测试矩阵、人工 finding 裁决、Codex 修复和回归证据完整 |
-| 3 | 本地容器化、NGINX/应用日志、可观察性和 Agent 只读工具 | 日志相关、提示注入/工具越界、模型不可用和预算场景通过 |
-| 4 | Alibaba Cloud 基础部署 | ALB、ECS、RDS、SLS 最小架构可重复部署；网络、身份、秘密、备份和成本控制有记录 |
-| 5 | L7 incident flow | 受控 HTTP Flood 从发现到 post-incident report 全流程完成，人工审批和恢复可审计 |
-| 6 | L4 与 compromised host 演练 | 使用合成或经批准的隔离方式完成 SYN/UDP 与 outbound 场景，能解释 telemetry 差异与调查边界 |
-| 7 | 防护组件与最终演示 | 按需加入 WAF、Anti-DDoS、ActionTrail，形成双工作流演示、架构图、报告和三分钟/深度讲述版本 |
+| 1 | Local multi-tenant application, fixed authorization matrix, and three isolated vulnerable modes | Complete: secure mode passes 54 checks; vulnerable modes consistently produce 8/18/4 findings and are retested with the same fixture |
+| 2 | Formal AppSec assessment artifacts and an independent reviewer workflow | Complete assessment brief, decision path, Claude test matrix, human finding decisions, Codex remediation, and regression evidence |
+| 3 | Local containerization, NGINX/application logging, observability, and read-only Agent tools | Pass log-correlation, prompt-injection/tool-boundary, unavailable-model, and budget scenarios |
+| 4 | Alibaba Cloud foundation | Repeatable minimum ALB/ECS/RDS/SLS architecture with documented network, identity, secret, backup, and cost controls |
+| 5 | L7 incident flow | Complete the controlled HTTP Flood workflow from detection through post-incident report, with auditable human approval and recovery |
+| 6 | L4 and compromised-host exercises | Complete SYN/UDP and outbound scenarios through synthetic or approved isolated methods and explain telemetry differences and investigation limits |
+| 7 | Protection components and final demonstration | Add WAF, Anti-DDoS, and ActionTrail as justified; produce dual-workflow demos, architecture diagrams, reports, and three-minute/deep-dive narratives |
 
-每阶段都必须先定义验收条件再实现。云组件的选择应由要回答的安全问题驱动，并记录“为什么需要这个 telemetry/control”，避免为了堆叠产品名称而增加资源。
+Each phase defines acceptance criteria before implementation. Cloud components are selected according to the security question they answer, with a record of why the telemetry or control is needed, rather than to accumulate product names.
 
-## 项目叙事
+## Project Narrative
 
-项目最终要表达的能力不是“我让 AI 替我做安全”，而是：
+The project is not intended to say, “I let AI do security for me.” Its intended message is:
 
-> 我能把安全需求转换为可执行、可审计的验证；让不同 Agent 在明确职责和工具边界内协作；由人核验证据、批准修复和响应动作；并把同一套证据思维从 AppSec 扩展到云与网络事件响应。
+> I can translate security requirements into executable and auditable validation; coordinate different Agents within explicit roles and tool boundaries; keep humans responsible for verifying evidence and approving remediation and response; and apply the same evidence discipline from AppSec to cloud and network incident response.

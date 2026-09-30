@@ -79,7 +79,7 @@ def write_report(report, output):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     (output / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    lines = ["# 固定权限矩阵报告", "", "[English](report.en.md) | 中文", "",
+    lines = ["# 固定权限矩阵报告", "", "[English](report.md) | 中文", "",
              f"- run_id: {report['run_id']}", f"- fixture_id: {report['fixture_id']}",
              f"- 权限版本: {report['permission_version']}", "- Agent 补证尚未实现；本报告仅包含确定性测试。",
              "- 范围限于六个已知身份和三个只读接口，不代表应用整体安全。", "",
@@ -91,8 +91,8 @@ def write_report(report, output):
                   "使用同一 fixture，以 actor 对应的本地凭据发送 GET path；不要将凭据复制到报告。", "",
                   "## 修复原则", "", "详情必须同时执行租户边界和对象归属/管理员检查；列表必须同时检查管理员角色和租户过滤。",
                   "由操作者切回 secure 并复用数据快照复测，确认违规消失且合法访问仍成功。", ""])
-    (output / "report.md").write_text("\n".join(lines), encoding="utf-8")
-    english = ["# Fixed Authorization Matrix Report", "", "English | [中文](report.md)", "",
+    (output / "report.zh.md").write_text("\n".join(lines), encoding="utf-8")
+    english = ["# Fixed Authorization Matrix Report", "", "English | [中文](report.zh.md)", "",
                f"- run_id: {report['run_id']}", f"- fixture_id: {report['fixture_id']}",
                f"- Authorization version: {report['permission_version']}",
                "- Agent supplemental analysis is not implemented; this report contains deterministic test results only.",
@@ -107,6 +107,7 @@ def write_report(report, output):
                     "", "## Remediation Principle", "",
                     "Detail access must enforce both the tenant boundary and object ownership/administrator check. List access must enforce both the administrator role and tenant filtering.",
                     "The operator switches back to `secure` and reuses the same data snapshot for regression testing, confirming that violations disappear while legitimate access still succeeds.", ""])
+    (output / "report.md").write_text("\n".join(english), encoding="utf-8")
     (output / "report.en.md").write_text("\n".join(english), encoding="utf-8")
 
 

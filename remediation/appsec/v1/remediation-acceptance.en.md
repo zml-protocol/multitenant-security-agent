@@ -1,6 +1,6 @@
 # AppSec v1 Remediation Acceptance
 
-English | [中文](remediation-acceptance.md)
+English | [中文](remediation-acceptance.zh.md)
 
 - Finding: `F1`
 - Finding status: `confirmed`

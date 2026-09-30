@@ -1,6 +1,6 @@
 # AppSec v1 Remediation Record
 
-English | [中文](remediation-record.md)
+English | [中文](remediation-record.zh.md)
 
 - Branch: `remediation/v1`
 - Finding: `F1`
@@ -40,4 +40,4 @@ Using the same fixture as the frozen assessment:
 - Confirmed violations: 0
 - Functional anomalies: 0
 
-Claude issued a `remediation_verified` recommendation, and the Security Engineer marked this fix `remediation_accepted`. See [remediation-acceptance.en.md](remediation-acceptance.en.md) for the final record. Creation of `appsec-v1-fixed` on the fixed-code commit is approved.
+Claude issued a `remediation_verified` recommendation, and the Security Engineer marked this fix `remediation_accepted`. See [remediation-acceptance.en.md](remediation-acceptance.md) for the final record. Creation of `appsec-v1-fixed` on the fixed-code commit is approved.

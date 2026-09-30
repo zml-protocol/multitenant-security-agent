@@ -1,6 +1,6 @@
 # Project Vision and Dual-Workflow Roadmap
 
-English | [中文](project-vision.md)
+English | [中文](project-vision.zh.md)
 
 This document defines the long-term goal. `spec.en.md` v0.1 is the initial requirements baseline, and `docs/phase1.en.md` describes the completed first local phase. Neither represents the entire final architecture.
 
